@@ -31,6 +31,7 @@ export interface User {
   role: UserRole;
   status: UserStatus;
   isVerified: boolean;
+  activeProfile?: any;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,22 +43,26 @@ export interface AuthTokens {
 
 export interface AuthResponse {
   user: User;
-  tokens: AuthTokens;
+  accessToken: string;
+  refreshToken?: string;
 }
 
 export interface RequestOtpDto {
-  mobileNumber: string;
+  phoneNumber: string;
 }
 
 export interface VerifyOtpDto {
-  mobileNumber: string;
-  otp: string;
+  phoneNumber: string;
+  code: string;
+}
+
+export interface TechnicianLoginDto {
+  phoneNumber: string;
+  password: string;
 }
 
 export interface CompleteProfileDto {
-  name: string;
+  fullName?: string;
   email?: string;
-  gender?: Gender;
-  dateOfBirth?: string;
-  role: UserRole;
+  role?: UserRole;
 }
