@@ -21,6 +21,9 @@ export interface Service {
   name: string;
   description?: string | null;
   isFixedPrice: boolean;
+  isPopular?: boolean;
+  isFeatured?: boolean;
+  orderCount?: number;
   basePrice: string | number;
   durationMin?: number | null;
   isActive: boolean;

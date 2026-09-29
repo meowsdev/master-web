@@ -27,7 +27,21 @@ import {
   Layers,
   Check,
   Filter,
+  X,
+  RotateCcw,
+  Flame,
 } from 'lucide-react';
+
+const POPULAR_CATEGORY_ID = 'all-popular';
+
+const POPULAR_CATEGORY_ITEM = {
+  id: POPULAR_CATEGORY_ID,
+  name: 'Popular Services',
+  slug: 'popular-services',
+  icon: '🔥',
+  description: 'Our most booked & highest-rated services curated across AC repair, deep cleaning, electrical, and plumbing.',
+  count: 'Top Booked',
+};
 
 const FALLBACK_CATEGORIES = [
   {
@@ -44,6 +58,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 850,
         durationMin: 60,
         isFixedPrice: true,
+        isPopular: true,
       },
       {
         id: 'ac-gas-refill',
@@ -52,6 +67,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 1800,
         durationMin: 45,
         isFixedPrice: false,
+        isPopular: true,
       },
       {
         id: 'ac-install-uninstall',
@@ -60,6 +76,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 1500,
         durationMin: 90,
         isFixedPrice: true,
+        isPopular: false,
       },
       {
         id: 'ac-troubleshoot',
@@ -68,6 +85,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 650,
         durationMin: 45,
         isFixedPrice: false,
+        isPopular: false,
       },
       {
         id: 'ac-drainage',
@@ -76,6 +94,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 500,
         durationMin: 35,
         isFixedPrice: true,
+        isPopular: false,
       },
     ],
   },
@@ -93,6 +112,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 450,
         durationMin: 40,
         isFixedPrice: false,
+        isPopular: true,
       },
       {
         id: 'elec-fan-light',
@@ -101,6 +121,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 350,
         durationMin: 30,
         isFixedPrice: true,
+        isPopular: false,
       },
       {
         id: 'elec-db-box',
@@ -109,6 +130,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 1200,
         durationMin: 75,
         isFixedPrice: false,
+        isPopular: false,
       },
       {
         id: 'elec-switch',
@@ -117,6 +139,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 300,
         durationMin: 25,
         isFixedPrice: true,
+        isPopular: false,
       },
     ],
   },
@@ -134,6 +157,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 400,
         durationMin: 35,
         isFixedPrice: true,
+        isPopular: true,
       },
       {
         id: 'plumb-blockage',
@@ -142,6 +166,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 750,
         durationMin: 45,
         isFixedPrice: false,
+        isPopular: false,
       },
       {
         id: 'plumb-motor',
@@ -150,6 +175,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 950,
         durationMin: 60,
         isFixedPrice: false,
+        isPopular: true,
       },
       {
         id: 'plumb-flush',
@@ -158,6 +184,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 650,
         durationMin: 50,
         isFixedPrice: true,
+        isPopular: false,
       },
     ],
   },
@@ -175,6 +202,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 1200,
         durationMin: 60,
         isFixedPrice: false,
+        isPopular: true,
       },
       {
         id: 'app-washing-machine',
@@ -183,6 +211,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 950,
         durationMin: 60,
         isFixedPrice: false,
+        isPopular: false,
       },
       {
         id: 'app-microwave',
@@ -191,6 +220,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 700,
         durationMin: 45,
         isFixedPrice: false,
+        isPopular: false,
       },
     ],
   },
@@ -208,6 +238,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 2200,
         durationMin: 180,
         isFixedPrice: true,
+        isPopular: true,
       },
       {
         id: 'clean-sofa-carpet',
@@ -216,6 +247,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 850,
         durationMin: 60,
         isFixedPrice: true,
+        isPopular: true,
       },
       {
         id: 'clean-water-tank',
@@ -224,6 +256,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 1500,
         durationMin: 90,
         isFixedPrice: true,
+        isPopular: false,
       },
     ],
   },
@@ -241,6 +274,7 @@ const FALLBACK_CATEGORIES = [
         basePrice: 3500,
         durationMin: 240,
         isFixedPrice: false,
+        isPopular: true,
       },
       {
         id: 'paint-waterproof',
@@ -249,23 +283,25 @@ const FALLBACK_CATEGORIES = [
         basePrice: 4500,
         durationMin: 180,
         isFixedPrice: false,
+        isPopular: false,
       },
     ],
   },
 ];
 
 const ICONS_MAP: Record<string, string> = {
-  'ac': '❄️',
-  'air': '❄️',
-  'electric': '⚡',
-  'plumb': '🔧',
-  'appliance': '📺',
-  'clean': '🧹',
-  'paint': '🎨',
-  'cctv': '📹',
-  'security': '📹',
-  'wood': '🪚',
-  'carpenter': '🪚',
+  popular: '🔥',
+  ac: '❄️',
+  air: '❄️',
+  electric: '⚡',
+  plumb: '🔧',
+  appliance: '📺',
+  clean: '🧹',
+  paint: '🎨',
+  cctv: '📹',
+  security: '📹',
+  wood: '🪚',
+  carpenter: '🪚',
 };
 
 function getCategoryIcon(name: string, iconUrl?: string | null): string {
@@ -282,8 +318,13 @@ export default function HomePage() {
   const servicesSectionRef = useRef<HTMLDivElement>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  // By default, start with POPULAR_CATEGORY_ID ('all-popular')
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(POPULAR_CATEGORY_ID);
   const [priceTypeFilter, setPriceTypeFilter] = useState<'ALL' | 'FIXED' | 'INSPECTION'>('ALL');
+
+  const isSearching = searchQuery.trim().length > 0;
+  const cleanSearch = searchQuery.trim();
+  const isPopularSelected = !isSearching && selectedCategoryId === POPULAR_CATEGORY_ID;
 
   // 1. Fetch categories from backend API
   const { data: dbCategories, isLoading: isCategoriesLoading } = useQuery({
@@ -291,10 +332,11 @@ export default function HomePage() {
     queryFn: () => servicesService.getCategories(),
   });
 
-  // 2. Normalise category list
+  // 2. Normalise category list, with Popular item at the very beginning
   const displayCategories = React.useMemo(() => {
+    let regularCats: any[] = FALLBACK_CATEGORIES;
     if (dbCategories && dbCategories.length > 0) {
-      return dbCategories.map((c) => ({
+      regularCats = dbCategories.map((c) => ({
         id: c.id,
         name: c.name,
         slug: c.slug,
@@ -304,63 +346,84 @@ export default function HomePage() {
         services: c.services || [],
       }));
     }
-    return FALLBACK_CATEGORIES;
-  }, [dbCategories]);
 
-  // Set default selected category once categories load
-  useEffect(() => {
-    if (displayCategories.length > 0) {
-      const exists = displayCategories.some((c) => c.id === selectedCategoryId);
-      if (!selectedCategoryId || !exists) {
-        setSelectedCategoryId(displayCategories[0].id);
-      }
-    }
-  }, [displayCategories, selectedCategoryId]);
+    // Prepend Popular Category item as the first option
+    return [POPULAR_CATEGORY_ITEM, ...regularCats];
+  }, [dbCategories]);
 
   // 3. Active selected category object
   const activeCategory =
     displayCategories.find((c) => c.id === selectedCategoryId) ||
     displayCategories[0];
 
-  // 4. Fetch services for the selected category
+  // 4. Fetch services:
+  // - If searching -> Global Search across ALL categories
+  // - If Popular is selected -> Fetch popular services across all categories
+  // - If specific category -> Fetch by categoryId
   const { data: dbServices, isLoading: isServicesLoading } = useQuery({
-    queryKey: ['services-by-category', selectedCategoryId],
-    queryFn: () => servicesService.getServices(selectedCategoryId),
-    enabled: !!selectedCategoryId,
+    queryKey: [
+      'services',
+      isSearching
+        ? { search: cleanSearch }
+        : isPopularSelected
+          ? { isPopular: true }
+          : { categoryId: selectedCategoryId },
+    ],
+    queryFn: () => {
+      if (isSearching) {
+        return servicesService.getServices({ search: cleanSearch });
+      }
+      if (isPopularSelected) {
+        return servicesService.getPopularServices();
+      }
+      return servicesService.getServices({ categoryId: selectedCategoryId });
+    },
   });
 
-  // 5. Determine active services (prefer DB query results, then category relation, then fallback)
+  // Flat fallback list across all categories
+  const allFallbackServices = React.useMemo(() => {
+    return FALLBACK_CATEGORIES.flatMap((c) =>
+      c.services.map((s) => ({
+        ...s,
+        category: { id: c.id, name: c.name, iconUrl: c.icon },
+      }))
+    );
+  }, []);
+
+  // 5. Determine active services
   const activeServices = React.useMemo(() => {
     if (dbServices && dbServices.length > 0) {
       return dbServices;
     }
-    if (activeCategory?.services && activeCategory.services.length > 0) {
-      return activeCategory.services;
+    if (isSearching) {
+      return allFallbackServices.filter(
+        (s) =>
+          s.name.toLowerCase().includes(cleanSearch.toLowerCase()) ||
+          s.description?.toLowerCase().includes(cleanSearch.toLowerCase()) ||
+          s.category?.name?.toLowerCase().includes(cleanSearch.toLowerCase())
+      );
+    }
+    if (isPopularSelected) {
+      return allFallbackServices.filter((s: any) => s.isPopular);
+    }
+    if (activeCategory && (activeCategory as any).services?.length > 0) {
+      return (activeCategory as any).services;
     }
     return FALLBACK_CATEGORIES[0].services;
-  }, [dbServices, activeCategory]);
+  }, [dbServices, isSearching, cleanSearch, isPopularSelected, allFallbackServices, activeCategory]);
 
-  // 6. Filter services based on search query & price type filter
+  // 6. Filter services based on price type filter
   const filteredServices = React.useMemo(() => {
     return activeServices.filter((s: any) => {
-      const matchesSearch = searchQuery
-        ? s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          s.description?.toLowerCase().includes(searchQuery.toLowerCase())
-        : true;
-
-      const matchesPrice =
-        priceTypeFilter === 'ALL'
-          ? true
-          : priceTypeFilter === 'FIXED'
-            ? s.isFixedPrice === true
-            : s.isFixedPrice === false;
-
-      return matchesSearch && matchesPrice;
+      if (priceTypeFilter === 'FIXED') return s.isFixedPrice === true;
+      if (priceTypeFilter === 'INSPECTION') return s.isFixedPrice === false;
+      return true;
     });
-  }, [activeServices, searchQuery, priceTypeFilter]);
+  }, [activeServices, priceTypeFilter]);
 
-  // Category click handler with smooth scrolling to services
+  // Category click handler (clears search query and views selected category)
   const handleCategoryClick = (catId: string) => {
+    setSearchQuery('');
     setSelectedCategoryId(catId);
     setPriceTypeFilter('ALL');
     // Smooth scroll down to services grid
@@ -369,6 +432,15 @@ export default function HomePage() {
       const y = servicesSectionRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setPriceTypeFilter('ALL');
   };
 
   return (
@@ -381,8 +453,8 @@ export default function HomePage() {
           <div className="text-center max-w-3xl mx-auto">
             {/* Pill Banner */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold mb-6 shadow-sm">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Flow A Counselor Routing • 3-Day Free Warranty • 2-Step Pricing</span>
+              <Flame className="w-4 h-4 text-emerald-600" />
+              <span>Top Booked Popular Services • 3-Day Warranty • 2-Step Pricing</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-zinc-900 dark:text-white">
@@ -392,38 +464,61 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="mt-4 text-base sm:text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
-              Click any category below to immediately see all available services,
-              consult with an active counselor in real-time, and get guaranteed on-site fixes.
+              Browse our most popular services below, or click any category to explore specialized service packages and consult with verified experts.
             </p>
 
-            {/* Live Search Box */}
+            {/* Global Search Box (Searches Across ALL Categories) */}
             <div className="mt-8 max-w-2xl mx-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-2.5 shadow-xl shadow-zinc-200/50 dark:shadow-none flex items-center gap-2">
               <div className="flex-1 flex items-center gap-2.5 px-3 w-full">
                 <Search className="w-5 h-5 text-emerald-600 shrink-0" />
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search service name (e.g. Master Chemical Wash, Gas Refill, Water Pump)..."
+                  onChange={handleSearchChange}
+                  placeholder="Search any service across all categories (e.g. Chemical Wash, Gas Refill, Water Pump, CCTV)..."
                   className="w-full text-sm bg-transparent border-none focus:outline-none text-zinc-900 dark:text-white placeholder-zinc-400 py-2"
                 />
-                {searchQuery && (
+                {isSearching && (
                   <button
-                    onClick={() => setSearchQuery('')}
-                    className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 px-2 cursor-pointer"
+                    type="button"
+                    onClick={clearSearch}
+                    className="p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer"
+                    title="Clear search"
                   >
-                    Clear
+                    <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
 
               <Link
-                href={`/chat?serviceId=${encodeURIComponent(searchQuery || selectedCategoryId || 'general-service')}`}
+                href={`/chat?serviceId=${encodeURIComponent(cleanSearch || selectedCategoryId || 'general-service')}`}
                 className="px-5 py-2.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/30 transition-all shrink-0 flex items-center gap-1.5 cursor-pointer"
               >
                 <span>Consult Counselor</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
+            </div>
+
+            {/* Popular Search Suggestion Pills */}
+            <div className="mt-3 flex items-center justify-center gap-2 flex-wrap text-xs text-zinc-500">
+              <span className="font-semibold text-zinc-400">Popular Searches:</span>
+              {['Chemical Wash', 'Gas Refill', 'Drainage Snaking', 'Ceiling Fan', 'Water Motor', 'Full Home Disinfection', 'Rooftop Damp'].map((term) => (
+                <button
+                  key={term}
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery(term);
+                    if (servicesSectionRef.current) {
+                      const yOffset = -80;
+                      const y = servicesSectionRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                      window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 border border-zinc-200 dark:border-zinc-800 transition-colors cursor-pointer"
+                >
+                  {term}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -436,14 +531,14 @@ export default function HomePage() {
             <div>
               <div className="flex items-center gap-2.5">
                 <h2 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900 dark:text-white">
-                  Explore Popular Categories
+                  Explore Categories & Services
                 </h2>
                 <span className="px-2.5 py-0.5 text-[11px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-full flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-emerald-600" /> Click to View Services
+                  <Sparkles className="w-3 h-3 text-emerald-600" /> Click to Filter
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-zinc-500 mt-1">
-                Select any category to load all specialized services and pricing
+                Popular services are shown by default. Click any category to explore its specialized services.
               </p>
             </div>
 
@@ -455,25 +550,33 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Categories Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
+          {/* Categories Grid (With Popular Tab as 1st Item) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 sm:gap-4">
             {displayCategories.map((cat) => {
-              const isSelected = selectedCategoryId === cat.id;
+              const isSelected = !isSearching && selectedCategoryId === cat.id;
+              const isPopularTab = cat.id === POPULAR_CATEGORY_ID;
+
               return (
                 <button
                   key={cat.id}
                   type="button"
                   onClick={() => handleCategoryClick(cat.id)}
-                  className={`group relative p-4 border rounded-2xl transition-all duration-200 cursor-pointer flex flex-col items-center text-center justify-between min-h-[140px] ${
+                  className={`group relative p-3.5 sm:p-4 border rounded-2xl transition-all duration-200 cursor-pointer flex flex-col items-center text-center justify-between min-h-[135px] sm:min-h-[145px] ${
                     isSelected
-                      ? 'border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/40 ring-2 ring-emerald-500 shadow-xl shadow-emerald-500/15 scale-[1.03] z-10'
+                      ? isPopularTab
+                        ? 'border-amber-500 bg-amber-500/10 dark:bg-amber-950/40 ring-2 ring-amber-500 shadow-xl shadow-amber-500/15 scale-[1.03] z-10'
+                        : 'border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/40 ring-2 ring-emerald-500 shadow-xl shadow-emerald-500/15 scale-[1.03] z-10'
                       : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 hover:shadow-md'
                   }`}
                 >
                   {/* Active Indicator Top Badge */}
                   {isSelected && (
-                    <span className="absolute -top-2.5 right-2 px-1.5 py-0.5 bg-emerald-600 text-white text-[9px] font-extrabold rounded-full flex items-center gap-0.5 shadow-sm">
-                      <Check className="w-2.5 h-2.5" /> Selected
+                    <span
+                      className={`absolute -top-2.5 right-2 px-1.5 py-0.5 text-white text-[9px] font-extrabold rounded-full flex items-center gap-0.5 shadow-sm ${
+                        isPopularTab ? 'bg-amber-600' : 'bg-emerald-600'
+                      }`}
+                    >
+                      <Check className="w-2.5 h-2.5" /> Active
                     </span>
                   )}
 
@@ -485,7 +588,9 @@ export default function HomePage() {
                     <h3
                       className={`text-xs font-bold line-clamp-2 leading-tight ${
                         isSelected
-                          ? 'text-emerald-700 dark:text-emerald-300'
+                          ? isPopularTab
+                            ? 'text-amber-700 dark:text-amber-300 font-black'
+                            : 'text-emerald-700 dark:text-emerald-300 font-black'
                           : 'text-zinc-900 dark:text-white'
                       }`}
                     >
@@ -493,9 +598,11 @@ export default function HomePage() {
                     </h3>
 
                     <span
-                      className={`text-[11px] mt-1.5 block font-semibold ${
+                      className={`text-[10px] sm:text-[11px] mt-1.5 block font-semibold ${
                         isSelected
-                          ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                          ? isPopularTab
+                            ? 'text-amber-600 dark:text-amber-400 font-bold'
+                            : 'text-emerald-600 dark:text-emerald-400 font-bold'
                           : 'text-zinc-400 dark:text-zinc-500'
                       }`}
                     >
@@ -509,33 +616,82 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. DYNAMIC SERVICES GRID (Rendered Under Selected Category) */}
+      {/* 2. DYNAMIC SERVICES GRID (Popular Default, Category View, or Global Search) */}
       <section
         ref={servicesSectionRef}
         id="services-section"
         className="py-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-20"
       >
-        {/* Category Header Banner & Filter Pills */}
+        {/* Header Banner & Filter Pills */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 mb-8 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-3xl shrink-0 shadow-inner">
-                {activeCategory?.icon}
+              <div
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shrink-0 shadow-inner border ${
+                  isPopularSelected
+                    ? 'bg-amber-100 dark:bg-amber-950/70 border-amber-200 dark:border-amber-800'
+                    : 'bg-emerald-100 dark:bg-emerald-950/70 border-emerald-200 dark:border-emerald-800'
+                }`}
+              >
+                {isSearching ? '🔍' : activeCategory?.icon}
               </div>
 
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900 dark:text-white">
-                    {activeCategory?.name}
+                    {isSearching
+                      ? `Search Results for "${cleanSearch}"`
+                      : isPopularSelected
+                        ? '🔥 Most Popular & Trending Services'
+                        : activeCategory?.name}
                   </h2>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                    {filteredServices.length} Services Available
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                      isPopularSelected
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                        : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                    }`}
+                  >
+                    {filteredServices.length}{' '}
+                    {isSearching
+                      ? 'Matches Found'
+                      : isPopularSelected
+                        ? 'Top Booked Services'
+                        : 'Services Available'}
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-zinc-500 mt-1.5 max-w-2xl leading-relaxed">
-                  {activeCategory?.description ||
-                    'Select any service below to connect directly with our support counselor, receive fair 2-step pricing, and book top-rated technicians.'}
+                  {isSearching
+                    ? `Showing all verified services across all categories matching "${cleanSearch}".`
+                    : isPopularSelected
+                      ? 'Hand-picked top-rated services across AC repair, deep cleaning, electrical wiring, and plumbing with guaranteed satisfaction.'
+                      : activeCategory?.description ||
+                        'Select any service below to connect directly with our support counselor, receive fair 2-step pricing, and book top-rated technicians.'}
                 </p>
+
+                {(isSearching || !isPopularSelected) && (
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleCategoryClick(POPULAR_CATEGORY_ID)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-semibold rounded-lg transition-colors cursor-pointer border border-amber-200 dark:border-amber-800"
+                    >
+                      <Flame className="w-3.5 h-3.5 text-amber-600" />
+                      <span>View All Popular Services</span>
+                    </button>
+
+                    {isSearching && (
+                      <button
+                        type="button"
+                        onClick={clearSearch}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Clear Search</span>
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -600,98 +756,121 @@ export default function HomePage() {
               No matching services found
             </h3>
             <p className="text-xs text-zinc-500 mt-1 mb-5">
-              Try clearing your search query or switching to another filter.
+              {isSearching
+                ? `No services found matching "${cleanSearch}". Try another search term or browse categories.`
+                : 'Try clearing your filter to view all available services.'}
             </p>
             <button
-              onClick={() => {
-                setSearchQuery('');
-                setPriceTypeFilter('ALL');
-              }}
+              onClick={clearSearch}
               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
             >
-              Reset Filters
+              Reset Search & Filters
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredServices.map((service: any) => (
-              <div
-                key={service.id}
-                className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50 rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
-              >
-                <div>
-                  {/* Top Badge & Type */}
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 flex items-center gap-1">
-                      <span>{activeCategory?.icon}</span>
-                      <span>{activeCategory?.name}</span>
-                    </span>
+            {filteredServices.map((service: any) => {
+              const serviceCatName =
+                service.category?.name ||
+                activeCategory?.name ||
+                'Verified Service';
+              const serviceCatIcon = getCategoryIcon(
+                serviceCatName,
+                service.category?.iconUrl
+              );
+              const isPopularService = service.isPopular ?? false;
 
-                    <span
-                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-md shrink-0 ${
-                        service.isFixedPrice
-                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
-                          : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
-                      }`}
+              return (
+                <div
+                  key={service.id}
+                  className={`group bg-white dark:bg-zinc-900 border rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${
+                    isPopularService && isPopularSelected
+                      ? 'border-amber-200/80 dark:border-amber-900/40 hover:border-amber-500/60'
+                      : 'border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50'
+                  }`}
+                >
+                  <div>
+                    {/* Top Badges (Category + Popular + Type) */}
+                    <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                          <span>{serviceCatIcon}</span>
+                          <span className="truncate max-w-[130px]">{serviceCatName}</span>
+                        </span>
+
+                        {isPopularService && (
+                          <span className="text-[9px] font-black px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 flex items-center gap-0.5">
+                            <Flame className="w-2.5 h-2.5 fill-amber-500 text-amber-500" /> Popular
+                          </span>
+                        )}
+                      </div>
+
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 ${
+                          service.isFixedPrice
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                            : 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300'
+                        }`}
+                      >
+                        {service.isFixedPrice ? 'Fixed Price' : 'Diagnostic'}
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-base font-bold text-zinc-900 dark:text-white group-hover:text-emerald-600 transition-colors leading-snug">
+                      {service.name}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed mt-2 mb-4">
+                      {service.description ||
+                        'Complete diagnostic, skilled technician dispatch, verified genuine parts replacement, and full testing.'}
+                    </p>
+
+                    {/* Price and Duration Badge */}
+                    <div className="flex items-center justify-between py-3 px-4 bg-zinc-50 dark:bg-zinc-950/60 rounded-2xl border border-zinc-100 dark:border-zinc-800/80 mb-5">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">
+                          Starting Price
+                        </span>
+                        <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
+                          ৳ {Number(service.basePrice || 400).toFixed(0)}
+                        </span>
+                      </div>
+
+                      <div className="h-7 w-px bg-zinc-200 dark:bg-zinc-800" />
+
+                      <div className="text-right">
+                        <span className="text-[10px] uppercase font-bold text-zinc-400 block flex items-center gap-1 justify-end tracking-wider">
+                          <Clock className="w-3 h-3 text-zinc-400" /> Time
+                        </span>
+                        <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                          {service.durationMin || 45} mins
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
+                    <Link
+                      href={`/chat?serviceId=${service.id}&categoryId=${service.categoryId || activeCategory?.id}`}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
                     >
-                      {service.isFixedPrice ? 'Fixed Price' : 'Diagnostic / Inspection'}
-                    </span>
-                  </div>
+                      <Headphones className="w-3.5 h-3.5" />
+                      <span>Consult Counselor</span>
+                    </Link>
 
-                  {/* Title */}
-                  <h3 className="text-base font-bold text-zinc-900 dark:text-white group-hover:text-emerald-600 transition-colors leading-snug">
-                    {service.name}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed mt-2 mb-4">
-                    {service.description ||
-                      'Complete diagnostic, skilled technician dispatch, verified genuine parts replacement, and full testing.'}
-                  </p>
-
-                  {/* Price and Duration Badge */}
-                  <div className="flex items-center justify-between py-3 px-4 bg-zinc-50 dark:bg-zinc-950/60 rounded-2xl border border-zinc-100 dark:border-zinc-800/80 mb-5">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">
-                        Starting Price
-                      </span>
-                      <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
-                        ৳ {Number(service.basePrice || 400).toFixed(0)}
-                      </span>
-                    </div>
-
-                    <div className="h-7 w-px bg-zinc-200 dark:bg-zinc-800" />
-
-                    <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-zinc-400 block flex items-center gap-1 justify-end tracking-wider">
-                        <Clock className="w-3 h-3 text-zinc-400" /> Time
-                      </span>
-                      <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                        {service.durationMin || 45} mins
-                      </span>
-                    </div>
+                    <Link
+                      href={`/orders/new?serviceId=${service.id}`}
+                      className="px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold rounded-xl transition-all"
+                    >
+                      Book Now
+                    </Link>
                   </div>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
-                  <Link
-                    href={`/chat?serviceId=${service.id}&categoryId=${activeCategory?.id}`}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
-                  >
-                    <Headphones className="w-3.5 h-3.5" />
-                    <span>Consult Counselor</span>
-                  </Link>
-
-                  <Link
-                    href={`/orders/new?serviceId=${service.id}`}
-                    className="px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold rounded-xl transition-all"
-                  >
-                    Book Now
-                  </Link>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

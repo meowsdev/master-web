@@ -39,9 +39,22 @@ export const servicesService = {
     return response.data;
   },
 
-  getServices: async (categoryId?: string) => {
+  getServices: async (
+    params?: string | { categoryId?: string; search?: string; isPopular?: boolean }
+  ) => {
+    const queryParams =
+      typeof params === 'string'
+        ? { categoryId: params }
+        : params || {};
     const response = await apiClient.get<Service[]>('/service/all', {
-      params: { categoryId },
+      params: queryParams,
+    });
+    return response.data;
+  },
+
+  getPopularServices: async () => {
+    const response = await apiClient.get<Service[]>('/service/all', {
+      params: { isPopular: true },
     });
     return response.data;
   },
