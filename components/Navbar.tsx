@@ -133,9 +133,24 @@ export const Navbar: React.FC<NavbarProps> = ({ onLocationChange }) => {
                 onChange={(e) => handleSwitchRole(e.target.value as UserRole)}
                 className="text-xs bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-800 dark:text-zinc-200 font-medium focus:ring-1 focus:ring-emerald-500 cursor-pointer"
               >
-                <option value={UserRole.CUSTOMER}>👤 Customer</option>
-                <option value={UserRole.PROVIDER}>🛠️ Provider</option>
-                <option value={UserRole.COUNSELOR}>🎧 Counselor</option>
+                {(
+                  user?.availableRoles || [
+                    UserRole.CUSTOMER,
+                    UserRole.PROVIDER,
+                    UserRole.COUNSELOR,
+                  ]
+                ).map((role) => (
+                  <option key={role} value={role}>
+                    {role === UserRole.CUSTOMER && '👤 Customer'}
+                    {role === UserRole.PROVIDER && '🛠️ Provider'}
+                    {role === UserRole.COUNSELOR && '🎧 Counselor'}
+                    {role === UserRole.TECHNICIAN && '🔧 Technician'}
+                    {role === UserRole.ADMIN && '👑 Admin'}
+                    {role === UserRole.MANAGER && '💼 Manager'}
+                    {role === UserRole.HR && '📋 HR'}
+                    {role === UserRole.SUPPORT && '💬 Support'}
+                  </option>
+                ))}
               </select>
 
               {/* Logout Button */}

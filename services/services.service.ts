@@ -35,25 +35,25 @@ export interface DiscoveredProvider {
 
 export const servicesService = {
   getCategories: async () => {
-    const response = await apiClient.get<ServiceCategory[]>('/services/categories');
+    const response = await apiClient.get<ServiceCategory[]>('/category/all');
     return response.data;
   },
 
   getServices: async (categoryId?: string) => {
-    const response = await apiClient.get<Service[]>('/services', {
+    const response = await apiClient.get<Service[]>('/service/all', {
       params: { categoryId },
     });
     return response.data;
   },
 
   getServiceById: async (id: string) => {
-    const response = await apiClient.get<Service>(`/services/${id}`);
+    const response = await apiClient.get<Service>(`/service/${id}`);
     return response.data;
   },
 
   discoverProviders: async (params: DiscoverProvidersParams) => {
     const response = await apiClient.get<DiscoveredProvider[]>(
-      '/services/providers/discover',
+      '/service/providers/discover',
       { params }
     );
     return response.data;

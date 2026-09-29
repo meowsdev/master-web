@@ -32,6 +32,14 @@ export interface User {
   status: UserStatus;
   isVerified: boolean;
   activeProfile?: any;
+  availableRoles?: UserRole[];
+  addresses?: Array<{
+    id: string;
+    addressText: string;
+    latitude?: number | null;
+    longitude?: number | null;
+    isDefault?: boolean;
+  }>;
   createdAt: string;
   updatedAt: string;
 }

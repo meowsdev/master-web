@@ -8,6 +8,9 @@ export interface ServiceCategory {
   basePrice: string | number;
   isActive: boolean;
   services?: Service[];
+  _count?: {
+    services?: number;
+  };
   createdAt: string;
   updatedAt: string;
 }

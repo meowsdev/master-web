@@ -1,3 +1,5 @@
+import { Service } from './service.types';
+
 export enum OrderStatus {
   PENDING = 'PENDING',
   ACCEPTED = 'ACCEPTED',
@@ -28,11 +30,14 @@ export interface Order {
   customerId: string;
   technicianId?: string | null;
   serviceId: string;
+  service?: Service;
   originalPrice: string | number;
   adminCommission: string | number;
   additionalPrice: string | number;
   totalPrice: string | number;
+  finalPrice?: string | number;
   priceEditCount: number;
+  priceChangeCount?: number;
   advancePaid: string | number;
   dueAmount: string | number;
   paymentStatus: PaymentStatus;
