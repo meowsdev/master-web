@@ -7,6 +7,8 @@ import { Navbar } from '@/components/Navbar';
 import { ordersService } from '@/services/orders.service';
 import { revisionService } from '@/services/revision.service';
 import { reviewService } from '@/services/review.service';
+import { useAuthStore } from '@/store/useAuthStore';
+import { UserRole } from '@/types/auth.types';
 import { OrderStatus, PaymentStatus } from '@/types/order.types';
 import {
   Package,
@@ -21,6 +23,7 @@ import {
   MessageSquare,
   ThumbsUp,
   ThumbsDown,
+  Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -29,6 +32,9 @@ export default function OrderDetailPage() {
   const id = params.id as string;
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { user, activeRole } = useAuthStore();
+
+  const isProvider = activeRole === UserRole.PROVIDER || user?.role === UserRole.PROVIDER;
 
   // Modals state
   const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
@@ -41,6 +47,19 @@ export default function OrderDetailPage() {
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', id],
     queryFn: () => ordersService.getOrderById(id),
+  });
+
+  // Update Status Mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: (status: OrderStatus) => ordersService.updateStatus(id, status),
+    onSuccess: (updated) => {
+      toast.success(`Order status updated to ${updated.orderStatus}!`);
+      queryClient.invalidateQueries({ queryKey: ['order', id] });
+      queryClient.invalidateQueries({ queryKey: ['my-orders'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to update order status');
+    },
   });
 
   // Accept Price Mutation
@@ -247,6 +266,110 @@ export default function OrderDetailPage() {
             </div>
           )}
         </div>
+
+        {/* Order Lifecycle Actions Card (Start Work / Complete / Cancel) */}
+        {!isCompleted && order.orderStatus !== OrderStatus.CANCELLED && (
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                <div>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                    Service Stage & Actions
+                  </h3>
+                  <p className="text-xs text-zinc-500">
+                    Current status: <span className="font-bold text-emerald-600 dark:text-emerald-400">{order.orderStatus}</span>
+                  </p>
+                </div>
+              </div>
+
+              <span className="px-3 py-1 text-xs font-extrabold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-xl">
+                {isProvider ? '🛠️ Provider View' : '👤 Customer View'}
+              </span>
+            </div>
+
+            {/* STAGE 1: PENDING / ACCEPTED */}
+            {(order.orderStatus === OrderStatus.PENDING || order.orderStatus === OrderStatus.ACCEPTED) && (
+              <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-xs font-bold text-zinc-900 dark:text-white">
+                    {isProvider ? 'Technician Dispatch & Work Execution' : 'Waiting for Provider to Arrive'}
+                  </h4>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">
+                    {isProvider
+                      ? 'When you arrive at customer location, click Start Work to begin.'
+                      : 'Your assigned technician is routed to your address.'}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  {isProvider ? (
+                    <button
+                      type="button"
+                      onClick={() => updateStatusMutation.mutate(OrderStatus.IN_PROGRESS)}
+                      disabled={updateStatusMutation.isPending}
+                      className="flex-1 sm:flex-initial px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <Zap className="w-4 h-4" />
+                      <span>🚀 Start Service Work</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => updateStatusMutation.mutate(OrderStatus.CANCELLED)}
+                      disabled={updateStatusMutation.isPending}
+                      className="flex-1 sm:flex-initial px-4 py-2 bg-rose-600/10 hover:bg-rose-600/20 text-rose-600 border border-rose-200 dark:border-rose-900 font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      <span>Cancel Order</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* STAGE 2: IN_PROGRESS */}
+            {order.orderStatus === OrderStatus.IN_PROGRESS && (
+              <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                    Service is Actively In Progress
+                  </h4>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">
+                    {isProvider
+                      ? 'Technician is on site. Once the service is completed, mark it as finished.'
+                      : 'Technician is performing the service. Confirm once the job is finished to release escrow & activate your 3-day warranty.'}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  {!isProvider ? (
+                    <button
+                      type="button"
+                      onClick={() => updateStatusMutation.mutate(OrderStatus.COMPLETED)}
+                      disabled={updateStatusMutation.isPending}
+                      className="flex-1 sm:flex-initial px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>✅ Confirm Work Done & Complete</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => updateStatusMutation.mutate(OrderStatus.COMPLETED)}
+                      disabled={updateStatusMutation.isPending}
+                      className="flex-1 sm:flex-initial px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>🏁 Mark Service Finished</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 3-Day Free Warranty Revision & Review Section */}
         {isCompleted && (

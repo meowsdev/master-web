@@ -45,5 +45,38 @@ export interface ChatSession {
   assignedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  service?: {
+    id: string;
+    name: string;
+    description?: string | null;
+    basePrice?: number | string | null;
+    durationMin?: number | null;
+    category?: {
+      id: string;
+      name: string;
+    } | null;
+  };
+  customerUser?: {
+    id: string;
+    name?: string | null;
+    mobileNumber?: string;
+    profilePhoto?: string | null;
+    role?: string;
+  };
+  counselorUser?: {
+    id: string;
+    name?: string | null;
+    mobileNumber?: string;
+    profilePhoto?: string | null;
+  };
+  providerUser?: {
+    id: string;
+    name?: string | null;
+    mobileNumber?: string;
+    profilePhoto?: string | null;
+  };
   messages?: Message[];
+  _count?: {
+    messages: number;
+  };
 }

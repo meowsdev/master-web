@@ -15,6 +15,26 @@ export interface CreateConversationDto {
   customerProfileId?: string;
 }
 
+export interface InChatBookingDto {
+  conversationId: string;
+  serviceId: string;
+  providerId?: string;
+  customPrice?: number;
+  addressText?: string;
+  preferredTime?: string;
+  notes?: string;
+  paymentMode?: 'CASH' | 'BKASH' | 'NAGAD' | 'CARD' | 'BANK';
+}
+
+export interface CustomOfferDto {
+  conversationId: string;
+  serviceId?: string;
+  customPrice: number;
+  description: string;
+  duration?: string;
+  expiresInHours?: number;
+}
+
 export const chatService = {
   getOrCreateConversation: async (dto: CreateConversationDto) => {
     const payload: Record<string, any> = {};
@@ -49,6 +69,38 @@ export const chatService = {
       payload.fileUrl = dto.fileUrl.trim();
     }
     const response = await apiClient.post<Message>('/chat/messages', payload);
+    return response.data;
+  },
+
+  createInChatBooking: async (dto: InChatBookingDto) => {
+    const response = await apiClient.post<{ order: any; message: Message }>(
+      '/chat/orders/in-chat-booking',
+      dto
+    );
+    return response.data;
+  },
+
+  sendCustomOffer: async (dto: CustomOfferDto) => {
+    const offerPayload = JSON.stringify({
+      type: 'OFFER',
+      price: dto.customPrice,
+      description: dto.description,
+      duration: dto.duration || 'Standard Dispatch',
+      expiresInHours: dto.expiresInHours || 24,
+      createdAt: new Date().toISOString(),
+      status: 'ACTIVE',
+    });
+
+    const response = await apiClient.post<Message>('/chat/messages', {
+      conversationId: dto.conversationId,
+      type: MessageType.OFFER,
+      text: offerPayload,
+    });
+    return response.data;
+  },
+
+  getUserConversations: async () => {
+    const response = await apiClient.get<ChatSession[]>('/chat/conversations');
     return response.data;
   },
 
