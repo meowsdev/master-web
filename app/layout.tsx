@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Master Services - Multi-Role Platform",
-  description: "On-demand services with real-time chat, technician booking, and counseling support.",
+  title: "super app",
+  description: "Super app - On-demand services and instant consultation",
 };
 
 export default function RootLayout({
