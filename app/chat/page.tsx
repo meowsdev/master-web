@@ -9,6 +9,7 @@ import { chatService, InChatBookingDto, CustomOfferDto } from '@/services/chat.s
 import { servicesService } from '@/services/services.service';
 import { ordersService } from '@/services/orders.service';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useChatSocket } from '@/hooks/useChatSocket';
 import { UserRole } from '@/types/auth.types';
 import { Message, MessageType, ChatSession } from '@/types/chat.types';
 import { Order, OrderStatus } from '@/types/order.types';
@@ -68,6 +69,13 @@ function ChatContent() {
   const { user, isAuthenticated, activeRole } = useAuthStore();
   const queryClient = useQueryClient();
 
+  const isStaffRole =
+    activeRole === UserRole.PROVIDER ||
+    activeRole === UserRole.COUNSELOR ||
+    activeRole === UserRole.ADMIN ||
+    activeRole === UserRole.MANAGER ||
+    activeRole === UserRole.SUPPORT;
+
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [inputText, setInputText] = useState('');
   const [searchConvQuery, setSearchConvQuery] = useState('');
@@ -90,6 +98,10 @@ function ChatContent() {
 
   // Cancel confirmation state
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
+
+  // Assign Provider Modal State (for Counselor/Admin)
+  const [isAssignProviderModalOpen, setIsAssignProviderModalOpen] = useState(false);
+  const [providerSearchQuery, setProviderSearchQuery] = useState('');
 
   // 1. Query all user conversations list (Section 1 Sidebar)
   const {
@@ -121,6 +133,13 @@ function ChatContent() {
     enabled: !!serviceIdParam && serviceIdParam !== 'general-service' && serviceIdParam !== 'all-popular',
   });
 
+  // 3.5 Fetch Available Providers for current service (for Counselor assignment)
+  const { data: availableProviders = [], isLoading: isProvidersLoading } = useQuery({
+    queryKey: ['available-providers', serviceIdParam],
+    queryFn: () => servicesService.discoverProviders({ serviceId: serviceIdParam || undefined }),
+    enabled: isAssignProviderModalOpen,
+  });
+
   // 4. Initialize or get conversation for target serviceId / providerId
   const {
     data: session,
@@ -139,20 +158,25 @@ function ChatContent() {
       }
       return res;
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !isStaffRole,
     retry: 2,
   });
 
   // Keep activeSessionId in sync with resolved session or first available conversation
   const effectiveSessionId = activeSessionId || session?.id || conversations?.[0]?.id || null;
 
+  // Real-time WebSocket hook for instant bidirectional messaging & typing indicators
+  const { isConnected, typingUser, emitTyping, emitStopTyping } = useChatSocket({
+    activeSessionId: effectiveSessionId,
+  });
+
   useEffect(() => {
     if (session?.id && !activeSessionId) {
       setActiveSessionId(session.id);
-    } else if (!activeSessionId && conversations.length > 0 && !serviceIdParam) {
+    } else if (!activeSessionId && conversations.length > 0) {
       setActiveSessionId(conversations[0].id);
     }
-  }, [session, activeSessionId, conversations, serviceIdParam]);
+  }, [session, activeSessionId, conversations]);
 
   // Current active conversation object
   const currentConversation = useMemo(() => {
@@ -352,8 +376,29 @@ function ChatContent() {
     },
   });
 
+  // 11. Assign Provider Mutation (For Counselors / Admins)
+  const assignProviderMutation = useMutation({
+    mutationFn: (providerUserId: string) => {
+      if (!effectiveSessionId) throw new Error('Active consultation required.');
+      return chatService.assignProvider(effectiveSessionId, providerUserId);
+    },
+    onSuccess: (res: any) => {
+      toast.success(`🎉 Provider "${res.provider?.name || 'Partner'}" assigned to order and chat!`);
+      setIsAssignProviderModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['my-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['user-conversations'] });
+      if (effectiveSessionId) {
+        queryClient.invalidateQueries({ queryKey: ['chat-messages', effectiveSessionId] });
+      }
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || 'Failed to assign provider.');
+    },
+  });
+
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    emitStopTyping();
     const textToSend = inputText.trim();
     if (!textToSend || sendMutation.isPending) return;
 
@@ -500,13 +545,6 @@ function ChatContent() {
       return null;
     }
   };
-
-  const isStaffRole =
-    activeRole === UserRole.PROVIDER ||
-    activeRole === UserRole.COUNSELOR ||
-    activeRole === UserRole.ADMIN ||
-    activeRole === UserRole.MANAGER ||
-    activeRole === UserRole.SUPPORT;
 
   // If Not Authenticated -> Show friendly Login card
   if (!isAuthenticated) {
@@ -685,6 +723,7 @@ function ChatContent() {
                   : parsedMsg?.type === 'ORDER_CONFIRMED'
                   ? `🎉 Order Placed: #${parsedMsg.shortOrderId}`
                   : conv.messages?.[0]?.text || 'No messages yet';
+                const customerLabel = conv.customerUser?.name || conv.customerUser?.mobileNumber || 'Customer';
                 const emoji = getCategoryEmoji(catName);
 
                 return (
@@ -713,7 +752,7 @@ function ChatContent() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1 mb-0.5">
                         <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 truncate max-w-[120px]">
-                          {catName}
+                          {isStaffRole ? `👤 ${customerLabel}` : catName}
                         </span>
                         <span className="text-[10px] text-zinc-400 shrink-0">
                           {new Date(conv.updatedAt || conv.createdAt).toLocaleTimeString([], {
@@ -768,21 +807,54 @@ function ChatContent() {
           {/* Header */}
           <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                <Headphones className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white font-bold text-sm shadow-sm relative">
+                {isStaffRole ? <User className="w-5 h-5" /> : <Headphones className="w-5 h-5" />}
+                {isConnected && (
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-zinc-900 rounded-full" />
+                )}
               </div>
               <div>
                 <h3 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <span>Support Counselor</span>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>
+                    {isStaffRole
+                      ? (currentConversation?.customerUser?.name || currentConversation?.customerUser?.mobileNumber || 'Customer Consultation')
+                      : 'Support Counselor'}
+                  </span>
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'
+                    }`}
+                    title={isConnected ? 'Live WebSocket Connected' : 'Connecting...'}
+                  />
                 </h3>
-                <p className="text-[11px] text-zinc-400">
-                  Online • Flow A Smart Routing • Response &lt; 1 min
+                <p className="text-[11px] text-zinc-400 flex items-center gap-1.5">
+                  {isConnected ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      Live Real-Time • Instant Response
+                    </span>
+                  ) : (
+                    <span>Online • Flow A Smart Routing • Response &lt; 1 min</span>
+                  )}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
+              {/* If staff, assign provider button */}
+              {isStaffRole && (
+                <button
+                  type="button"
+                  onClick={() => setIsAssignProviderModalOpen(true)}
+                  className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-200 dark:hover:bg-emerald-900/80 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                >
+                  <Wrench className="w-3.5 h-3.5" />
+                  <span>
+                    {currentConversation?.providerUser ? `Provider: ${currentConversation.providerUser.name?.split(' ')[0] || 'Assigned'}` : 'Assign Provider'}
+                  </span>
+                </button>
+              )}
+
               {/* If staff, offer creator button */}
               {isStaffRole && (
                 <button
@@ -1063,6 +1135,20 @@ function ChatContent() {
                 );
               })
             )}
+
+            {/* Live Typing Indicator */}
+            {typingUser && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 rounded-2xl w-fit text-xs text-emerald-700 dark:text-emerald-300 animate-pulse">
+                <span className="font-semibold">{typingUser}</span>
+                <span>is typing</span>
+                <span className="flex gap-1 items-center ml-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.3s]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.15s]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" />
+                </span>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 
@@ -1095,10 +1181,19 @@ function ChatContent() {
             <input
               type="text"
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={(e) => {
+                setInputText(e.target.value);
+                if (e.target.value.trim()) {
+                  emitTyping();
+                } else {
+                  emitStopTyping();
+                }
+              }}
+              onBlur={() => emitStopTyping()}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
+                  emitStopTyping();
                   handleSendMessage();
                 }
               }}
@@ -1284,6 +1379,60 @@ function ChatContent() {
                 )}
               </div>
             ) : null}
+
+            {/* ASSIGNED PROVIDER / TECHNICIAN CARD */}
+            <div className="p-4 bg-white dark:bg-zinc-850 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                  <Wrench className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Assigned Provider</span>
+                </span>
+                {isStaffRole && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAssignProviderModalOpen(true)}
+                    className="text-[10px] font-bold text-emerald-600 hover:text-emerald-500 cursor-pointer"
+                  >
+                    {currentConversation?.providerUser ? 'Change' : '+ Assign'}
+                  </button>
+                )}
+              </div>
+
+              {currentConversation?.providerUser ? (
+                <div className="flex items-center gap-3 p-2.5 bg-emerald-50/60 dark:bg-emerald-950/30 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-bold text-zinc-900 dark:text-white truncate">
+                      {currentConversation.providerUser.name || 'Master Expert Provider'}
+                    </h4>
+                    <p className="text-[10px] text-zinc-500 truncate">
+                      📞 {currentConversation.providerUser.mobileNumber}
+                    </p>
+                  </div>
+                  <span className="px-1.5 py-0.5 text-[9px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-200 rounded-md shrink-0">
+                    ASSIGNED
+                  </span>
+                </div>
+              ) : (
+                <div className="text-center py-2 space-y-2">
+                  <p className="text-[11px] text-zinc-400">No provider assigned yet.</p>
+                  {isStaffRole ? (
+                    <button
+                      type="button"
+                      onClick={() => setIsAssignProviderModalOpen(true)}
+                      className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span>Assign Verified Provider</span>
+                    </button>
+                  ) : (
+                    <p className="text-[10px] text-emerald-600 font-semibold">Counselor is assigning best technician...</p>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Session Channel Details */}
             <div className="p-4 bg-white dark:bg-zinc-850 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm space-y-3">
@@ -1637,7 +1786,7 @@ function ChatContent() {
               />
             </div>
 
-            {/* Action Buttons */}
+              {/* Action Buttons */}
             <div className="pt-2 flex items-center gap-2.5">
               <button
                 type="button"
@@ -1665,6 +1814,147 @@ function ChatContent() {
                     <span>Send Custom Offer</span>
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* ASSIGN PROVIDER / TECHNICIAN MODAL (FOR COUNSELOR / ADMIN)    */}
+      {/* ============================================================ */}
+      {isAssignProviderModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 w-full max-w-lg shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/30">
+                  <Wrench className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-zinc-900 dark:text-white">
+                    Assign Verified Provider
+                  </h3>
+                  <p className="text-[11px] text-zinc-500">
+                    Select expert partner for {serviceDetail?.name || 'this service'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsAssignProviderModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center cursor-pointer transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="relative shrink-0">
+              <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={providerSearchQuery}
+                onChange={(e) => setProviderSearchQuery(e.target.value)}
+                placeholder="Search provider by name or phone..."
+                className="w-full pl-8 pr-3 py-2 text-xs bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-zinc-900 dark:text-white"
+              />
+            </div>
+
+            {/* Providers Scrollable List */}
+            <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+              {isProvidersLoading ? (
+                <div className="py-12 text-center text-xs text-zinc-400 space-y-2">
+                  <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p>Discovering verified providers...</p>
+                </div>
+              ) : availableProviders.length === 0 ? (
+                <div className="py-10 text-center text-xs text-zinc-400 space-y-2">
+                  <AlertCircle className="w-6 h-6 text-zinc-400 mx-auto" />
+                  <p>No verified providers found for this service category.</p>
+                </div>
+              ) : (
+                availableProviders
+                  .filter((p) => {
+                    if (!providerSearchQuery.trim()) return true;
+                    const q = providerSearchQuery.toLowerCase();
+                    return (
+                      p.user?.name?.toLowerCase().includes(q) ||
+                      p.user?.mobileNumber?.toLowerCase().includes(q)
+                    );
+                  })
+                  .map((prov) => {
+                    const isCurrentlyAssigned =
+                      currentConversation?.providerId === prov.user.id ||
+                      currentActiveOrder?.providerId === prov.id;
+
+                    return (
+                      <div
+                        key={prov.id}
+                        className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                          isCurrentlyAssigned
+                            ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-500/60'
+                            : 'bg-zinc-50/50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-700 hover:border-zinc-500'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">
+                            <User className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <h4 className="text-xs font-bold text-zinc-900 dark:text-white truncate">
+                                {prov.user.name || 'Verified Provider'}
+                              </h4>
+                              {isCurrentlyAssigned && (
+                                <span className="px-1.5 py-0.2 bg-emerald-600 text-white text-[9px] font-black rounded-full">
+                                  Current
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-zinc-500 truncate">
+                              📞 {prov.user.mobileNumber}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1 text-[10px] text-zinc-400">
+                              <span className="text-amber-500 font-bold">⭐ {prov.rating || 4.9}</span>
+                              <span>•</span>
+                              <span>{prov.experienceYears || 5}+ Yrs Exp</span>
+                              <span>•</span>
+                              <span className={prov.isAvailable ? 'text-emerald-600 font-semibold' : 'text-zinc-400'}>
+                                {prov.isAvailable ? '● Available' : '○ Busy'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => assignProviderMutation.mutate(prov.user.id)}
+                          disabled={assignProviderMutation.isPending || isCurrentlyAssigned}
+                          className={`px-3 py-2 text-xs font-bold rounded-xl transition-all shrink-0 cursor-pointer shadow-sm ${
+                            isCurrentlyAssigned
+                              ? 'bg-emerald-200 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 cursor-default'
+                              : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20 disabled:opacity-50'
+                          }`}
+                        >
+                          {assignProviderMutation.isPending ? 'Assigning...' : isCurrentlyAssigned ? 'Assigned' : 'Assign'}
+                        </button>
+                      </div>
+                    );
+                  })
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsAssignProviderModalOpen(false)}
+                className="py-2 px-4 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-zinc-100 dark:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
+              >
+                Close
               </button>
             </div>
           </div>

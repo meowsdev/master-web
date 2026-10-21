@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Navbar } from '@/components/Navbar';
 import { ordersService } from '@/services/orders.service';
+import { authService } from '@/services/auth.service';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Order, OrderStatus } from '@/types/order.types';
 import {
@@ -17,26 +18,56 @@ import {
   Wrench,
   ArrowUpRight,
   ShieldAlert,
+  CreditCard,
+  PlusCircle,
+  X,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ProviderDashboardPage() {
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const queryClient = useQueryClient();
 
-  // Mock provider profile metrics for display
-  const walletBalance = Number(user?.activeProfile?.walletBalance ?? 250);
-  const providerLevel = user?.activeProfile?.level || 'SILVER';
-  const completedOrders = user?.activeProfile?.totalCompletedOrders ?? 14;
-  const ratingScore = Number(user?.activeProfile?.rating ?? 4.8);
+  // Top Up Modal state
+  const [isTopUpOpen, setIsTopUpOpen] = useState(false);
+  const [topUpAmount, setTopUpAmount] = useState<number>(500);
+  const [customAmount, setCustomAmount] = useState<string>('');
 
-  const isWalletNegative = walletBalance < 0;
+  // Live profile query
+  const { data: liveUser, refetch: refetchMe } = useQuery({
+    queryKey: ['me'],
+    queryFn: async () => {
+      const res = await authService.getMe();
+      setUser(res);
+      return res;
+    },
+    initialData: user ?? undefined,
+  });
+
+  const activeUser = liveUser || user;
+  const providerProfile = activeUser?.providerProfile || activeUser?.activeProfile;
+  const providerId = providerProfile?.id;
+
+  // Real provider metrics
+  const walletBalance = Number(providerProfile?.walletBalance ?? 0);
+  const providerLevel = providerProfile?.level || 'BRONZE';
+  const ratingScore = Number(providerProfile?.rating ?? 5.0);
+  const isWalletNegative = walletBalance < 0 || providerProfile?.isBlockedForNegative;
 
   // Query Provider Orders
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ['provider-orders'],
-    queryFn: () => ordersService.getOrders(),
+    queryKey: ['provider-orders', providerId],
+    queryFn: () =>
+      providerId
+        ? ordersService.getProviderOrders(providerId)
+        : ordersService.getOrders(),
+    enabled: !!providerId,
   });
+
+  const completedOrders =
+    orders.filter((ord: Order) => ord.orderStatus === OrderStatus.COMPLETED).length ||
+    Number(providerProfile?.totalCompletedOrders ?? 0);
 
   // Update Status Mutation
   const updateStatusMutation = useMutation({
@@ -45,11 +76,37 @@ export default function ProviderDashboardPage() {
     onSuccess: () => {
       toast.success('Order status updated!');
       queryClient.invalidateQueries({ queryKey: ['provider-orders'] });
+      refetchMe();
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to update status');
     },
   });
+
+  // Recharge Wallet Mutation
+  const rechargeMutation = useMutation({
+    mutationFn: (amount: number) => authService.rechargeProviderWallet(amount),
+    onSuccess: (updated) => {
+      setUser(updated);
+      toast.success(`Successfully recharged ${topUpAmount} BDT to your wallet!`);
+      setIsTopUpOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+      queryClient.invalidateQueries({ queryKey: ['provider-orders'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to recharge wallet');
+    },
+  });
+
+  const handleRechargeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const finalAmount = customAmount ? Number(customAmount) : topUpAmount;
+    if (!finalAmount || finalAmount <= 0) {
+      toast.error('Please enter a valid recharge amount');
+      return;
+    }
+    rechargeMutation.mutate(finalAmount);
+  };
 
   const getLevelBadgeStyle = (level: string) => {
     switch (level?.toUpperCase()) {
@@ -60,6 +117,7 @@ export default function ProviderDashboardPage() {
       case 'SILVER':
         return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700';
       case 'BRONZE':
+      case 'NEW':
         return 'bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300 border-orange-200 dark:border-orange-800';
       default:
         return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
@@ -73,7 +131,7 @@ export default function ProviderDashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
         {/* Negative Balance Lock Alert Banner */}
         {isWalletNegative && (
-          <div className="p-5 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-rose-500/10">
+          <div className="p-5 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-rose-500/10 animate-in fade-in duration-300">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center shrink-0">
                 <AlertOctagon className="w-6 h-6" />
@@ -90,7 +148,7 @@ export default function ProviderDashboardPage() {
 
             <button
               type="button"
-              onClick={() => toast.info('Redirecting to payment gateway to recharge...')}
+              onClick={() => setIsTopUpOpen(true)}
               className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-md transition-all shrink-0 cursor-pointer"
             >
               Recharge Wallet
@@ -128,9 +186,10 @@ export default function ProviderDashboardPage() {
 
             <button
               type="button"
-              onClick={() => toast.success('Recharge dialog opening...')}
-              className="w-full py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white text-xs font-semibold rounded-xl transition-all"
+              onClick={() => setIsTopUpOpen(true)}
+              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
+              <PlusCircle className="w-3.5 h-3.5" />
               Top Up Wallet
             </button>
           </div>
@@ -160,7 +219,7 @@ export default function ProviderDashboardPage() {
                 </span>
               </div>
               <p className="text-xs text-zinc-500 mt-1">
-                ⭐ {ratingScore.toFixed(1)} Rating • Next audit on 1st of month
+                ⭐ {ratingScore.toFixed(1)} Rating • Evaluated monthly
               </p>
             </div>
 
@@ -188,12 +247,14 @@ export default function ProviderDashboardPage() {
                 {completedOrders} Orders
               </span>
               <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
-                100% Completion Rate
+                {orders.length > 0
+                  ? `${Math.round((completedOrders / orders.length) * 100)}% Completion Rate`
+                  : 'Ready for Orders'}
               </p>
             </div>
 
             <div className="text-[11px] text-zinc-400">
-              Qualifies for Gold badge promotion at 25 completed orders.
+              Qualifies for Silver/Gold badge promotion with active performance.
             </div>
           </div>
         </div>
@@ -207,18 +268,31 @@ export default function ProviderDashboardPage() {
                 Assigned Orders & Service Requests
               </h2>
             </div>
-            <span className="text-xs text-zinc-500">
-              {orders.length} Total Orders
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-zinc-500">
+                {orders.length} Total Orders
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  queryClient.invalidateQueries({ queryKey: ['provider-orders'] });
+                  refetchMe();
+                }}
+                className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-lg transition-colors cursor-pointer"
+                title="Refresh"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           {isLoading ? (
             <div className="text-center py-12 text-xs text-zinc-400">
-              Loading orders...
+              Loading provider orders...
             </div>
           ) : orders.length === 0 ? (
             <div className="text-center py-16 text-zinc-400 text-xs">
-              No orders assigned yet.
+              No orders assigned yet. Orders assigned by counselors or placed by customers will appear here.
             </div>
           ) : (
             <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -237,7 +311,7 @@ export default function ProviderDashboardPage() {
                       </span>
                     </div>
                     <p className="text-xs text-zinc-500 mt-1">
-                      Total: {Number(ord.totalPrice).toFixed(2)} BDT (Comm:{' '}
+                      Total: {Number(ord.totalPrice).toFixed(2)} BDT (Platform Fee:{' '}
                       {Number(ord.adminCommission).toFixed(2)} BDT)
                     </p>
                   </div>
@@ -253,7 +327,8 @@ export default function ProviderDashboardPage() {
                             status: OrderStatus.IN_PROGRESS,
                           })
                         }
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer"
+                        disabled={updateStatusMutation.isPending}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
                       >
                         Start Work
                       </button>
@@ -268,7 +343,8 @@ export default function ProviderDashboardPage() {
                             status: OrderStatus.COMPLETED,
                           })
                         }
-                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer"
+                        disabled={updateStatusMutation.isPending}
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
                       >
                         Mark Completed
                       </button>
@@ -286,6 +362,101 @@ export default function ProviderDashboardPage() {
             </div>
           )}
         </div>
+
+        {/* Top Up Wallet Modal */}
+        {isTopUpOpen && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+                    <CreditCard className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-white">
+                    Recharge Provider Wallet
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsTopUpOpen(false)}
+                  className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-lg"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <p className="text-xs text-zinc-500">
+                Current Balance:{' '}
+                <strong className={isWalletNegative ? 'text-rose-600 font-bold' : 'text-emerald-600'}>
+                  {walletBalance.toFixed(2)} BDT
+                </strong>
+                . Recharging ensures smooth order acceptance and instant account unblocking.
+              </p>
+
+              <form onSubmit={handleRechargeSubmit} className="space-y-4">
+                {/* Preset Amount Pills */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[500, 1000, 2000].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => {
+                        setTopUpAmount(amt);
+                        setCustomAmount('');
+                      }}
+                      className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                        !customAmount && topUpAmount === amt
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                          : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
+                      }`}
+                    >
+                      +{amt} BDT
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom Amount Input */}
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-500 mb-1 block">
+                    Or Enter Custom Amount (BDT)
+                  </label>
+                  <input
+                    type="number"
+                    min="50"
+                    step="50"
+                    placeholder="e.g. 1500"
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                    className="w-full p-2.5 text-xs sm:text-sm bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-zinc-900 dark:text-white"
+                  />
+                </div>
+
+                {/* Payment Simulation Note */}
+                <div className="p-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl text-[11px] text-zinc-500 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  Instant credit via bKash / Nagad / Card Gateway.
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsTopUpOpen(false)}
+                    className="px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={rechargeMutation.isPending}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer"
+                  >
+                    {rechargeMutation.isPending ? 'Processing...' : 'Pay & Recharge'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -104,6 +104,14 @@ export const chatService = {
     return response.data;
   },
 
+  assignProvider: async (conversationId: string, providerUserId: string) => {
+    const response = await apiClient.post(
+      `/chat/conversations/${conversationId}/assign-provider`,
+      { userId: providerUserId }
+    );
+    return response.data;
+  },
+
   setCounselorStatus: async (isOnline: boolean) => {
     const response = await apiClient.patch('/chat/counselor/status', {
       isOnline,
@@ -111,3 +119,4 @@ export const chatService = {
     return response.data;
   },
 };
+

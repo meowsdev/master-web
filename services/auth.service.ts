@@ -48,6 +48,13 @@ export const authService = {
     return response.data;
   },
 
+  rechargeProviderWallet: async (amount: number) => {
+    const response = await apiClient.post<User>('/auth/provider/recharge-wallet', {
+      amount,
+    });
+    return response.data;
+  },
+
   logout: async (refreshToken?: string) => {
     const response = await apiClient.post<{ message: string }>('/auth/logout', {
       refreshToken,

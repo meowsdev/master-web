@@ -2,7 +2,8 @@ import { apiClient } from '@/lib/axios';
 
 export interface CreateReviewDto {
   orderId: string;
-  providerId: string;
+  providerId?: string;
+  customerId?: string;
   customerRating: number;
   providerRating?: number;
   reviewComment?: string;

@@ -24,6 +24,20 @@ export enum PaymentMode {
   BANK = 'BANK',
 }
 
+export interface ProviderReview {
+  id: string;
+  orderId: string;
+  providerId: string;
+  customerId: string;
+  customerRating: number;
+  providerRating?: number;
+  reviewComment?: string;
+  continueWithProvider: boolean;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Order {
   id: string;
   providerId: string;
@@ -44,4 +58,5 @@ export interface Order {
   orderStatus: OrderStatus;
   createdAt: string;
   updatedAt: string;
+  providerReview?: ProviderReview | null;
 }

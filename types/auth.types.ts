@@ -32,6 +32,10 @@ export interface User {
   status: UserStatus;
   isVerified: boolean;
   activeProfile?: any;
+  customerProfile?: any;
+  providerProfile?: any;
+  counselorProfile?: any;
+  technicianProfile?: any;
   availableRoles?: UserRole[];
   addresses?: Array<{
     id: string;

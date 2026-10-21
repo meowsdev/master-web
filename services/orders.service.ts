@@ -28,6 +28,11 @@ export const ordersService = {
     return response.data;
   },
 
+  getProviderOrders: async (providerId: string) => {
+    const response = await apiClient.get<Order[]>(`/orders/provider/${providerId}`);
+    return response.data;
+  },
+
   getOrderById: async (id: string) => {
     const response = await apiClient.get<Order>(`/orders/${id}`);
     return response.data;
