@@ -8,6 +8,7 @@ import {
   Send,
   Wrench,
   MapPin,
+  Lock,
 } from 'lucide-react';
 
 interface ChatComposerProps {
@@ -16,6 +17,8 @@ interface ChatComposerProps {
   onSendMessage: () => void;
   onSendVoiceNote: () => void;
   onOpenBooking: () => void;
+  isAuthenticated?: boolean;
+  onOpenAuth?: () => void;
   isDarkMode: boolean;
 }
 
@@ -25,6 +28,8 @@ export function ChatComposer({
   onSendMessage,
   onSendVoiceNote,
   onOpenBooking,
+  isAuthenticated = false,
+  onOpenAuth,
   isDarkMode,
 }: ChatComposerProps) {
   const [isAttachmentOpen, setIsAttachmentOpen] = useState(false);
@@ -32,6 +37,28 @@ export function ChatComposer({
 
   const bgComposer = isDarkMode ? 'bg-[#202c33] border-[#222e35]' : 'bg-[#f0f2f5] border-[#e9edef]';
   const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
+
+  // If user is not authenticated, lock composer and prompt to login
+  if (!isAuthenticated) {
+    return (
+      <div className={`h-[62px] border-t px-4 flex items-center justify-between shrink-0 ${bgComposer}`}>
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-[#008069]/10 text-[#008069] dark:text-[#25D366] flex items-center justify-center shrink-0">
+            <Lock className="w-4 h-4" />
+          </div>
+          <span className={`text-[13px] truncate ${textSecondary}`}>
+            Login with your phone number to chat with service counselors and book
+          </span>
+        </div>
+        <button
+          onClick={onOpenAuth}
+          className="px-4 py-2 rounded-full bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold text-xs shrink-0 cursor-pointer transition-colors shadow-sm ml-2"
+        >
+          Login with Phone
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className={`h-[62px] border-t px-3 md:px-4 flex items-center gap-2 shrink-0 relative ${bgComposer}`}>

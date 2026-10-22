@@ -9,24 +9,38 @@ import {
   VerifyOtpDto,
 } from '@/types/auth.types';
 
+export function formatPhoneNumber(phone: string): string {
+  let cleaned = phone.trim().replace(/[\s\-\(\)]/g, '');
+  if (cleaned.startsWith('+880')) return cleaned;
+  if (cleaned.startsWith('880')) return `+${cleaned}`;
+  if (cleaned.startsWith('0')) return `+88${cleaned}`;
+  return `+880${cleaned}`;
+}
+
 export const authService = {
   requestOtp: async (dto: RequestOtpDto) => {
+    const formattedPhone = formatPhoneNumber(dto.phoneNumber);
     const response = await apiClient.post<{ message: string; code?: string }>(
       '/auth/request-otp',
-      dto
+      { phoneNumber: formattedPhone }
     );
     return response.data;
   },
 
   verifyOtp: async (dto: VerifyOtpDto) => {
-    const response = await apiClient.post<AuthResponse>('/auth/verify-otp', dto);
+    const formattedPhone = formatPhoneNumber(dto.phoneNumber);
+    const response = await apiClient.post<AuthResponse>('/auth/verify-otp', {
+      phoneNumber: formattedPhone,
+      code: dto.code,
+    });
     return response.data;
   },
 
   technicianLogin: async (dto: TechnicianLoginDto) => {
+    const formattedPhone = formatPhoneNumber(dto.phoneNumber);
     const response = await apiClient.post<AuthResponse>(
       '/auth/technician-login',
-      dto
+      { phoneNumber: formattedPhone, password: dto.password }
     );
     return response.data;
   },
@@ -37,7 +51,7 @@ export const authService = {
   },
 
   switchProfile: async (role: UserRole) => {
-    const response = await apiClient.post<User>('/auth/switch-profile', {
+    const response = await apiClient.post<AuthResponse & User>('/auth/switch-profile', {
       role,
     });
     return response.data;

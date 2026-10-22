@@ -59,14 +59,7 @@ export function ChatHeader({
           <ArrowLeft className="w-5 h-5" />
         </button>
 
-        {/* Back to Welcome Screen */}
-        <button
-          onClick={onBackToWelcome}
-          className={`hidden md:flex p-1.5 rounded-full cursor-pointer transition-colors ${headerIconBtn}`}
-          title="Back to Welcome Screen"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </button>
+
 
         {/* Service Avatar with WhatsApp Green Indicator */}
         <div className="relative shrink-0">
@@ -104,11 +97,10 @@ export function ChatHeader({
         {onToggleSave && (
           <button
             onClick={onToggleSave}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-              isSaved
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${isSaved
                 ? 'text-[#008069] dark:text-[#25D366] bg-[#d9fdd3] dark:bg-[#005c4b]/50'
                 : headerIconBtn
-            }`}
+              }`}
             title={isSaved ? 'Saved (Click to remove from Save list)' : 'Save service to Save list'}
           >
             <Bookmark className={`w-4.5 h-4.5 ${isSaved ? 'fill-current' : ''}`} />
@@ -154,9 +146,8 @@ export function ChatHeader({
 
           {isChatMenuOpen && (
             <div
-              className={`absolute right-0 top-11 w-48 rounded-xl shadow-xl py-2 border z-50 text-sm ${
-                isDarkMode ? 'bg-[#233138] border-[#2f3b43] text-[#e9edef]' : 'bg-white border-[#e9edef] text-[#111b21]'
-              }`}
+              className={`absolute right-0 top-11 w-48 rounded-xl shadow-xl py-2 border z-50 text-sm ${isDarkMode ? 'bg-[#233138] border-[#2f3b43] text-[#e9edef]' : 'bg-white border-[#e9edef] text-[#111b21]'
+                }`}
             >
               <button
                 onClick={() => {

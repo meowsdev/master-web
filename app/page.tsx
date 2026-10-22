@@ -1,11 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Service } from '@/types/service.types';
 import {
-  ChatMessage,
   RailTab,
   STATUS_STORIES,
   DHAKA_AREAS,
@@ -15,6 +13,7 @@ import {
 // Custom Hooks
 import { useServicesFilter } from '@/hooks/useServicesFilter';
 import { useSuperAppAudio } from '@/hooks/useSuperAppAudio';
+import { useSuperAppChat } from '@/hooks/useSuperAppChat';
 
 // Super App UI Components
 import { NavigationRail } from '@/components/super-app/NavigationRail';
@@ -42,17 +41,8 @@ export default function SuperAppPage() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const { playSound } = useSuperAppAudio(soundEnabled);
 
-  // Far-left Rail Tab & Active Service state
+  // Far-left Rail Tab
   const [activeRailTab, setActiveRailTab] = useState<RailTab>('CHATS');
-  const [activeServiceId, setActiveServiceId] = useState<string | null>(null);
-
-  // In-chat messages mapped per service ID
-  const [serviceMessages, setServiceMessages] = useState<Record<string, ChatMessage[]>>({});
-  const [inputText, setInputText] = useState('');
-
-  // Mobile navigation view: 'LIST' or 'CHAT'
-  const [mobileView, setMobileView] = useState<'LIST' | 'CHAT'>('CHAT');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Modals state
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -88,6 +78,25 @@ export default function SuperAppPage() {
     filteredServices,
   } = useServicesFilter();
 
+  // Chat management hook with strict authentication guards
+  const {
+    activeServiceId,
+    setActiveServiceId,
+    serviceMessages,
+    inputText,
+    setInputText,
+    mobileView,
+    setMobileView,
+    messagesEndRef,
+    scrollToBottom,
+    handleSelectService,
+    handleSendMessage,
+    handleSendVoiceNote,
+    handleReactToMessage,
+    handleConfirmBooking,
+    handleClearChat,
+  } = useSuperAppChat({ playSound });
+
   // Active selected service object
   const activeService = useMemo(() => {
     if (!activeServiceId) return null;
@@ -109,129 +118,12 @@ export default function SuperAppPage() {
 
   // Auto-scroll chat to latest message
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [currentMessages]);
+    scrollToBottom();
+  }, [currentMessages, scrollToBottom]);
 
-  // Handle service selection & conversation initiation
-  const handleSelectService = (service: Service) => {
-    setActiveServiceId(service.id);
-    setMobileView('CHAT');
-
-    if (!serviceMessages[service.id] || serviceMessages[service.id].length === 0) {
-      const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const initialMsgs: ChatMessage[] = [
-        {
-          id: 'init-1',
-          sender: 'them',
-          text: `Assalamu Alaikum! Welcome to ${service.name}. I am your dedicated service counselor.`,
-          time: currentTime,
-        },
-        {
-          id: 'init-2',
-          sender: 'them',
-          text: service.description || 'Here are the details for this verified on-demand service:',
-          time: currentTime,
-          type: 'service_card',
-          serviceCard: {
-            title: service.name,
-            price: service.basePrice,
-            duration: `${service.durationMin || 45} mins`,
-            category: service.category?.name || 'On-Demand Service',
-          },
-        },
-      ];
-      setServiceMessages((prev) => ({ ...prev, [service.id]: initialMsgs }));
-    }
-  };
-
-  // Send message inside active chat
-  const handleSendMessage = () => {
-    if (!inputText.trim() || !activeServiceId) return;
-    const msgText = inputText.trim();
-    const sId = activeServiceId;
-    setInputText('');
-    playSound('send');
-
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const newMsg: ChatMessage = {
-      id: 'usr-' + Date.now(),
-      sender: 'me',
-      text: msgText,
-      time: currentTime,
-      status: 'read',
-    };
-
-    setServiceMessages((prev) => ({
-      ...prev,
-      [sId]: [...(prev[sId] || []), newMsg],
-    }));
-
-    // Simulated counselor reply after 1.2s
-    setTimeout(() => {
-      playSound('receive');
-      const counselorReply: ChatMessage = {
-        id: 'reply-' + Date.now(),
-        sender: 'them',
-        text: `Got your message regarding "${msgText}". Our certified technician is on standby. Click [Book Service] whenever you are ready!`,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setServiceMessages((prev) => ({
-        ...prev,
-        [sId]: [...(prev[sId] || []), counselorReply],
-      }));
-    }, 1200);
-  };
-
-  // Send simulated voice note
-  const handleSendVoiceNote = () => {
-    if (!activeServiceId) return;
-    const sId = activeServiceId;
-    playSound('send');
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const voiceMsg: ChatMessage = {
-      id: 'vmsg-' + Date.now(),
-      sender: 'me',
-      text: '🎙️ Voice note (0:14)',
-      time: currentTime,
-      status: 'read',
-    };
-    setServiceMessages((prev) => ({
-      ...prev,
-      [sId]: [...(prev[sId] || []), voiceMsg],
-    }));
-    toast.success('Voice message sent');
-  };
-
-  // React to message with emoji
-  const handleReactToMessage = (messageId: string, emoji: string) => {
-    if (!activeServiceId) return;
-    setServiceMessages((prev) => ({
-      ...prev,
-      [activeServiceId]: (prev[activeServiceId] || []).map((m) =>
-        m.id === messageId ? { ...m, reaction: emoji } : m
-      ),
-    }));
-  };
-
-  // Confirm in-chat booking
-  const handleConfirmBooking = () => {
-    if (!activeService || !activeServiceId) return;
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const confirmationMsg: ChatMessage = {
-      id: 'book-' + Date.now(),
-      sender: 'them',
-      text: `🎉 Booking Confirmed!\n\n📍 Location: ${bookingAddress}\n⏰ Scheduled: ${bookingTime}\n💳 Payment Mode: ${bookingPaymentMode}\n💰 Base Fare: ৳${activeService.basePrice}\n\nOur verified technician is preparing tools for dispatch!`,
-      time: currentTime,
-    };
-
-    setServiceMessages((prev) => ({
-      ...prev,
-      [activeServiceId]: [...(prev[activeServiceId] || []), confirmationMsg],
-    }));
-
-    setIsBookingModalOpen(false);
-    playSound('receive');
-    toast.success(`Booked ${activeService.name} successfully!`);
+  const handleOpenAuth = (mode: 'LOGIN' | 'REGISTER' = 'LOGIN') => {
+    setAuthInitialMode(mode);
+    setIsAuthModalOpen(true);
   };
 
   const bgMain = isDarkMode ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#f0f2f5] text-[#111b21]';
@@ -266,10 +158,7 @@ export default function SuperAppPage() {
           }}
           onSelectWelcome={() => setActiveServiceId(null)}
           onOpenSettings={() => setIsSettingsDrawerOpen(true)}
-          onOpenAuth={() => {
-            setAuthInitialMode('LOGIN');
-            setIsAuthModalOpen(true);
-          }}
+          onOpenAuth={() => handleOpenAuth('LOGIN')}
           isAuthenticated={isAuthenticated}
           userName={user?.name}
           onLogout={() => {
@@ -287,8 +176,16 @@ export default function SuperAppPage() {
           activeFilterChip={activeFilterChip}
           onSelectFilterChip={setActiveFilterChip}
           customFilters={customFilters}
-          onOpenCreateFilter={() => setIsFilterModalOpen(true)}
+          onOpenCreateFilter={() => {
+            if (!isAuthenticated) {
+              toast.info('Please log in with your phone number to create custom filter lists.');
+              handleOpenAuth('LOGIN');
+              return;
+            }
+            setIsFilterModalOpen(true);
+          }}
           onDeleteCustomFilter={deleteCustomFilter}
+          activeRole={activeRole}
           isDarkMode={isDarkMode}
         />
 
@@ -303,10 +200,7 @@ export default function SuperAppPage() {
           isAuthenticated={isAuthenticated}
           user={user}
           activeRole={activeRole}
-          onOpenAuth={() => {
-            setAuthInitialMode('LOGIN');
-            setIsAuthModalOpen(true);
-          }}
+          onOpenAuth={() => handleOpenAuth('LOGIN')}
           isDarkMode={isDarkMode}
         />
       </section>
@@ -323,26 +217,52 @@ export default function SuperAppPage() {
               activeService={activeService}
               onBackMobile={() => setMobileView('LIST')}
               onBackToWelcome={() => setActiveServiceId(null)}
-              onOpenBooking={() => setIsBookingModalOpen(true)}
+              onOpenBooking={() => {
+                if (!isAuthenticated) {
+                  toast.info('Please log in with your phone number to book services.');
+                  handleOpenAuth('LOGIN');
+                  return;
+                }
+                setIsBookingModalOpen(true);
+              }}
               onStartCall={(type) => {
+                if (!isAuthenticated) {
+                  toast.info('Please log in with your phone number to start a consultation call.');
+                  handleOpenAuth('LOGIN');
+                  return;
+                }
                 setCallType(type);
                 setIsCallingModalOpen(true);
               }}
               onClearChat={() => {
-                if (activeServiceId) {
-                  setServiceMessages((prev) => ({ ...prev, [activeServiceId]: [] }));
-                  toast.success('Chat cleared');
-                }
+                if (activeServiceId) handleClearChat(activeServiceId);
               }}
               isSaved={activeService ? isServiceSaved(activeService.id) : false}
-              onToggleSave={activeService ? () => toggleSaveService(activeService.id) : undefined}
+              onToggleSave={
+                activeService
+                  ? () => {
+                      if (!isAuthenticated) {
+                        toast.info('Please log in with your phone number to save services.');
+                        handleOpenAuth('LOGIN');
+                        return;
+                      }
+                      toggleSaveService(activeService.id);
+                    }
+                  : undefined
+              }
               isDarkMode={isDarkMode}
             />
 
             <ChatMessages
               activeService={activeService}
               messages={currentMessages}
-              onOpenBooking={() => setIsBookingModalOpen(true)}
+              onOpenBooking={() => {
+                if (!isAuthenticated) {
+                  handleOpenAuth('LOGIN');
+                  return;
+                }
+                setIsBookingModalOpen(true);
+              }}
               onReact={handleReactToMessage}
               messagesEndRef={messagesEndRef}
               isDarkMode={isDarkMode}
@@ -351,9 +271,17 @@ export default function SuperAppPage() {
             <ChatComposer
               inputText={inputText}
               onInputChange={setInputText}
-              onSendMessage={handleSendMessage}
-              onSendVoiceNote={handleSendVoiceNote}
-              onOpenBooking={() => setIsBookingModalOpen(true)}
+              onSendMessage={() => handleSendMessage(isAuthenticated, () => handleOpenAuth('LOGIN'))}
+              onSendVoiceNote={() => handleSendVoiceNote(isAuthenticated, () => handleOpenAuth('LOGIN'))}
+              onOpenBooking={() => {
+                if (!isAuthenticated) {
+                  handleOpenAuth('LOGIN');
+                  return;
+                }
+                setIsBookingModalOpen(true);
+              }}
+              isAuthenticated={isAuthenticated}
+              onOpenAuth={() => handleOpenAuth('LOGIN')}
               isDarkMode={isDarkMode}
             />
           </>
@@ -362,10 +290,7 @@ export default function SuperAppPage() {
             isAuthenticated={isAuthenticated}
             user={user}
             activeRole={activeRole}
-            onOpenAuth={(mode = 'LOGIN') => {
-              setAuthInitialMode(mode);
-              setIsAuthModalOpen(true);
-            }}
+            onOpenAuth={(mode = 'LOGIN') => handleOpenAuth(mode)}
             onOpenSettings={() => setIsSettingsDrawerOpen(true)}
             onLogout={() => {
               logout();
@@ -376,7 +301,7 @@ export default function SuperAppPage() {
         )}
       </main>
 
-      {/* 4. Modals and Drawers */}
+      {/* Modals & Dialogs */}
       <BookingModal
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
@@ -387,7 +312,17 @@ export default function SuperAppPage() {
         onTimeChange={setBookingTime}
         bookingPaymentMode={bookingPaymentMode}
         onPaymentModeChange={setBookingPaymentMode}
-        onConfirmBooking={handleConfirmBooking}
+        onConfirmBooking={() =>
+          handleConfirmBooking(
+            activeService,
+            bookingAddress,
+            bookingTime,
+            bookingPaymentMode,
+            isAuthenticated,
+            () => handleOpenAuth('LOGIN'),
+            () => setIsBookingModalOpen(false)
+          )
+        }
         isDarkMode={isDarkMode}
       />
 
@@ -425,10 +360,7 @@ export default function SuperAppPage() {
         user={user}
         activeRole={activeRole}
         onSwitchRole={setRole}
-        onOpenAuth={() => {
-          setAuthInitialMode('LOGIN');
-          setIsAuthModalOpen(true);
-        }}
+        onOpenAuth={() => handleOpenAuth('LOGIN')}
         onLogout={() => {
           logout();
           toast.info('Logged out');

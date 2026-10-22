@@ -15,6 +15,7 @@ interface SearchAndFiltersProps {
   customFilters?: CustomFilterList[];
   onOpenCreateFilter: () => void;
   onDeleteCustomFilter?: (id: string) => void;
+  activeRole?: string | null;
   isDarkMode: boolean;
 }
 
@@ -29,10 +30,16 @@ export function SearchAndFilters({
   customFilters = [],
   onOpenCreateFilter,
   onDeleteCustomFilter,
+  activeRole,
   isDarkMode,
 }: SearchAndFiltersProps) {
-  // Standard WhatsApp Web chips: All, Unread, Favorites, Save (replaced Groups as requested)
-  const standardChips: StandardFilterChip[] = ['All', 'Unread', 'Favorites', 'Save'];
+  const isCustomer = !activeRole || activeRole === 'CUSTOMER';
+
+  // For Customer: hide 'Favorites' and show only 'All', 'Unread', 'Save'
+  // For other roles (Admin/Manager): show 'All', 'Unread', 'Favorites', 'Save'
+  const standardChips: StandardFilterChip[] = isCustomer
+    ? ['All', 'Unread', 'Save']
+    : ['All', 'Unread', 'Favorites', 'Save'];
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -184,56 +191,59 @@ export function SearchAndFilters({
             );
           })}
 
-          {/* User-created Custom Filter Lists */}
-          {customFilters.map((custom) => {
-            const isActive = activeFilterChip === custom.name || activeFilterChip === custom.id;
-            return (
-              <div
-                key={custom.id}
-                className={`flex items-center gap-1 pl-3 pr-2 py-1 text-[13px] rounded-full transition-colors font-medium shrink-0 group ${
-                  isActive
-                    ? 'bg-[#d9fdd3] text-[#008069] dark:bg-[#005c4b] dark:text-[#25D366]'
-                    : 'bg-[#f0f2f5] text-[#54656f] hover:bg-[#e9edef] dark:bg-[#202c33] dark:text-[#8696a0] dark:hover:bg-[#2a3942]'
-                }`}
-              >
-                <button
-                  onClick={() => {
-                    if (!hasDraggedRef.current) {
-                      onSelectFilterChip(custom.name);
-                    }
-                  }}
-                  className="cursor-pointer"
+          {/* User-created Custom Filter Lists (Hidden for regular Customer) */}
+          {!isCustomer &&
+            customFilters.map((custom) => {
+              const isActive = activeFilterChip === custom.name || activeFilterChip === custom.id;
+              return (
+                <div
+                  key={custom.id}
+                  className={`flex items-center gap-1 pl-3 pr-2 py-1 text-[13px] rounded-full transition-colors font-medium shrink-0 group ${
+                    isActive
+                      ? 'bg-[#d9fdd3] text-[#008069] dark:bg-[#005c4b] dark:text-[#25D366]'
+                      : 'bg-[#f0f2f5] text-[#54656f] hover:bg-[#e9edef] dark:bg-[#202c33] dark:text-[#8696a0] dark:hover:bg-[#2a3942]'
+                  }`}
                 >
-                  {custom.name}
-                </button>
-                {onDeleteCustomFilter && (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteCustomFilter(custom.id);
+                    onClick={() => {
+                      if (!hasDraggedRef.current) {
+                        onSelectFilterChip(custom.name);
+                      }
                     }}
-                    className="opacity-60 hover:opacity-100 hover:text-red-500 transition-opacity p-0.5 cursor-pointer"
-                    title={`Delete "${custom.name}" list`}
+                    className="cursor-pointer"
                   >
-                    <X className="w-3 h-3" />
+                    {custom.name}
                   </button>
-                )}
-              </div>
-            );
-          })}
+                  {onDeleteCustomFilter && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteCustomFilter(custom.id);
+                      }}
+                      className="opacity-60 hover:opacity-100 hover:text-red-500 transition-opacity p-0.5 cursor-pointer"
+                      title={`Delete "${custom.name}" list`}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
 
-          {/* Create New List Button (+) */}
-          <button
-            onClick={() => {
-              if (!hasDraggedRef.current) {
-                onOpenCreateFilter();
-              }
-            }}
-            className="w-6 h-6 rounded-full bg-[#f0f2f5] text-[#54656f] hover:bg-[#e9edef] dark:bg-[#202c33] dark:text-[#8696a0] flex items-center justify-center shrink-0 cursor-pointer hover:text-[#008069] dark:hover:text-[#25D366] transition-colors"
-            title="New list"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </button>
+          {/* Create New List Button (+) (Hidden for regular Customer) */}
+          {!isCustomer && (
+            <button
+              onClick={() => {
+                if (!hasDraggedRef.current) {
+                  onOpenCreateFilter();
+                }
+              }}
+              className="w-6 h-6 rounded-full bg-[#f0f2f5] text-[#54656f] hover:bg-[#e9edef] dark:bg-[#202c33] dark:text-[#8696a0] flex items-center justify-center shrink-0 cursor-pointer hover:text-[#008069] dark:hover:text-[#25D366] transition-colors"
+              title="New list"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Right Scroll Arrow Button */}

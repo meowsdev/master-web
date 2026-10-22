@@ -84,7 +84,17 @@ export function WelcomeScreen({
               </div>
 
               <p className={`text-xs ${textSecondary}`}>
-                You are logged in and ready to consult counselors and book services.
+                {activeRole === 'PROVIDER'
+                  ? 'You are active as a Service Provider. Ready to manage service dispatches and job orders.'
+                  : activeRole === 'COUNSELOR'
+                  ? 'You are active as a Dedicated Counselor. Ready to consult incoming customer inquiries.'
+                  : activeRole === 'TECHNICIAN'
+                  ? 'You are active as a Field Technician. Ready for assigned repair tasks and customer location routing.'
+                  : activeRole === 'ADMIN' || activeRole === 'MANAGER'
+                  ? 'You are active with Administrative privileges for platform governance, audits and monitoring.'
+                  : activeRole === 'SUPPORT'
+                  ? 'You are active as Support Staff. Ready to resolve customer disputes and service questions.'
+                  : 'You are logged in as a Customer and ready to consult counselors and book on-demand services.'}
               </p>
 
               <div className="flex items-center justify-center gap-3 pt-2">

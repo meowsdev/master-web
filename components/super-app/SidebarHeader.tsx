@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import {
-  Plus,
   MoreVertical,
   Sparkles,
   Settings,
@@ -53,15 +52,6 @@ export function SidebarHeader({
 
       {/* Action Buttons */}
       <div className="flex items-center gap-1">
-        {/* New Chat / Welcome screen action */}
-        <button
-          onClick={onSelectWelcome}
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${headerIconBtn}`}
-          title="Welcome screen"
-        >
-          <Plus className="w-5 h-5" />
-        </button>
-
         {/* Menu Dropdown */}
         <div className="relative">
           <button
