@@ -42,6 +42,19 @@ body {
   background: rgba(11, 20, 26, 0.35);
 }
 
+/* Hide scrollbar utility across all modern browsers */
+.scrollbar-none::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.scrollbar-none,
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
 .whatsapp-wallpaper {
   background-color: #efeae2;
   background-image: url('/whatsapp-doodle.svg');

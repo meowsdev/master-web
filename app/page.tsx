@@ -32,6 +32,7 @@ import { AuthModal } from '@/components/modals/AuthModal';
 import { CallingModal } from '@/components/modals/CallingModal';
 import { StatusViewerModal } from '@/components/modals/StatusViewerModal';
 import { SettingsDrawer } from '@/components/modals/SettingsDrawer';
+import { CreateFilterModal } from '@/components/modals/CreateFilterModal';
 
 export default function SuperAppPage() {
   const { user, isAuthenticated, activeRole, logout, setRole } = useAuthStore();
@@ -77,6 +78,13 @@ export default function SuperAppPage() {
     setIsSearchFocused,
     activeFilterChip,
     setActiveFilterChip,
+    customFilters,
+    createCustomFilter,
+    deleteCustomFilter,
+    toggleSaveService,
+    isServiceSaved,
+    isFilterModalOpen,
+    setIsFilterModalOpen,
     filteredServices,
   } = useServicesFilter();
 
@@ -278,6 +286,9 @@ export default function SuperAppPage() {
           onSearchBlur={() => setIsSearchFocused(false)}
           activeFilterChip={activeFilterChip}
           onSelectFilterChip={setActiveFilterChip}
+          customFilters={customFilters}
+          onOpenCreateFilter={() => setIsFilterModalOpen(true)}
+          onDeleteCustomFilter={deleteCustomFilter}
           isDarkMode={isDarkMode}
         />
 
@@ -323,6 +334,8 @@ export default function SuperAppPage() {
                   toast.success('Chat cleared');
                 }
               }}
+              isSaved={activeService ? isServiceSaved(activeService.id) : false}
+              onToggleSave={activeService ? () => toggleSaveService(activeService.id) : undefined}
               isDarkMode={isDarkMode}
             />
 
@@ -420,6 +433,14 @@ export default function SuperAppPage() {
           logout();
           toast.info('Logged out');
         }}
+      />
+
+      <CreateFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        services={dbServices}
+        onCreateFilter={createCustomFilter}
+        isDarkMode={isDarkMode}
       />
     </div>
   );

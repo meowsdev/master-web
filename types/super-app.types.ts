@@ -31,8 +31,17 @@ export interface StatusStory {
 // Navigation Rail tab identifiers
 export type RailTab = 'CHATS' | 'STATUS' | 'CHANNELS' | 'COMMUNITIES' | 'SETTINGS';
 
-// Filter chips available in WhatsApp Web sidebar
-export type FilterChip = 'All' | 'Unread' | 'Favorites' | 'Groups';
+// Custom filter list structure for WhatsApp Web user-created lists
+export interface CustomFilterList {
+  id: string;
+  name: string;
+  serviceIds: string[];
+  createdAt: number;
+}
+
+// Filter chips available in WhatsApp Web sidebar (Groups replaced with Save)
+export type StandardFilterChip = 'All' | 'Unread' | 'Favorites' | 'Save';
+export type FilterChip = StandardFilterChip | string;
 
 // Payment methods for in-chat service booking
 export type PaymentMode = 'CASH' | 'BKASH' | 'NAGAD';

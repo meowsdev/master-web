@@ -9,6 +9,7 @@ import {
   Phone,
   Search,
   MoreVertical,
+  Bookmark,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Service } from '@/types/service.types';
@@ -20,6 +21,8 @@ interface ChatHeaderProps {
   onOpenBooking: () => void;
   onStartCall: (type: 'voice' | 'video') => void;
   onClearChat: () => void;
+  isSaved?: boolean;
+  onToggleSave?: () => void;
   isDarkMode: boolean;
 }
 
@@ -30,6 +33,8 @@ export function ChatHeader({
   onOpenBooking,
   onStartCall,
   onClearChat,
+  isSaved = false,
+  onToggleSave,
   isDarkMode,
 }: ChatHeaderProps) {
   const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
@@ -94,6 +99,21 @@ export function ChatHeader({
           <span>Book Service</span>
           <ChevronDown className="w-3.5 h-3.5 text-[#54656f] dark:text-[#8696a0]" />
         </button>
+
+        {/* Save to Save list button */}
+        {onToggleSave && (
+          <button
+            onClick={onToggleSave}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+              isSaved
+                ? 'text-[#008069] dark:text-[#25D366] bg-[#d9fdd3] dark:bg-[#005c4b]/50'
+                : headerIconBtn
+            }`}
+            title={isSaved ? 'Saved (Click to remove from Save list)' : 'Save service to Save list'}
+          >
+            <Bookmark className={`w-4.5 h-4.5 ${isSaved ? 'fill-current' : ''}`} />
+          </button>
+        )}
 
         {/* Video Call */}
         <button

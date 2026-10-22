@@ -54,19 +54,27 @@ export function ServiceList({
         ) : services.length === 0 ? (
           <div className="p-8 text-center space-y-3">
             <p className={`text-sm font-medium ${textPrimary}`}>
-              No services found matching &ldquo;{searchQuery}&rdquo;
+              {searchQuery
+                ? `No services found matching "${searchQuery}"`
+                : 'No services in this list yet'}
             </p>
-            <p className={`text-xs ${textSecondary}`}>Try searching with different keywords</p>
-            <button
-              onClick={onClearSearch}
-              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                isDarkMode
-                  ? 'bg-[#005c4b] text-white hover:bg-[#25D366]'
-                  : 'bg-[#e7fce3] text-[#075E54] border border-[#25D366]/30 hover:bg-[#25D366] hover:text-white'
-              }`}
-            >
-              Clear search
-            </button>
+            <p className={`text-xs ${textSecondary}`}>
+              {searchQuery
+                ? 'Try searching with different keywords'
+                : 'Save services or add them when creating custom lists to view them here'}
+            </p>
+            {searchQuery && (
+              <button
+                onClick={onClearSearch}
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  isDarkMode
+                    ? 'bg-[#005c4b] text-white hover:bg-[#25D366]'
+                    : 'bg-[#e7fce3] text-[#075E54] border border-[#25D366]/30 hover:bg-[#25D366] hover:text-white'
+                }`}
+              >
+                Clear search
+              </button>
+            )}
           </div>
         ) : (
           services.map((service) => (
