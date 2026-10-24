@@ -3,12 +3,13 @@
 import React from 'react';
 import { X, Calendar, MapPin, Zap } from 'lucide-react';
 import { Service } from '@/types/service.types';
-import { DHAKA_AREAS, PaymentMode } from '@/types/super-app.types';
+import { DHAKA_AREAS, PaymentMode, OrderCardData } from '@/types/super-app.types';
 
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
   service: Service | null;
+  runningOrder?: OrderCardData | null;
   bookingAddress: string;
   onAddressChange: (address: string) => void;
   bookingTime: string;
@@ -23,6 +24,7 @@ export function BookingModal({
   isOpen,
   onClose,
   service,
+  runningOrder,
   bookingAddress,
   onAddressChange,
   bookingTime,
@@ -146,11 +148,28 @@ export function BookingModal({
             <span className={`font-black text-lg ${textPrimary}`}>৳{service.basePrice}</span>
           </div>
 
+          {/* Running Order Warning */}
+          {runningOrder && (
+            <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 text-center space-y-1">
+              <p className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                ⚠️ Order #{runningOrder.orderId} ({runningOrder.serviceName}) is currently running!
+              </p>
+              <p className="text-[11.5px] text-amber-700 dark:text-amber-400">
+                You cannot start another order until the current running order is completed.
+              </p>
+            </div>
+          )}
+
           <button
             onClick={onConfirmBooking}
-            className="w-full py-3.5 bg-[#25D366] hover:bg-[#20ba5a] active:bg-[#075E54] text-white font-bold text-sm rounded-2xl shadow-lg shadow-[#25D366]/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            disabled={!!runningOrder}
+            className={`w-full py-3.5 font-bold text-sm rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 ${
+              runningOrder
+                ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+                : 'bg-[#25D366] hover:bg-[#20ba5a] active:bg-[#075E54] text-white shadow-[#25D366]/25 cursor-pointer'
+            }`}
           >
-            <span>Confirm Technician Booking</span>
+            <span>{runningOrder ? 'Complete Running Order First' : 'Confirm Technician Booking'}</span>
           </button>
         </div>
       </div>

@@ -4,12 +4,14 @@ import React from 'react';
 import { Calendar, CheckCheck } from 'lucide-react';
 import { Service } from '@/types/service.types';
 import { ChatMessage } from '@/types/super-app.types';
+import { OrderCard } from './OrderCard';
 
 interface ChatMessagesProps {
   activeService: Service;
   messages: ChatMessage[];
   onOpenBooking: () => void;
   onReact: (messageId: string, emoji: string) => void;
+  onCompleteOrder?: (messageId: string, orderId: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   isDarkMode: boolean;
 }
@@ -19,6 +21,7 @@ export function ChatMessages({
   messages,
   onOpenBooking,
   onReact,
+  onCompleteOrder,
   messagesEndRef,
   isDarkMode,
 }: ChatMessagesProps) {
@@ -49,7 +52,14 @@ export function ChatMessages({
       {/* Messages List */}
       {messages.map((msg) => (
         <React.Fragment key={msg.id}>
-          {msg.type === 'service_card' && msg.serviceCard ? (
+          {msg.type === 'order_card' && msg.orderCard ? (
+            /* Interactive Order Status Card */
+            <OrderCard
+              msg={msg}
+              onCompleteOrder={onCompleteOrder || (() => {})}
+              isDarkMode={isDarkMode}
+            />
+          ) : msg.type === 'service_card' && msg.serviceCard ? (
             /* Service Attachment Card */
             <div className="flex justify-start my-2">
               <div
@@ -118,27 +128,27 @@ export function ChatMessages({
             /* Outgoing Message (WhatsApp green bubble) */
             <div className="flex justify-end my-0.5 relative group">
               <div
-                className={`rounded-lg rounded-tr-none px-3.5 py-1.5 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] max-w-[85%] sm:max-w-[70%] md:max-w-[60%] text-[14.2px] leading-[19px] relative whitespace-pre-line ${bubbleOutgoing}`}
+                className={`rounded-lg rounded-tr-none px-3.5 py-1.5 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] max-w-[85%] sm:max-w-[70%] md:max-w-[60%] text-[14.2px] leading-[19px] relative whitespace-pre-line select-text ${bubbleOutgoing}`}
               >
-                <span>{msg.text}</span>
+                <span className="select-text">{msg.text}</span>
                 <span className="float-right ml-3 mt-1.5 text-[11px] opacity-75 flex items-center gap-1 select-none">
                   <span>{msg.time}</span>
                   <CheckCheck className="w-4 h-4 text-[#53bdeb]" />
                 </span>
 
                 {msg.reaction && (
-                  <span className="absolute -bottom-2.5 right-2 bg-white dark:bg-[#202c33] rounded-full px-1.5 py-0.5 shadow-sm text-xs border border-black/5 dark:border-white/10">
+                  <span className="absolute -bottom-2.5 right-2 bg-white dark:bg-[#202c33] rounded-full px-1.5 py-0.5 shadow-sm text-xs border border-black/5 dark:border-white/10 select-none">
                     {msg.reaction}
                   </span>
                 )}
 
                 {/* Hover Reaction Bar */}
-                <div className="hidden group-hover:flex items-center gap-1 absolute -top-8 right-0 bg-white dark:bg-[#233138] rounded-full px-2 py-1 shadow-lg border border-black/5 dark:border-white/10 text-sm z-10">
+                <div className="hidden group-hover:flex items-center gap-1 absolute -top-8 right-0 bg-white dark:bg-[#233138] rounded-full px-2 py-1 shadow-lg border border-black/5 dark:border-white/10 text-sm z-10 select-none">
                   {['👍', '❤️', '😂', '🔥', '🙏'].map((emoji) => (
                     <button
                       key={emoji}
                       onClick={() => onReact(msg.id, emoji)}
-                      className="hover:scale-125 transition-transform p-0.5"
+                      className="hover:scale-125 transition-transform p-0.5 cursor-pointer"
                     >
                       {emoji}
                     </button>
@@ -150,9 +160,9 @@ export function ChatMessages({
             /* Incoming Message (Pure White bubble) */
             <div className="flex justify-start my-0.5 relative group">
               <div
-                className={`rounded-lg rounded-tl-none px-3.5 py-1.5 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] max-w-[85%] sm:max-w-[70%] md:max-w-[60%] text-[14.2px] leading-[19px] relative whitespace-pre-line ${bubbleIncoming}`}
+                className={`rounded-lg rounded-tl-none px-3.5 py-1.5 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] max-w-[85%] sm:max-w-[70%] md:max-w-[60%] text-[14.2px] leading-[19px] relative whitespace-pre-line select-text ${bubbleIncoming}`}
               >
-                <span>{msg.text}</span>
+                <span className="select-text">{msg.text}</span>
                 <span className="float-right ml-3 mt-1.5 text-[11px] opacity-75 select-none">
                   {msg.time}
                 </span>

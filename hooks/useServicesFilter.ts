@@ -10,12 +10,20 @@ import { FilterChip, CustomFilterList } from '@/types/super-app.types';
 const STORAGE_KEY_CUSTOM_FILTERS = 'superapp_custom_filters_v1';
 const STORAGE_KEY_SAVED_SERVICES = 'superapp_saved_services_v1';
 
+interface UseServicesFilterProps {
+  runningServiceIds?: string[];
+  serviceLastActivity?: Record<string, number>;
+}
+
 /**
  * Hook to manage backend service fetching, search query filtering,
- * WhatsApp Web filter chip states (All, Unread, Favorites, Save),
+ * WhatsApp Web filter chip states (All, Running, Unread, Favorites, Save),
  * and dynamic user-created custom filter lists.
  */
-export function useServicesFilter() {
+export function useServicesFilter({
+  runningServiceIds = [],
+  serviceLastActivity = {},
+}: UseServicesFilterProps = {}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activeFilterChip, setActiveFilterChip] = useState<FilterChip>('All');
@@ -145,7 +153,9 @@ export function useServicesFilter() {
     }
 
     // Filter by Active Chip
-    if (activeFilterChip === 'Unread') {
+    if (activeFilterChip === 'Running') {
+      list = list.filter((s) => runningServiceIds.includes(s.id));
+    } else if (activeFilterChip === 'Unread') {
       list = list.slice(0, 3);
     } else if (activeFilterChip === 'Favorites') {
       list = list.filter((s: any) => s.isPopular || s.basePrice >= 800);
@@ -161,8 +171,23 @@ export function useServicesFilter() {
       }
     }
 
+    // WhatsApp Standard: Sort conversations by latest chat activity (most recent message on top)
+    list = [...list].sort((a, b) => {
+      const timeA = serviceLastActivity[a.id] || 0;
+      const timeB = serviceLastActivity[b.id] || 0;
+      return timeB - timeA;
+    });
+
     return list;
-  }, [dbServices, searchQuery, activeFilterChip, savedServiceIds, customFilters]);
+  }, [
+    dbServices,
+    searchQuery,
+    activeFilterChip,
+    savedServiceIds,
+    customFilters,
+    runningServiceIds,
+    serviceLastActivity,
+  ]);
 
   return {
     dbServices,

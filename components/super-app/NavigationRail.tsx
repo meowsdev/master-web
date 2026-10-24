@@ -24,6 +24,7 @@ interface NavigationRailProps {
   onOpenStatus: () => void;
   user: any;
   activeRole: string | null;
+  runningCount?: number;
 }
 
 export function NavigationRail({
@@ -35,12 +36,13 @@ export function NavigationRail({
   onOpenStatus,
   user,
   activeRole,
+  runningCount = 0,
 }: NavigationRailProps) {
   const bgRail = isDarkMode ? 'bg-[#202c33] border-[#2f3b43]' : 'bg-[#f0f2f5] border-[#e9edef]';
   const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
 
   return (
-    <aside className={`hidden md:flex flex-col items-center justify-between w-[60px] border-r py-3 z-20 shrink-0 ${bgRail}`}>
+    <aside className={`hidden md:flex flex-col items-center justify-between w-[60px] border-r py-3 z-20 shrink-0 select-none ${bgRail}`}>
       {/* Top Navigation Tabs */}
       <div className="flex flex-col items-center gap-2.5 w-full">
         {/* Chats Tab with active indicator */}
@@ -56,7 +58,13 @@ export function NavigationRail({
           title="Chats & Services"
         >
           <MessageSquare className="w-5 h-5" />
-          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#25D366] rounded-full ring-2 ring-white dark:ring-[#202c33]" />
+          {runningCount > 0 ? (
+            <span className="absolute -top-1 -right-1 px-1 min-w-[18px] h-[18px] bg-amber-500 text-black text-[10px] font-black rounded-full flex items-center justify-center ring-2 ring-white dark:ring-[#202c33] animate-pulse">
+              {runningCount}
+            </span>
+          ) : (
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#25D366] rounded-full ring-2 ring-white dark:ring-[#202c33]" />
+          )}
         </button>
 
         {/* Status Updates Tab */}

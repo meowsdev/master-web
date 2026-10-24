@@ -1,5 +1,19 @@
 import { Service } from '@/types/service.types';
 
+// Order Card details embedded within in-chat messages
+export interface OrderCardData {
+  orderId: string;
+  serviceId: string;
+  serviceName: string;
+  serviceIcon?: string;
+  address: string;
+  scheduleTime: string;
+  paymentMode: PaymentMode | string;
+  basePrice: number | string;
+  status: 'PENDING' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  completedAt?: string;
+}
+
 // Message structure for in-chat conversations
 export interface ChatMessage {
   id: string;
@@ -7,13 +21,14 @@ export interface ChatMessage {
   text: string;
   time: string;
   status?: 'sent' | 'delivered' | 'read';
-  type?: 'text' | 'voice_call' | 'service_card';
+  type?: 'text' | 'voice_call' | 'service_card' | 'order_card';
   reaction?: string;
   serviceCard?: {
     title: string;
     price: number | string;
     duration: string;
   };
+  orderCard?: OrderCardData;
 }
 
 // Status Stories structure
@@ -39,7 +54,7 @@ export interface CustomFilterList {
 }
 
 // Filter chips available in WhatsApp Web sidebar (Groups replaced with Save)
-export type StandardFilterChip = 'All' | 'Unread' | 'Favorites' | 'Save';
+export type StandardFilterChip = 'All' | 'Running' | 'Unread' | 'Favorites' | 'Save';
 export type FilterChip = StandardFilterChip | string;
 
 // Payment methods for in-chat service booking

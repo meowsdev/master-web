@@ -106,6 +106,31 @@ export default function SuperAppPage() {
   const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
   const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
 
+  // Chat management hook with strict authentication guards & running order tracking
+  const {
+    activeServiceId,
+    setActiveServiceId,
+    serviceMessages,
+    inputText,
+    setInputText,
+    mobileView,
+    setMobileView,
+    messagesEndRef,
+    scrollToBottom,
+    handleSelectService,
+    handleSendMessage,
+    handleSendVoiceNote,
+    handleReactToMessage,
+    handleConfirmBooking,
+    handleCompleteOrder,
+    handleClearChat,
+    activeOrder,
+    activeOrderMessageId,
+    runningOrder,
+    runningServiceIds,
+    serviceLastActivity,
+  } = useSuperAppChat({ playSound });
+
   // Services & Filter computation hook
   const {
     dbServices,
@@ -124,26 +149,7 @@ export default function SuperAppPage() {
     isFilterModalOpen,
     setIsFilterModalOpen,
     filteredServices,
-  } = useServicesFilter();
-
-  // Chat management hook with strict authentication guards
-  const {
-    activeServiceId,
-    setActiveServiceId,
-    serviceMessages,
-    inputText,
-    setInputText,
-    mobileView,
-    setMobileView,
-    messagesEndRef,
-    scrollToBottom,
-    handleSelectService,
-    handleSendMessage,
-    handleSendVoiceNote,
-    handleReactToMessage,
-    handleConfirmBooking,
-    handleClearChat,
-  } = useSuperAppChat({ playSound });
+  } = useServicesFilter({ runningServiceIds, serviceLastActivity });
 
   // Active selected service object
   const activeService = useMemo(() => {
@@ -174,11 +180,27 @@ export default function SuperAppPage() {
     setIsAuthModalOpen(true);
   };
 
+  // Centralized booking opener enforcing 1 active running order rule
+  const handleOpenBooking = () => {
+    if (!isAuthenticated) {
+      toast.info('Please log in with your phone number to book services.');
+      handleOpenAuth('LOGIN');
+      return;
+    }
+    if (runningOrder) {
+      toast.warning(
+        `Active Order #${runningOrder.orderId} (${runningOrder.serviceName}) is currently running! Please complete it before placing a new order.`
+      );
+      return;
+    }
+    setIsBookingModalOpen(true);
+  };
+
   const bgMain = isDarkMode ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#f0f2f5] text-[#111b21]';
   const bgSidebar = isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]';
 
   return (
-    <div className={`flex h-screen w-screen overflow-hidden select-none font-sans ${bgMain}`}>
+    <div className={`flex h-screen w-screen overflow-hidden font-sans ${bgMain}`}>
       {/* 1. Far-Left Navigation Rail (60px) */}
       <NavigationRail
         activeRailTab={activeRailTab}
@@ -189,6 +211,7 @@ export default function SuperAppPage() {
         onOpenStatus={() => setIsStatusViewerOpen(true)}
         user={user}
         activeRole={activeRole}
+        runningCount={runningServiceIds.length}
       />
 
       {/* 2. Middle Column: Sidebar (Chats/Services List) */}
@@ -200,6 +223,7 @@ export default function SuperAppPage() {
         <SidebarHeader
           isDarkMode={isDarkMode}
           soundEnabled={soundEnabled}
+          runningCount={runningServiceIds.length}
           onToggleSound={toggleSound}
           onSelectWelcome={() => setActiveServiceId(null)}
           onOpenSettings={() => setIsSettingsDrawerOpen(true)}
@@ -231,6 +255,7 @@ export default function SuperAppPage() {
           }}
           onDeleteCustomFilter={deleteCustomFilter}
           activeRole={activeRole}
+          runningCount={runningServiceIds.length}
           isDarkMode={isDarkMode}
         />
 
@@ -246,6 +271,9 @@ export default function SuperAppPage() {
           user={user}
           activeRole={activeRole}
           onOpenAuth={() => handleOpenAuth('LOGIN')}
+          runningServiceIds={runningServiceIds}
+          serviceMessages={serviceMessages}
+          activeFilterChip={activeFilterChip}
           isDarkMode={isDarkMode}
         />
       </section>
@@ -260,16 +288,10 @@ export default function SuperAppPage() {
           <>
             <ChatHeader
               activeService={activeService}
+              activeOrder={activeOrder}
               onBackMobile={() => setMobileView('LIST')}
               onBackToWelcome={() => setActiveServiceId(null)}
-              onOpenBooking={() => {
-                if (!isAuthenticated) {
-                  toast.info('Please log in with your phone number to book services.');
-                  handleOpenAuth('LOGIN');
-                  return;
-                }
-                setIsBookingModalOpen(true);
-              }}
+              onOpenBooking={handleOpenBooking}
               onStartCall={(type) => {
                 if (!isAuthenticated) {
                   toast.info('Please log in with your phone number to start a consultation call.');
@@ -299,17 +321,33 @@ export default function SuperAppPage() {
               isDarkMode={isDarkMode}
             />
 
+            {/* Active Order Banner: Shows live status & quick completion action */}
+            {activeOrder && activeOrder.status === 'IN_PROGRESS' && activeOrderMessageId && (
+              <div className="bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-800/60 px-4 py-2 flex items-center justify-between text-xs z-10 shrink-0 select-text">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping shrink-0" />
+                  <span className="font-bold text-amber-900 dark:text-amber-200 truncate">
+                    Order #{activeOrder.orderId} • In Progress
+                  </span>
+                  <span className="hidden sm:inline text-amber-700 dark:text-amber-400">
+                    ({activeOrder.scheduleTime} • {activeOrder.address})
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleCompleteOrder(activeOrderMessageId, activeOrder.orderId)}
+                  className="shrink-0 ml-2 px-3 py-1 bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold rounded-full text-xs shadow-xs cursor-pointer transition-colors"
+                >
+                  Complete Order
+                </button>
+              </div>
+            )}
+
             <ChatMessages
               activeService={activeService}
               messages={currentMessages}
-              onOpenBooking={() => {
-                if (!isAuthenticated) {
-                  handleOpenAuth('LOGIN');
-                  return;
-                }
-                setIsBookingModalOpen(true);
-              }}
+              onOpenBooking={handleOpenBooking}
               onReact={handleReactToMessage}
+              onCompleteOrder={handleCompleteOrder}
               messagesEndRef={messagesEndRef}
               isDarkMode={isDarkMode}
             />
@@ -319,13 +357,7 @@ export default function SuperAppPage() {
               onInputChange={setInputText}
               onSendMessage={() => handleSendMessage(isAuthenticated, () => handleOpenAuth('LOGIN'))}
               onSendVoiceNote={() => handleSendVoiceNote(isAuthenticated, () => handleOpenAuth('LOGIN'))}
-              onOpenBooking={() => {
-                if (!isAuthenticated) {
-                  handleOpenAuth('LOGIN');
-                  return;
-                }
-                setIsBookingModalOpen(true);
-              }}
+              onOpenBooking={handleOpenBooking}
               isAuthenticated={isAuthenticated}
               onOpenAuth={() => handleOpenAuth('LOGIN')}
               isDarkMode={isDarkMode}
@@ -352,6 +384,7 @@ export default function SuperAppPage() {
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
         service={activeService}
+        runningOrder={runningOrder}
         bookingAddress={bookingAddress}
         onAddressChange={setBookingAddress}
         bookingTime={bookingTime}
@@ -433,14 +466,7 @@ export default function SuperAppPage() {
           }
           toggleSaveService(activeService.id);
         }}
-        onOpenBooking={() => {
-          if (!isAuthenticated) {
-            toast.info('Please log in with your phone number to book services.');
-            handleOpenAuth('LOGIN');
-            return;
-          }
-          setIsBookingModalOpen(true);
-        }}
+        onOpenBooking={handleOpenBooking}
         onStartCall={(type) => {
           if (!isAuthenticated) {
             toast.info('Please log in with your phone number to start a consultation call.');

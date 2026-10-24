@@ -13,9 +13,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Service } from '@/types/service.types';
+import { OrderCardData } from '@/types/super-app.types';
 
 interface ChatHeaderProps {
   activeService: Service;
+  activeOrder?: OrderCardData | null;
   onBackMobile: () => void;
   onBackToWelcome: () => void;
   onOpenBooking: () => void;
@@ -29,6 +31,7 @@ interface ChatHeaderProps {
 
 export function ChatHeader({
   activeService,
+  activeOrder,
   onBackMobile,
   onBackToWelcome,
   onOpenBooking,
@@ -77,30 +80,61 @@ export function ChatHeader({
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#25D366] rounded-full border-2 border-white dark:border-[#202c33]" />
           </div>
 
-          {/* Title & Counselor Online */}
+          {/* Title & Counselor Online or Active Order Status */}
           <div className="min-w-0">
             <h2 className={`text-[15.5px] font-medium truncate leading-tight group-hover:text-[#008069] dark:group-hover:text-[#25D366] transition-colors ${textPrimary}`}>
               {activeService.name}
             </h2>
-            <p className={`text-[12px] ${textSecondary} font-normal flex items-center gap-1.5`}>
-              <span className="w-2 h-2 rounded-full bg-[#25D366] inline-block" />
-              <span>Counselor Online • ৳{activeService.basePrice}</span>
-            </p>
+            {activeOrder ? (
+              <p className="text-[12px] font-medium flex items-center gap-1.5 mt-0.5">
+                {activeOrder.status === 'IN_PROGRESS' ? (
+                  <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping inline-block" />
+                    <span>Order #{activeOrder.orderId} • In Progress ⚡</span>
+                  </span>
+                ) : activeOrder.status === 'COMPLETED' ? (
+                  <span className="flex items-center gap-1.5 text-[#008069] dark:text-[#25D366] font-bold">
+                    <span className="w-2 h-2 rounded-full bg-[#25D366] inline-block" />
+                    <span>Order #{activeOrder.orderId} • Completed ✅</span>
+                  </span>
+                ) : (
+                  <span className={`text-[12px] ${textSecondary}`}>
+                    Order #{activeOrder.orderId} • {activeOrder.status}
+                  </span>
+                )}
+              </p>
+            ) : (
+              <p className={`text-[12px] ${textSecondary} font-normal flex items-center gap-1.5`}>
+                <span className="w-2 h-2 rounded-full bg-[#25D366] inline-block" />
+                <span>Counselor Online • ৳{activeService.basePrice}</span>
+              </p>
+            )}
           </div>
         </div>
       </div>
 
       {/* Right Action Buttons in Authentic WhatsApp Web Desktop Style */}
       <div className="flex items-center gap-1">
-        {/* Book Service Button (WhatsApp Web pill button style) */}
-        <button
-          onClick={onOpenBooking}
-          className="border border-[#d1d7db] dark:border-[#3b4a54] bg-white dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef] text-[12.5px] font-medium px-3.5 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-[#f0f2f5] dark:hover:bg-[#2a3942] transition-colors cursor-pointer mr-1"
-        >
-          <Wrench className="w-3.5 h-3.5 text-[#008069] dark:text-[#25D366]" />
-          <span>Book Service</span>
-          <ChevronDown className="w-3.5 h-3.5 text-[#54656f] dark:text-[#8696a0]" />
-        </button>
+        {/* Book Service Button (Shows Order Running if currently in progress) */}
+        {activeOrder?.status === 'IN_PROGRESS' ? (
+          <button
+            onClick={onOpenBooking}
+            className="border border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 text-[12px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer mr-1"
+            title="Order is currently in progress. Complete it first."
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping inline-block" />
+            <span>Order Running</span>
+          </button>
+        ) : (
+          <button
+            onClick={onOpenBooking}
+            className="border border-[#d1d7db] dark:border-[#3b4a54] bg-white dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef] text-[12.5px] font-medium px-3.5 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-[#f0f2f5] dark:hover:bg-[#2a3942] transition-colors cursor-pointer mr-1"
+          >
+            <Wrench className="w-3.5 h-3.5 text-[#008069] dark:text-[#25D366]" />
+            <span>Book Service</span>
+            <ChevronDown className="w-3.5 h-3.5 text-[#54656f] dark:text-[#8696a0]" />
+          </button>
+        )}
 
         {/* Save to Save list button */}
         {onToggleSave && (

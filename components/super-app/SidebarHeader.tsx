@@ -14,6 +14,7 @@ import {
 interface SidebarHeaderProps {
   isDarkMode: boolean;
   soundEnabled: boolean;
+  runningCount?: number;
   onToggleSound: () => void;
   onSelectWelcome: () => void;
   onOpenSettings: () => void;
@@ -26,6 +27,7 @@ interface SidebarHeaderProps {
 export function SidebarHeader({
   isDarkMode,
   soundEnabled,
+  runningCount = 0,
   onToggleSound,
   onSelectWelcome,
   onOpenSettings,
@@ -48,6 +50,11 @@ export function SidebarHeader({
         <h1 className="text-[20px] font-bold tracking-tight text-[#111b21] dark:text-[#e9edef]">
           Super app
         </h1>
+        {runningCount > 0 && (
+          <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1 animate-pulse">
+            ⚡ {runningCount} Active
+          </span>
+        )}
       </div>
 
       {/* Action Buttons */}

@@ -3,6 +3,7 @@
 import React from 'react';
 import { LogIn } from 'lucide-react';
 import { Service } from '@/types/service.types';
+import { ChatMessage } from '@/types/super-app.types';
 import { ServiceListItem } from './ServiceListItem';
 
 interface ServiceListProps {
@@ -17,6 +18,9 @@ interface ServiceListProps {
   user: any;
   activeRole: string | null;
   onOpenAuth: () => void;
+  runningServiceIds?: string[];
+  serviceMessages?: Record<string, ChatMessage[]>;
+  activeFilterChip?: string;
   isDarkMode: boolean;
 }
 
@@ -32,6 +36,9 @@ export function ServiceList({
   user,
   activeRole,
   onOpenAuth,
+  runningServiceIds = [],
+  serviceMessages = {},
+  activeFilterChip,
   isDarkMode,
 }: ServiceListProps) {
   const textPrimary = isDarkMode ? 'text-[#e9edef]' : 'text-[#111b21]';
@@ -54,12 +61,16 @@ export function ServiceList({
         ) : services.length === 0 ? (
           <div className="p-8 text-center space-y-3">
             <p className={`text-sm font-medium ${textPrimary}`}>
-              {searchQuery
+              {activeFilterChip === 'Running'
+                ? 'No running orders right now'
+                : searchQuery
                 ? `No services found matching "${searchQuery}"`
                 : 'No services in this list yet'}
             </p>
             <p className={`text-xs ${textSecondary}`}>
-              {searchQuery
+              {activeFilterChip === 'Running'
+                ? 'When you start a service order, it will appear here in running status.'
+                : searchQuery
                 ? 'Try searching with different keywords'
                 : 'Save services or add them when creating custom lists to view them here'}
             </p>
@@ -77,15 +88,29 @@ export function ServiceList({
             )}
           </div>
         ) : (
-          services.map((service) => (
-            <ServiceListItem
-              key={service.id}
-              service={service}
-              isSelected={service.id === activeServiceId}
-              onSelect={onSelectService}
-              isDarkMode={isDarkMode}
-            />
-          ))
+          services.map((service) => {
+            const msgs = serviceMessages[service.id] || [];
+            const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
+            const runningOrder = msgs
+              .slice()
+              .reverse()
+              .find(
+                (m) => m.type === 'order_card' && m.orderCard?.status === 'IN_PROGRESS'
+              )?.orderCard;
+
+            return (
+              <ServiceListItem
+                key={service.id}
+                service={service}
+                isSelected={service.id === activeServiceId}
+                isRunning={runningServiceIds.includes(service.id)}
+                runningOrderId={runningOrder?.orderId || null}
+                lastMessage={lastMsg}
+                onSelect={onSelectService}
+                isDarkMode={isDarkMode}
+              />
+            );
+          })
         )}
       </div>
 

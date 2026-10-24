@@ -16,6 +16,7 @@ interface SearchAndFiltersProps {
   onOpenCreateFilter: () => void;
   onDeleteCustomFilter?: (id: string) => void;
   activeRole?: string | null;
+  runningCount?: number;
   isDarkMode: boolean;
 }
 
@@ -31,15 +32,15 @@ export function SearchAndFilters({
   onOpenCreateFilter,
   onDeleteCustomFilter,
   activeRole,
+  runningCount = 0,
   isDarkMode,
 }: SearchAndFiltersProps) {
   const isCustomer = !activeRole || activeRole === 'CUSTOMER';
 
-  // For Customer: hide 'Favorites' and show only 'All', 'Unread', 'Save'
-  // For other roles (Admin/Manager): show 'All', 'Unread', 'Favorites', 'Save'
+  // Include 'Running' orders tab for quick tracking
   const standardChips: StandardFilterChip[] = isCustomer
-    ? ['All', 'Unread', 'Save']
-    : ['All', 'Unread', 'Favorites', 'Save'];
+    ? ['All', 'Running', 'Unread', 'Save']
+    : ['All', 'Running', 'Unread', 'Favorites', 'Save'];
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -186,7 +187,27 @@ export function SearchAndFilters({
                     : 'bg-[#f0f2f5] text-[#54656f] hover:bg-[#e9edef] dark:bg-[#202c33] dark:text-[#8696a0] dark:hover:bg-[#2a3942]'
                 }`}
               >
-                {chip}
+                {chip === 'Running' ? (
+                  <span className="flex items-center gap-1.5">
+                    {runningCount > 0 && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping inline-block" />
+                    )}
+                    <span>Running</span>
+                    {runningCount > 0 && (
+                      <span
+                        className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                          isActive
+                            ? 'bg-[#008069] text-white dark:bg-[#25D366] dark:text-[#111b21]'
+                            : 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300'
+                        }`}
+                      >
+                        {runningCount}
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  chip
+                )}
               </button>
             );
           })}

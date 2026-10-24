@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
-import { ChatMessage } from '@/types/super-app.types';
+import { ChatMessage, OrderCardData } from '@/types/super-app.types';
 import { Service } from '@/types/service.types';
 
 interface UseSuperAppChatProps {
@@ -11,10 +11,55 @@ interface UseSuperAppChatProps {
 
 export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
   const [activeServiceId, setActiveServiceId] = useState<string | null>(null);
-  const [serviceMessages, setServiceMessages] = useState<Record<string, ChatMessage[]>>({});
+  const [serviceMessages, setServiceMessages] = useState<Record<string, ChatMessage[]>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('master_service_messages');
+        if (saved) return JSON.parse(saved);
+      } catch {
+        // ignore
+      }
+    }
+    return {};
+  });
   const [inputText, setInputText] = useState('');
   const [mobileView, setMobileView] = useState<'LIST' | 'CHAT'>('LIST');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Track latest chat activity timestamps so active conversations jump to top
+  const [serviceLastActivity, setServiceLastActivity] = useState<Record<string, number>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('master_service_activity');
+        if (saved) return JSON.parse(saved);
+      } catch {
+        // ignore
+      }
+    }
+    return {};
+  });
+
+  // Sync activity map to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && Object.keys(serviceLastActivity).length > 0) {
+      try {
+        localStorage.setItem('master_service_activity', JSON.stringify(serviceLastActivity));
+      } catch {
+        // ignore
+      }
+    }
+  }, [serviceLastActivity]);
+
+  // Sync chat messages to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && Object.keys(serviceMessages).length > 0) {
+      try {
+        localStorage.setItem('master_service_messages', JSON.stringify(serviceMessages));
+      } catch {
+        // ignore
+      }
+    }
+  }, [serviceMessages]);
 
   // Auto-scroll chat to latest message
   const scrollToBottom = () => {
@@ -79,6 +124,7 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
       ...prev,
       [sId]: [...(prev[sId] || []), newMsg],
     }));
+    setServiceLastActivity((prev) => ({ ...prev, [sId]: Date.now() }));
 
     // Simulated counselor reply after 1.2s
     setTimeout(() => {
@@ -93,6 +139,7 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
         ...prev,
         [sId]: [...(prev[sId] || []), counselorReply],
       }));
+      setServiceLastActivity((prev) => ({ ...prev, [sId]: Date.now() }));
     }, 1200);
   };
 
@@ -118,6 +165,7 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
       ...prev,
       [sId]: [...(prev[sId] || []), voiceMsg],
     }));
+    setServiceLastActivity((prev) => ({ ...prev, [sId]: Date.now() }));
     toast.success('Voice message sent');
   };
 
@@ -132,7 +180,54 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
     }));
   };
 
-  // Confirm in-chat booking with auth check
+  // Active order computed for current active service
+  const activeOrder: OrderCardData | null = useMemo(() => {
+    if (!activeServiceId) return null;
+    const msgs = serviceMessages[activeServiceId] || [];
+    const orderMsgs = msgs.filter((m) => m.type === 'order_card' && m.orderCard);
+    if (orderMsgs.length === 0) return null;
+    return orderMsgs[orderMsgs.length - 1].orderCard || null;
+  }, [serviceMessages, activeServiceId]);
+
+  const activeOrderMessageId = useMemo(() => {
+    if (!activeServiceId) return null;
+    const msgs = serviceMessages[activeServiceId] || [];
+    const orderMsgs = msgs.filter((m) => m.type === 'order_card' && m.orderCard);
+    if (orderMsgs.length === 0) return null;
+    return orderMsgs[orderMsgs.length - 1].id;
+  }, [serviceMessages, activeServiceId]);
+
+  // Any running order across all services
+  const runningOrder: OrderCardData | null = useMemo(() => {
+    for (const sId of Object.keys(serviceMessages)) {
+      const msgs = serviceMessages[sId] || [];
+      const found = msgs
+        .slice()
+        .reverse()
+        .find((m) => m.type === 'order_card' && m.orderCard?.status === 'IN_PROGRESS');
+      if (found && found.orderCard) {
+        return found.orderCard;
+      }
+    }
+    return null;
+  }, [serviceMessages]);
+
+  // Array of service IDs that currently have an IN_PROGRESS order
+  const runningServiceIds: string[] = useMemo(() => {
+    const ids: string[] = [];
+    for (const sId of Object.keys(serviceMessages)) {
+      const msgs = serviceMessages[sId] || [];
+      const hasRunning = msgs.some(
+        (m) => m.type === 'order_card' && m.orderCard?.status === 'IN_PROGRESS'
+      );
+      if (hasRunning) {
+        ids.push(sId);
+      }
+    }
+    return ids;
+  }, [serviceMessages]);
+
+  // Confirm in-chat booking with auth check and dispatch Order Card
   const handleConfirmBooking = (
     activeService: Service | null,
     address: string,
@@ -149,22 +244,89 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
     }
     if (!activeService || !activeServiceId) return;
 
+    // Strict rule: 1 ta order running thaka obostay r akta order start korta parba na
+    if (runningOrder) {
+      toast.error(
+        `Active Order #${runningOrder.orderId} (${runningOrder.serviceName}) is currently running! Please complete it before placing a new order.`
+      );
+      return;
+    }
+
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const confirmationMsg: ChatMessage = {
-      id: 'book-' + Date.now(),
+    const generatedOrderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+
+    const orderCardMsg: ChatMessage = {
+      id: 'order-' + Date.now(),
       sender: 'them',
-      text: `🎉 Booking Confirmed!\n\n📍 Location: ${address}\n⏰ Scheduled: ${time}\n💳 Payment Mode: ${paymentMode}\n💰 Base Fare: ৳${activeService.basePrice}\n\nOur verified technician is preparing tools for dispatch!`,
+      type: 'order_card',
+      text: `🎉 Order #${generatedOrderId} Placed Successfully!`,
       time: currentTime,
+      orderCard: {
+        orderId: generatedOrderId,
+        serviceId: activeService.id,
+        serviceName: activeService.name,
+        serviceIcon: activeService.category?.iconUrl || '🛠️',
+        address,
+        scheduleTime: time,
+        paymentMode,
+        basePrice: activeService.basePrice,
+        status: 'IN_PROGRESS',
+      },
     };
 
     setServiceMessages((prev) => ({
       ...prev,
-      [activeServiceId]: [...(prev[activeServiceId] || []), confirmationMsg],
+      [activeServiceId]: [...(prev[activeServiceId] || []), orderCardMsg],
     }));
+    setServiceLastActivity((prev) => ({ ...prev, [activeServiceId]: Date.now() }));
 
     playSound('receive');
-    toast.success(`Booked ${activeService.name} successfully!`);
+    toast.success(`Booked ${activeService.name} successfully! Order #${generatedOrderId} is In Progress.`);
     onSuccess();
+  };
+
+  // Mark an active order as completed directly from the chat card
+  const handleCompleteOrder = (messageId: string, orderId: string) => {
+    if (!activeServiceId) return;
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    setServiceMessages((prev) => {
+      const list = prev[activeServiceId] || [];
+      return {
+        ...prev,
+        [activeServiceId]: list.map((msg) => {
+          if (msg.id === messageId && msg.orderCard) {
+            return {
+              ...msg,
+              orderCard: {
+                ...msg.orderCard,
+                status: 'COMPLETED',
+                completedAt: currentTime,
+              },
+            };
+          }
+          return msg;
+        }),
+      };
+    });
+
+    // Append celebration confirmation notice from the counselor
+    const completionNotice: ChatMessage = {
+      id: 'compl-' + Date.now(),
+      sender: 'them',
+      text: `✅ Order #${orderId} has been successfully completed! Thank you for choosing Master Services. Your 7-day service warranty is now active. ⭐⭐⭐⭐⭐`,
+      time: currentTime,
+      status: 'read',
+    };
+
+    setServiceMessages((prev) => ({
+      ...prev,
+      [activeServiceId]: [...(prev[activeServiceId] || []), completionNotice],
+    }));
+    setServiceLastActivity((prev) => ({ ...prev, [activeServiceId]: Date.now() }));
+
+    playSound('receive');
+    toast.success(`Order #${orderId} marked as COMPLETED! 🎉`);
   };
 
   const handleClearChat = (serviceId: string) => {
@@ -182,11 +344,17 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
     setMobileView,
     messagesEndRef,
     scrollToBottom,
+    activeOrder,
+    activeOrderMessageId,
+    runningOrder,
+    runningServiceIds,
+    serviceLastActivity,
     handleSelectService,
     handleSendMessage,
     handleSendVoiceNote,
     handleReactToMessage,
     handleConfirmBooking,
+    handleCompleteOrder,
     handleClearChat,
   };
 }
