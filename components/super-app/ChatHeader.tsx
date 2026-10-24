@@ -23,6 +23,7 @@ interface ChatHeaderProps {
   onClearChat: () => void;
   isSaved?: boolean;
   onToggleSave?: () => void;
+  onOpenDetails?: () => void;
   isDarkMode: boolean;
 }
 
@@ -35,6 +36,7 @@ export function ChatHeader({
   onClearChat,
   isSaved = false,
   onToggleSave,
+  onOpenDetails,
   isDarkMode,
 }: ChatHeaderProps) {
   const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
@@ -61,23 +63,30 @@ export function ChatHeader({
 
 
 
-        {/* Service Avatar with WhatsApp Green Indicator */}
-        <div className="relative shrink-0">
-          <div className="w-10 h-10 rounded-full bg-[#f0f2f5] dark:bg-[#111b21] flex items-center justify-center text-lg shrink-0 border border-[#e9edef] dark:border-[#374248]">
-            {activeService.category?.iconUrl || '🛠️'}
+        {/* Service Avatar & Title (Clicking opens Service Details Drawer on the right) */}
+        <div
+          onClick={onOpenDetails}
+          className="flex items-center gap-3 min-w-0 cursor-pointer group select-none"
+          title="Click to view service details"
+        >
+          {/* Service Avatar with WhatsApp Green Indicator */}
+          <div className="relative shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-[#f0f2f5] dark:bg-[#111b21] flex items-center justify-center text-lg shrink-0 border border-[#e9edef] dark:border-[#374248]">
+              {activeService.category?.iconUrl || '🛠️'}
+            </div>
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#25D366] rounded-full border-2 border-white dark:border-[#202c33]" />
           </div>
-          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#25D366] rounded-full border-2 border-white dark:border-[#202c33]" />
-        </div>
 
-        {/* Title & Counselor Online */}
-        <div className="min-w-0">
-          <h2 className={`text-[15.5px] font-medium truncate leading-tight ${textPrimary}`}>
-            {activeService.name}
-          </h2>
-          <p className={`text-[12px] ${textSecondary} font-normal flex items-center gap-1.5`}>
-            <span className="w-2 h-2 rounded-full bg-[#25D366] inline-block" />
-            <span>Counselor Online • ৳{activeService.basePrice}</span>
-          </p>
+          {/* Title & Counselor Online */}
+          <div className="min-w-0">
+            <h2 className={`text-[15.5px] font-medium truncate leading-tight group-hover:text-[#008069] dark:group-hover:text-[#25D366] transition-colors ${textPrimary}`}>
+              {activeService.name}
+            </h2>
+            <p className={`text-[12px] ${textSecondary} font-normal flex items-center gap-1.5`}>
+              <span className="w-2 h-2 rounded-full bg-[#25D366] inline-block" />
+              <span>Counselor Online • ৳{activeService.basePrice}</span>
+            </p>
+          </div>
         </div>
       </div>
 
@@ -149,6 +158,15 @@ export function ChatHeader({
               className={`absolute right-0 top-11 w-48 rounded-xl shadow-xl py-2 border z-50 text-sm ${isDarkMode ? 'bg-[#233138] border-[#2f3b43] text-[#e9edef]' : 'bg-white border-[#e9edef] text-[#111b21]'
                 }`}
             >
+              <button
+                onClick={() => {
+                  onOpenDetails?.();
+                  setIsChatMenuOpen(false);
+                }}
+                className="w-full px-4 py-2 text-left hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer font-medium"
+              >
+                Service info
+              </button>
               <button
                 onClick={() => {
                   onOpenBooking();

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
@@ -24,6 +24,7 @@ import { ChatHeader } from '@/components/super-app/ChatHeader';
 import { ChatMessages } from '@/components/super-app/ChatMessages';
 import { ChatComposer } from '@/components/super-app/ChatComposer';
 import { WelcomeScreen } from '@/components/super-app/WelcomeScreen';
+import { ServiceDetailsDrawer } from '@/components/super-app/ServiceDetailsDrawer';
 
 // Dialogs & Drawers
 import { BookingModal } from '@/components/modals/BookingModal';
@@ -36,10 +37,56 @@ import { CreateFilterModal } from '@/components/modals/CreateFilterModal';
 export default function SuperAppPage() {
   const { user, isAuthenticated, activeRole, logout, setRole } = useAuthStore();
 
-  // Theme & Sound states
+  // Theme & Sound states with localStorage persistence
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const { playSound } = useSuperAppAudio(soundEnabled);
+
+  // Initialize theme and sound from localStorage
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('superapp_theme');
+      if (savedTheme) {
+        setIsDarkMode(savedTheme === 'dark');
+      } else if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        setIsDarkMode(true);
+      }
+
+      const savedSound = localStorage.getItem('superapp_sound');
+      if (savedSound !== null) {
+        setSoundEnabled(savedSound === 'true');
+      }
+    } catch (e) {
+      console.error('Failed to read settings from localStorage', e);
+    }
+  }, []);
+
+  // Toggle and persist theme
+  const toggleTheme = useCallback(() => {
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('superapp_theme', next ? 'dark' : 'light');
+      } catch (e) {
+        console.error('Failed to save theme to localStorage', e);
+      }
+      return next;
+    });
+  }, []);
+
+  // Toggle and persist sound
+  const toggleSound = useCallback(() => {
+    setSoundEnabled((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('superapp_sound', String(next));
+      } catch (e) {
+        console.error('Failed to save sound to localStorage', e);
+      }
+      toast.info(`Sound: ${next ? 'ON' : 'OFF'}`);
+      return next;
+    });
+  }, []);
 
   // Far-left Rail Tab
   const [activeRailTab, setActiveRailTab] = useState<RailTab>('CHATS');
@@ -52,11 +99,12 @@ export default function SuperAppPage() {
   const [bookingTime, setBookingTime] = useState('Today, Within 2 Hours');
   const [bookingPaymentMode, setBookingPaymentMode] = useState<PaymentMode>('CASH');
 
-  // Calling & Status viewer modals
+  // Calling, Status viewer, and Service details modals
   const [isCallingModalOpen, setIsCallingModalOpen] = useState(false);
   const [callType, setCallType] = useState<'voice' | 'video'>('voice');
   const [isStatusViewerOpen, setIsStatusViewerOpen] = useState(false);
   const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
+  const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
 
   // Services & Filter computation hook
   const {
@@ -136,7 +184,7 @@ export default function SuperAppPage() {
         activeRailTab={activeRailTab}
         onSelectTab={setActiveRailTab}
         isDarkMode={isDarkMode}
-        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+        onToggleTheme={toggleTheme}
         onOpenSettings={() => setIsSettingsDrawerOpen(true)}
         onOpenStatus={() => setIsStatusViewerOpen(true)}
         user={user}
@@ -152,10 +200,7 @@ export default function SuperAppPage() {
         <SidebarHeader
           isDarkMode={isDarkMode}
           soundEnabled={soundEnabled}
-          onToggleSound={() => {
-            setSoundEnabled(!soundEnabled);
-            toast.info(`Sound: ${!soundEnabled ? 'ON' : 'OFF'}`);
-          }}
+          onToggleSound={toggleSound}
           onSelectWelcome={() => setActiveServiceId(null)}
           onOpenSettings={() => setIsSettingsDrawerOpen(true)}
           onOpenAuth={() => handleOpenAuth('LOGIN')}
@@ -250,6 +295,7 @@ export default function SuperAppPage() {
                     }
                   : undefined
               }
+              onOpenDetails={() => setIsServiceDetailsOpen(true)}
               isDarkMode={isDarkMode}
             />
 
@@ -351,12 +397,9 @@ export default function SuperAppPage() {
         isOpen={isSettingsDrawerOpen}
         onClose={() => setIsSettingsDrawerOpen(false)}
         isDarkMode={isDarkMode}
-        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+        onToggleTheme={toggleTheme}
         soundEnabled={soundEnabled}
-        onToggleSound={() => {
-          setSoundEnabled(!soundEnabled);
-          toast.info(`Sound: ${!soundEnabled ? 'ON' : 'OFF'}`);
-        }}
+        onToggleSound={toggleSound}
         user={user}
         activeRole={activeRole}
         onSwitchRole={setRole}
@@ -372,6 +415,41 @@ export default function SuperAppPage() {
         onClose={() => setIsFilterModalOpen(false)}
         services={dbServices}
         onCreateFilter={createCustomFilter}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* 4. Slide-in Service Details Drawer on the Right */}
+      <ServiceDetailsDrawer
+        isOpen={isServiceDetailsOpen}
+        onClose={() => setIsServiceDetailsOpen(false)}
+        service={activeService}
+        isSaved={activeService ? isServiceSaved(activeService.id) : false}
+        onToggleSave={() => {
+          if (!activeService) return;
+          if (!isAuthenticated) {
+            toast.info('Please log in with your phone number to save services.');
+            handleOpenAuth('LOGIN');
+            return;
+          }
+          toggleSaveService(activeService.id);
+        }}
+        onOpenBooking={() => {
+          if (!isAuthenticated) {
+            toast.info('Please log in with your phone number to book services.');
+            handleOpenAuth('LOGIN');
+            return;
+          }
+          setIsBookingModalOpen(true);
+        }}
+        onStartCall={(type) => {
+          if (!isAuthenticated) {
+            toast.info('Please log in with your phone number to start a consultation call.');
+            handleOpenAuth('LOGIN');
+            return;
+          }
+          setCallType(type);
+          setIsCallingModalOpen(true);
+        }}
         isDarkMode={isDarkMode}
       />
     </div>

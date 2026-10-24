@@ -13,7 +13,6 @@ export interface ChatMessage {
     title: string;
     price: number | string;
     duration: string;
-    category?: string;
   };
 }
 

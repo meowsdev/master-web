@@ -45,7 +45,6 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
             title: service.name,
             price: service.basePrice,
             duration: `${service.durationMin || 45} mins`,
-            category: service.category?.name || 'On-Demand Service',
           },
         },
       ];

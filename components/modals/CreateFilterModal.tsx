@@ -39,7 +39,7 @@ export function CreateFilterModal({
     return services.filter(
       (s) =>
         s.name.toLowerCase().includes(q) ||
-        (s.category?.name && s.category.name.toLowerCase().includes(q))
+        (s.description && s.description.toLowerCase().includes(q))
     );
   }, [services, searchQuery]);
 
@@ -170,7 +170,7 @@ export function CreateFilterModal({
                       <div className="min-w-0">
                         <p className="text-sm font-medium leading-tight truncate">{service.name}</p>
                         <p className={`text-xs ${textSecondary}`}>
-                          ৳{service.basePrice} • {service.category?.name || 'Service'}
+                          ৳{service.basePrice}
                         </p>
                       </div>
                     </div>

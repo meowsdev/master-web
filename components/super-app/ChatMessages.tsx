@@ -66,13 +66,6 @@ export function ChatMessages({
                     {activeService.category?.iconUrl || '🛠️'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span
-                      className={`text-[10.5px] uppercase font-extrabold tracking-wider ${
-                        isDarkMode ? 'text-[#25D366]' : 'text-[#075E54]'
-                      }`}
-                    >
-                      {msg.serviceCard.category}
-                    </span>
                     <h3 className={`text-[15px] font-bold leading-snug ${textPrimary}`}>
                       {msg.serviceCard.title}
                     </h3>

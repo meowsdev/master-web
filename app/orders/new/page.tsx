@@ -80,7 +80,7 @@ function NewOrderContent() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                    {service?.category?.name || 'Home Maintenance'}
+                    Verified Service
                   </span>
                   <h2 className="text-xl font-bold text-zinc-900 dark:text-white mt-2">
                     {service?.name || 'Selected Verified Service'}

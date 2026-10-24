@@ -134,14 +134,13 @@ export function useServicesFilter() {
   const filteredServices = useMemo(() => {
     let list = dbServices;
 
-    // Search query filter (Name, Description, Category)
+    // Search query filter (Name, Description)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       list = list.filter(
         (s) =>
           s.name.toLowerCase().includes(query) ||
-          (s.description && s.description.toLowerCase().includes(query)) ||
-          (s.category?.name && s.category.name.toLowerCase().includes(query))
+          (s.description && s.description.toLowerCase().includes(query))
       );
     }
 
