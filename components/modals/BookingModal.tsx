@@ -155,7 +155,7 @@ export function BookingModal({
                 ⚠️ Order #{runningOrder.orderId} ({runningOrder.serviceName}) is currently running!
               </p>
               <p className="text-[11.5px] text-amber-700 dark:text-amber-400">
-                You cannot start another order until the current running order is completed.
+                You cannot start another order for this service until the running order is completed.
               </p>
             </div>
           )}
@@ -169,7 +169,7 @@ export function BookingModal({
                 : 'bg-[#25D366] hover:bg-[#20ba5a] active:bg-[#075E54] text-white shadow-[#25D366]/25 cursor-pointer'
             }`}
           >
-            <span>{runningOrder ? 'Complete Running Order First' : 'Confirm Technician Booking'}</span>
+            <span>{runningOrder ? 'This Service Has an Active Order' : 'Confirm Technician Booking'}</span>
           </button>
         </div>
       </div>

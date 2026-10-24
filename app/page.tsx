@@ -127,6 +127,7 @@ export default function SuperAppPage() {
     activeOrder,
     activeOrderMessageId,
     runningOrder,
+    activeServiceRunningOrder,
     runningServiceIds,
     serviceLastActivity,
   } = useSuperAppChat({ playSound });
@@ -180,16 +181,17 @@ export default function SuperAppPage() {
     setIsAuthModalOpen(true);
   };
 
-  // Centralized booking opener enforcing 1 active running order rule
+  // Centralized booking opener: prevents duplicate running orders for the SAME service,
+  // while allowing multiple concurrent orders across different services.
   const handleOpenBooking = () => {
     if (!isAuthenticated) {
       toast.info('Please log in with your phone number to book services.');
       handleOpenAuth('LOGIN');
       return;
     }
-    if (runningOrder) {
+    if (activeServiceRunningOrder) {
       toast.warning(
-        `Active Order #${runningOrder.orderId} (${runningOrder.serviceName}) is currently running! Please complete it before placing a new order.`
+        `Active Order #${activeServiceRunningOrder.orderId} for "${activeService?.name}" is already running! Please complete it before placing another order for this service.`
       );
       return;
     }
@@ -384,7 +386,7 @@ export default function SuperAppPage() {
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
         service={activeService}
-        runningOrder={runningOrder}
+        runningOrder={activeServiceRunningOrder}
         bookingAddress={bookingAddress}
         onAddressChange={setBookingAddress}
         bookingTime={bookingTime}

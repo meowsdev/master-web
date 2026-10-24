@@ -212,6 +212,17 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
     return null;
   }, [serviceMessages]);
 
+  // Running order specifically for the current active service
+  const activeServiceRunningOrder: OrderCardData | null = useMemo(() => {
+    if (!activeServiceId) return null;
+    const msgs = serviceMessages[activeServiceId] || [];
+    const found = msgs
+      .slice()
+      .reverse()
+      .find((m) => m.type === 'order_card' && m.orderCard?.status === 'IN_PROGRESS');
+    return found?.orderCard || null;
+  }, [serviceMessages, activeServiceId]);
+
   // Array of service IDs that currently have an IN_PROGRESS order
   const runningServiceIds: string[] = useMemo(() => {
     const ids: string[] = [];
@@ -244,10 +255,10 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
     }
     if (!activeService || !activeServiceId) return;
 
-    // Strict rule: 1 ta order running thaka obostay r akta order start korta parba na
-    if (runningOrder) {
+    // Rule: Same service-e 2 bar order running kora jabe na, kintu alada alada service-e eksathe running thakte parbe
+    if (activeServiceRunningOrder) {
       toast.error(
-        `Active Order #${runningOrder.orderId} (${runningOrder.serviceName}) is currently running! Please complete it before placing a new order.`
+        `Active Order #${activeServiceRunningOrder.orderId} for "${activeService.name}" is already in progress! Please complete it before booking this service again.`
       );
       return;
     }
@@ -347,6 +358,7 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
     activeOrder,
     activeOrderMessageId,
     runningOrder,
+    activeServiceRunningOrder,
     runningServiceIds,
     serviceLastActivity,
     handleSelectService,
