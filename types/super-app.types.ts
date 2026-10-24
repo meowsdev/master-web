@@ -1,5 +1,3 @@
-import { Service } from '@/types/service.types';
-
 // Order Card details embedded within in-chat messages
 export interface OrderCardData {
   orderId: string;

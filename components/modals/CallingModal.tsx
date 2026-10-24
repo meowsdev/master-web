@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Phone, Video, Mic, MicOff, PhoneMissed } from 'lucide-react';
+import { Video, Mic, MicOff, PhoneMissed } from 'lucide-react';
 import { Service } from '@/types/service.types';
 
 interface CallingModalProps {
@@ -9,7 +9,7 @@ interface CallingModalProps {
   onClose: () => void;
   service: Service | null;
   callType: 'voice' | 'video';
-  isDarkMode: boolean;
+  isDarkMode?: boolean;
 }
 
 export function CallingModal({
@@ -17,20 +17,21 @@ export function CallingModal({
   onClose,
   service,
   callType,
-  isDarkMode,
+  isDarkMode = true,
 }: CallingModalProps) {
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
-    let timer: any;
-    if (isOpen) {
-      timer = setInterval(() => setCallDuration((prev) => prev + 1), 1000);
-    } else {
-      setCallDuration(0);
-    }
+    if (!isOpen) return;
+    const timer = setInterval(() => setCallDuration((prev) => prev + 1), 1000);
     return () => clearInterval(timer);
   }, [isOpen]);
+
+  const handleEndCall = () => {
+    setCallDuration(0);
+    onClose();
+  };
 
   if (!isOpen || !service) return null;
 
@@ -42,7 +43,11 @@ export function CallingModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-sm rounded-3xl p-6 bg-[#111b21] border border-[#2f3b43] text-white text-center space-y-6 shadow-2xl animate-in zoom-in-95 duration-200">
+      <div
+        className={`w-full max-w-sm rounded-3xl p-6 border text-white text-center space-y-6 shadow-2xl animate-in zoom-in-95 duration-200 ${
+          isDarkMode ? 'bg-[#111b21] border-[#2f3b43]' : 'bg-[#202c33] border-[#2f3b43]'
+        }`}
+      >
         {/* Caller Avatar */}
         <div className="relative mx-auto w-24 h-24">
           <div className="w-24 h-24 rounded-full bg-[#202c33] border-4 border-[#25D366] flex items-center justify-center text-4xl shadow-xl">
@@ -89,7 +94,7 @@ export function CallingModal({
 
           {/* End Call Button */}
           <button
-            onClick={onClose}
+            onClick={handleEndCall}
             className="w-14 h-14 rounded-full bg-rose-500 hover:bg-rose-600 active:scale-95 text-white flex items-center justify-center shadow-lg shadow-rose-500/30 cursor-pointer transition-all"
             title="End Call"
           >

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { RailTab } from '@/types/super-app.types';
+import { User } from '@/types/auth.types';
 
 interface NavigationRailProps {
   activeRailTab: RailTab;
@@ -22,7 +23,7 @@ interface NavigationRailProps {
   onToggleTheme: () => void;
   onOpenSettings: () => void;
   onOpenStatus: () => void;
-  user: any;
+  user: User | null;
   activeRole: string | null;
   runningCount?: number;
 }
@@ -168,7 +169,7 @@ export function NavigationRail({
           title={user ? `${user.name} (${activeRole})` : 'Profile / Login'}
         >
           {user?.profilePhoto ? (
-            <Image src={user.profilePhoto} alt="User" width={36} height={36} className="object-cover" />
+            <Image src={user.profilePhoto} alt="User" width={36} height={36} unoptimized className="object-cover" />
           ) : (
             <span className="text-xs font-bold text-[#54656f]">
               {user?.name ? user.name[0].toUpperCase() : 'U'}

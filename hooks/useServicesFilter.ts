@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { servicesService } from '@/services/services.service';
@@ -27,48 +27,31 @@ export function useServicesFilter({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activeFilterChip, setActiveFilterChip] = useState<FilterChip>('All');
-  const [customFilters, setCustomFilters] = useState<CustomFilterList[]>([]);
-  const [savedServiceIds, setSavedServiceIds] = useState<string[]>([]);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-
-  // Load custom filters and saved services from localStorage on client mount
-  useEffect(() => {
+  const [customFilters, setCustomFilters] = useState<CustomFilterList[]>(() => {
+    if (typeof window === 'undefined') return [];
     try {
-      const storedFilters = localStorage.getItem(STORAGE_KEY_CUSTOM_FILTERS);
-      if (storedFilters) {
-        setCustomFilters(JSON.parse(storedFilters));
-      }
-      const storedSaved = localStorage.getItem(STORAGE_KEY_SAVED_SERVICES);
-      if (storedSaved) {
-        setSavedServiceIds(JSON.parse(storedSaved));
-      }
-    } catch (e) {
-      console.error('Failed to load filters from localStorage', e);
+      const stored = localStorage.getItem(STORAGE_KEY_CUSTOM_FILTERS);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
     }
-  }, []);
+  });
+  const [savedServiceIds, setSavedServiceIds] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_SAVED_SERVICES);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   // Fetch real services list from database backend
   const { data: dbServices = [], isLoading: isServicesLoading } = useQuery<Service[]>({
     queryKey: ['super-app-services'],
     queryFn: () => servicesService.getServices(),
   });
-
-  // Seed default saved services if empty once dbServices load
-  useEffect(() => {
-    if (dbServices.length > 0 && savedServiceIds.length === 0) {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY_SAVED_SERVICES);
-        if (!stored) {
-          // Pre-save the first 2 popular services as initial items
-          const initialSaved = dbServices.slice(0, 2).map((s) => s.id);
-          setSavedServiceIds(initialSaved);
-          localStorage.setItem(STORAGE_KEY_SAVED_SERVICES, JSON.stringify(initialSaved));
-        }
-      } catch (e) {
-        // ignore
-      }
-    }
-  }, [dbServices, savedServiceIds.length]);
 
   // Create a new custom filter list and persist
   const createCustomFilter = (name: string, serviceIds: string[]) => {
@@ -158,7 +141,7 @@ export function useServicesFilter({
     } else if (activeFilterChip === 'Unread') {
       list = list.slice(0, 3);
     } else if (activeFilterChip === 'Favorites') {
-      list = list.filter((s: any) => s.isPopular || s.basePrice >= 800);
+      list = list.filter((s: Service) => s.isPopular || Number(s.basePrice) >= 800);
     } else if (activeFilterChip === 'Save') {
       list = list.filter((s) => savedServiceIds.includes(s.id));
     } else if (activeFilterChip !== 'All') {

@@ -76,5 +76,6 @@ export interface TechnicianLoginDto {
 export interface CompleteProfileDto {
   fullName?: string;
   email?: string;
+  profilePhoto?: string;
   role?: UserRole;
 }

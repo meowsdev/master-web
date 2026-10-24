@@ -23,14 +23,12 @@ export function CreateFilterModal({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Reset state when modal opens
-  React.useEffect(() => {
-    if (isOpen) {
-      setFilterName('');
-      setSelectedIds([]);
-      setSearchQuery('');
-    }
-  }, [isOpen]);
+  const handleClose = () => {
+    setFilterName('');
+    setSelectedIds([]);
+    setSearchQuery('');
+    onClose();
+  };
 
   // Filter services shown in selection list based on search
   const displayedServices = useMemo(() => {
@@ -87,7 +85,7 @@ export function CreateFilterModal({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-1 rounded-full text-[#54656f] dark:text-[#8696a0] hover:text-[#111b21] dark:hover:text-white cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -195,7 +193,7 @@ export function CreateFilterModal({
           <div className="px-5 py-3.5 flex items-center justify-end gap-2.5 shrink-0">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className={`px-4 py-2 rounded-full text-sm font-medium hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer ${textSecondary}`}
             >
               Cancel

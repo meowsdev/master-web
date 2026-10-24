@@ -10,7 +10,7 @@ import {
 } from '@/types/auth.types';
 
 export function formatPhoneNumber(phone: string): string {
-  let cleaned = phone.trim().replace(/[\s\-\(\)]/g, '');
+  const cleaned = phone.trim().replace(/[\s\-\(\)]/g, '');
   if (cleaned.startsWith('+880')) return cleaned;
   if (cleaned.startsWith('880')) return `+${cleaned}`;
   if (cleaned.startsWith('0')) return `+88${cleaned}`;

@@ -7,9 +7,6 @@ import {
   MapPin,
   Calendar,
   CreditCard,
-  ShieldCheck,
-  Wrench,
-  Sparkles,
 } from 'lucide-react';
 import { ChatMessage } from '@/types/super-app.types';
 

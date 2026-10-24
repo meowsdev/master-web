@@ -219,6 +219,15 @@ export function ChatHeader({
               >
                 Clear messages
               </button>
+              <button
+                onClick={() => {
+                  onBackToWelcome();
+                  setIsChatMenuOpen(false);
+                }}
+                className="w-full px-4 py-2 text-left hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer text-xs"
+              >
+                Close chat
+              </button>
             </div>
           )}
         </div>

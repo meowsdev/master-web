@@ -4,15 +4,15 @@ import React from 'react';
 import {
   LogIn,
   Zap,
-  Phone,
   ShieldCheck,
   Award,
   Lock,
 } from 'lucide-react';
+import { User } from '@/types/auth.types';
 
 interface WelcomeScreenProps {
   isAuthenticated: boolean;
-  user: any;
+  user: User | null;
   activeRole: string | null;
   onOpenAuth: (mode?: 'LOGIN' | 'REGISTER') => void;
   onOpenSettings: () => void;

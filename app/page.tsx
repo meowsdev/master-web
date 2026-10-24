@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from 'react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
@@ -33,56 +33,49 @@ import { CallingModal } from '@/components/modals/CallingModal';
 import { StatusViewerModal } from '@/components/modals/StatusViewerModal';
 import { SettingsDrawer } from '@/components/modals/SettingsDrawer';
 import { CreateFilterModal } from '@/components/modals/CreateFilterModal';
+import { ProfileEditorModal } from '@/components/modals/ProfileEditorModal';
+
+const emptySubscribe = () => () => {};
 
 export default function SuperAppPage() {
-  const { user, isAuthenticated, activeRole, logout, setRole } = useAuthStore();
+  const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const { user, isAuthenticated, activeRole, logout, setRole, setUser } = useAuthStore();
 
-  // Theme & Sound states with localStorage persistence
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  // Theme & Sound states
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const theme = localStorage.getItem('superapp_theme');
+      return theme === 'dark' || (!theme && Boolean(window.matchMedia?.('(prefers-color-scheme: dark)').matches));
+    } catch {
+      return false;
+    }
+  });
+
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    try {
+      const sound = localStorage.getItem('superapp_sound');
+      return sound !== null ? sound === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+
   const { playSound } = useSuperAppAudio(soundEnabled);
 
-  // Initialize theme and sound from localStorage
-  useEffect(() => {
-    try {
-      const savedTheme = localStorage.getItem('superapp_theme');
-      if (savedTheme) {
-        setIsDarkMode(savedTheme === 'dark');
-      } else if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        setIsDarkMode(true);
-      }
-
-      const savedSound = localStorage.getItem('superapp_sound');
-      if (savedSound !== null) {
-        setSoundEnabled(savedSound === 'true');
-      }
-    } catch (e) {
-      console.error('Failed to read settings from localStorage', e);
-    }
-  }, []);
-
-  // Toggle and persist theme
   const toggleTheme = useCallback(() => {
     setIsDarkMode((prev) => {
       const next = !prev;
-      try {
-        localStorage.setItem('superapp_theme', next ? 'dark' : 'light');
-      } catch (e) {
-        console.error('Failed to save theme to localStorage', e);
-      }
+      try { localStorage.setItem('superapp_theme', next ? 'dark' : 'light'); } catch {}
       return next;
     });
   }, []);
 
-  // Toggle and persist sound
   const toggleSound = useCallback(() => {
     setSoundEnabled((prev) => {
       const next = !prev;
-      try {
-        localStorage.setItem('superapp_sound', String(next));
-      } catch (e) {
-        console.error('Failed to save sound to localStorage', e);
-      }
+      try { localStorage.setItem('superapp_sound', String(next)); } catch {}
       toast.info(`Sound: ${next ? 'ON' : 'OFF'}`);
       return next;
     });
@@ -104,6 +97,7 @@ export default function SuperAppPage() {
   const [callType, setCallType] = useState<'voice' | 'video'>('voice');
   const [isStatusViewerOpen, setIsStatusViewerOpen] = useState(false);
   const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
+  const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
   const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
 
   // Chat management hook with strict authentication guards & running order tracking
@@ -126,7 +120,6 @@ export default function SuperAppPage() {
     handleClearChat,
     activeOrder,
     activeOrderMessageId,
-    runningOrder,
     activeServiceRunningOrder,
     runningServiceIds,
     serviceLastActivity,
@@ -176,10 +169,15 @@ export default function SuperAppPage() {
     scrollToBottom();
   }, [currentMessages, scrollToBottom]);
 
-  const handleOpenAuth = (mode: 'LOGIN' | 'REGISTER' = 'LOGIN') => {
+  const handleOpenAuth = useCallback((mode: 'LOGIN' | 'REGISTER' = 'LOGIN') => {
     setAuthInitialMode(mode);
     setIsAuthModalOpen(true);
-  };
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    logout();
+    toast.info('Logged out');
+  }, [logout]);
 
   // Centralized booking opener: prevents duplicate running orders for the SAME service,
   // while allowing multiple concurrent orders across different services.
@@ -197,6 +195,14 @@ export default function SuperAppPage() {
     }
     setIsBookingModalOpen(true);
   };
+
+  if (!isMounted) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-[#efeae2] dark:bg-[#0b141a]">
+        <div className="w-10 h-10 rounded-full border-3 border-[#008069] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   const bgMain = isDarkMode ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#f0f2f5] text-[#111b21]';
   const bgSidebar = isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]';
@@ -218,9 +224,8 @@ export default function SuperAppPage() {
 
       {/* 2. Middle Column: Sidebar (Chats/Services List) */}
       <section
-        className={`${
-          mobileView === 'LIST' ? 'flex' : 'hidden md:flex'
-        } flex-col w-full md:w-[380px] lg:w-[420px] border-r shrink-0 h-full relative z-10 ${bgSidebar}`}
+        className={`${mobileView === 'LIST' ? 'flex' : 'hidden md:flex'
+          } flex-col w-full md:w-[380px] lg:w-[420px] border-r shrink-0 h-full relative z-10 ${bgSidebar}`}
       >
         <SidebarHeader
           isDarkMode={isDarkMode}
@@ -229,13 +234,10 @@ export default function SuperAppPage() {
           onToggleSound={toggleSound}
           onSelectWelcome={() => setActiveServiceId(null)}
           onOpenSettings={() => setIsSettingsDrawerOpen(true)}
-          onOpenAuth={() => handleOpenAuth('LOGIN')}
+          onOpenAuth={() => handleOpenAuth()}
           isAuthenticated={isAuthenticated}
           userName={user?.name}
-          onLogout={() => {
-            logout();
-            toast.info('Logged out');
-          }}
+          onLogout={handleLogout}
         />
 
         <SearchAndFilters
@@ -273,6 +275,7 @@ export default function SuperAppPage() {
           user={user}
           activeRole={activeRole}
           onOpenAuth={() => handleOpenAuth('LOGIN')}
+          onOpenProfile={() => setIsProfileEditorOpen(true)}
           runningServiceIds={runningServiceIds}
           serviceMessages={serviceMessages}
           activeFilterChip={activeFilterChip}
@@ -282,9 +285,8 @@ export default function SuperAppPage() {
 
       {/* 3. Right Main Area: Active Service Chat Window OR Welcome Screen */}
       <main
-        className={`${
-          mobileView === 'CHAT' ? 'flex' : 'hidden md:flex'
-        } flex-col flex-1 h-full relative z-0 min-w-0`}
+        className={`${mobileView === 'CHAT' ? 'flex' : 'hidden md:flex'
+          } flex-col flex-1 h-full relative z-0 min-w-0`}
       >
         {activeService ? (
           <>
@@ -310,13 +312,13 @@ export default function SuperAppPage() {
               onToggleSave={
                 activeService
                   ? () => {
-                      if (!isAuthenticated) {
-                        toast.info('Please log in with your phone number to save services.');
-                        handleOpenAuth('LOGIN');
-                        return;
-                      }
-                      toggleSaveService(activeService.id);
+                    if (!isAuthenticated) {
+                      toast.info('Please log in with your phone number to save services.');
+                      handleOpenAuth('LOGIN');
+                      return;
                     }
+                    toggleSaveService(activeService.id);
+                  }
                   : undefined
               }
               onOpenDetails={() => setIsServiceDetailsOpen(true)}
@@ -370,12 +372,9 @@ export default function SuperAppPage() {
             isAuthenticated={isAuthenticated}
             user={user}
             activeRole={activeRole}
-            onOpenAuth={(mode = 'LOGIN') => handleOpenAuth(mode)}
+            onOpenAuth={handleOpenAuth}
             onOpenSettings={() => setIsSettingsDrawerOpen(true)}
-            onLogout={() => {
-              logout();
-              toast.info('Logged out');
-            }}
+            onLogout={handleLogout}
             isDarkMode={isDarkMode}
           />
         )}
@@ -438,11 +437,18 @@ export default function SuperAppPage() {
         user={user}
         activeRole={activeRole}
         onSwitchRole={setRole}
-        onOpenAuth={() => handleOpenAuth('LOGIN')}
-        onLogout={() => {
-          logout();
-          toast.info('Logged out');
-        }}
+        onOpenAuth={() => handleOpenAuth()}
+        onOpenEditProfile={() => setIsProfileEditorOpen(true)}
+        onLogout={handleLogout}
+      />
+
+      <ProfileEditorModal
+        key={`${user?.id || 'guest'}-${isProfileEditorOpen}`}
+        isOpen={isProfileEditorOpen}
+        onClose={() => setIsProfileEditorOpen(false)}
+        user={user}
+        onUserUpdated={setUser}
+        isDarkMode={isDarkMode}
       />
 
       <CreateFilterModal

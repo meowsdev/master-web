@@ -5,10 +5,6 @@ import {
   X,
   Phone,
   Lock,
-  UserCheck,
-  ShieldCheck,
-  Briefcase,
-  Wrench,
   User as UserIcon,
   Mail,
   CheckCircle2,
@@ -72,8 +68,10 @@ export function AuthModal({
       }
       toast.success(res.message || 'OTP sent successfully!');
       setStep('OTP');
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Failed to request OTP';
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message ||
+        'Failed to request OTP';
       toast.error(Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
     } finally {
       setLoading(false);
@@ -108,8 +106,10 @@ export function AuthModal({
         setStep('PROFILE');
         toast.info('নতুন একাউন্ট সম্পন্ন করতে নাম ও আপনার একমাত্র রোলটি নির্বাচন করুন।');
       }
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Verification failed. Invalid OTP.';
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message ||
+        'Verification failed. Invalid OTP.';
       toast.error(Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
     } finally {
       setLoading(false);
@@ -136,8 +136,10 @@ export function AuthModal({
         `${updatedUser.role} হিসেবে সফলভাবে নিবন্ধিত হয়েছেন! এই নাম্বারের জন্য রোলটি স্থায়ীভাবে নির্ধারিত হয়েছে।`,
       );
       onClose();
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Failed to complete profile';
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message ||
+        'Failed to complete profile';
       toast.error(Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
     } finally {
       setLoading(false);
@@ -157,8 +159,10 @@ export function AuthModal({
       setRole(UserRole.TECHNICIAN);
       toast.success(`Technician logged in: ${res.user.name || res.user.mobileNumber}`);
       onClose();
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Invalid technician credentials';
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message ||
+        'Invalid technician credentials';
       toast.error(Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
     } finally {
       setLoading(false);

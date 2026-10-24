@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import {
   X,
@@ -19,8 +19,10 @@ import {
   LogIn,
   CheckCircle2,
   Lock,
+  Pencil,
+  LucideIcon,
 } from 'lucide-react';
-import { UserRole } from '@/types/auth.types';
+import { UserRole, User } from '@/types/auth.types';
 
 interface SettingsDrawerProps {
   isOpen: boolean;
@@ -29,10 +31,11 @@ interface SettingsDrawerProps {
   onToggleTheme: () => void;
   soundEnabled: boolean;
   onToggleSound: () => void;
-  user: any;
+  user: User | null;
   activeRole: string | null;
   onSwitchRole?: (role: UserRole) => void;
   onOpenAuth: () => void;
+  onOpenEditProfile?: () => void;
   onLogout: () => void;
 }
 
@@ -46,6 +49,7 @@ export function SettingsDrawer({
   user,
   activeRole,
   onOpenAuth,
+  onOpenEditProfile,
   onLogout,
 }: SettingsDrawerProps) {
   if (!isOpen) return null;
@@ -54,7 +58,7 @@ export function SettingsDrawer({
   const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
 
   // Role details metadata
-  const roleMeta: Record<string, { label: string; desc: string; icon: any }> = {
+  const roleMeta: Record<string, { label: string; desc: string; icon: LucideIcon }> = {
     [UserRole.CUSTOMER]: {
       label: 'Customer (গ্রাহক)',
       desc: 'Browse on-demand services & book in chat',
@@ -99,9 +103,8 @@ export function SettingsDrawer({
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div
-        className={`w-full max-w-sm h-full shadow-2xl border-l flex flex-col justify-between p-6 animate-in slide-in-from-right duration-200 overflow-y-auto ${
-          isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]'
-        }`}
+        className={`w-full max-w-sm h-full shadow-2xl border-l flex flex-col justify-between p-6 animate-in slide-in-from-right duration-200 overflow-y-auto ${isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]'
+          }`}
       >
         {/* Top Header & Settings */}
         <div className="space-y-4">
@@ -118,25 +121,38 @@ export function SettingsDrawer({
 
           {/* User Profile Card */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-full overflow-hidden bg-[#008069] text-white flex items-center justify-center text-xl font-bold border-2 border-[#25D366] shrink-0">
-                {user?.profilePhoto ? (
-                  <Image src={user.profilePhoto} alt="User" width={56} height={56} className="object-cover" />
-                ) : (
-                  <span>{user?.name ? user.name[0].toUpperCase() : 'G'}</span>
-                )}
+            <div className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-black/5 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02]">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-[#008069] text-white flex items-center justify-center text-xl font-bold border-2 border-[#25D366] shrink-0">
+                  {user?.profilePhoto ? (
+                    <Image src={user.profilePhoto} alt="User" width={56} height={56} unoptimized className="object-cover w-full h-full" />
+                  ) : (
+                    <span>{user?.name ? user.name[0].toUpperCase() : 'G'}</span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <h4 className={`text-base font-bold truncate ${textPrimary}`}>
+                    {user?.name || 'Guest User'}
+                  </h4>
+                  <p className={`text-xs truncate ${textSecondary}`}>
+                    {user?.mobileNumber || 'Not logged in'}
+                  </p>
+                  <span className="inline-block mt-1 text-[11px] font-bold uppercase px-2 py-0.5 rounded-md bg-[#e7fce3] dark:bg-[#005c4b]/50 text-[#008069] dark:text-[#25D366]">
+                    Role: {currentRole}
+                  </span>
+                </div>
               </div>
-              <div className="min-w-0">
-                <h4 className={`text-base font-bold truncate ${textPrimary}`}>
-                  {user?.name || 'Guest User'}
-                </h4>
-                <p className={`text-xs truncate ${textSecondary}`}>
-                  {user?.mobileNumber || 'Not logged in'}
-                </p>
-                <span className="inline-block mt-1 text-[11px] font-bold uppercase px-2 py-0.5 rounded-md bg-[#e7fce3] dark:bg-[#005c4b]/50 text-[#008069] dark:text-[#25D366]">
-                  Role: {currentRole}
-                </span>
-              </div>
+
+              {user && onOpenEditProfile && (
+                <button
+                  onClick={onOpenEditProfile}
+                  className="px-2.5 py-1.5 rounded-xl bg-[#008069]/10 hover:bg-[#008069]/20 text-[#008069] dark:text-[#25D366] text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                  title="Edit Profile"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>Edit</span>
+                </button>
+              )}
             </div>
 
             {/* Quick Preferences */}
@@ -174,9 +190,8 @@ export function SettingsDrawer({
 
               {user ? (
                 <div
-                  className={`p-3.5 rounded-2xl border space-y-3 ${
-                    isDarkMode ? 'bg-[#202c33]/60 border-[#2f3b43]' : 'bg-[#f0f2f5] border-[#e9edef]'
-                  }`}
+                  className={`p-3.5 rounded-2xl border space-y-3 ${isDarkMode ? 'bg-[#202c33]/60 border-[#2f3b43]' : 'bg-[#f0f2f5] border-[#e9edef]'
+                    }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -200,11 +215,10 @@ export function SettingsDrawer({
 
                   {/* Single Role Policy Badge */}
                   <div
-                    className={`p-2.5 rounded-xl border text-[11px] leading-relaxed space-y-1 ${
-                      isDarkMode
-                        ? 'bg-[#111b21] border-[#222e35] text-[#8696a0]'
-                        : 'bg-white border-[#e9edef] text-[#667781]'
-                    }`}
+                    className={`p-2.5 rounded-xl border text-[11px] leading-relaxed space-y-1 ${isDarkMode
+                      ? 'bg-[#111b21] border-[#222e35] text-[#8696a0]'
+                      : 'bg-white border-[#e9edef] text-[#667781]'
+                      }`}
                   >
                     <div className="flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-400">
                       <Lock className="w-3 h-3" />
@@ -217,9 +231,8 @@ export function SettingsDrawer({
                 </div>
               ) : (
                 <div
-                  className={`p-3.5 rounded-2xl border text-center space-y-2.5 ${
-                    isDarkMode ? 'bg-[#202c33]/60 border-[#2f3b43]' : 'bg-[#f0f2f5] border-[#e9edef]'
-                  }`}
+                  className={`p-3.5 rounded-2xl border text-center space-y-2.5 ${isDarkMode ? 'bg-[#202c33]/60 border-[#2f3b43]' : 'bg-[#f0f2f5] border-[#e9edef]'
+                    }`}
                 >
                   <p className={`text-xs ${textSecondary}`}>
                     বর্তমানে কোনো একাউন্ট লগইন করা নেই। রেজিস্ট্রেশন বা লগইন করলে এই নাম্বারের জন্য একটি মাত্র নির্দিষ্ট রোল নির্ধারিত থাকবে।
@@ -244,22 +257,7 @@ export function SettingsDrawer({
         <div className="pt-4 border-t border-black/5 dark:border-white/10 shrink-0 space-y-2">
           {user ? (
             <>
-              <button
-                onClick={() => {
-                  onLogout();
-                  onClose();
-                  onOpenAuth();
-                }}
-                className={`w-full py-2.5 border rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                  isDarkMode
-                    ? 'border-[#2f3b43] text-[#8696a0] hover:bg-white/5'
-                    : 'border-[#d1d7db] text-[#54656f] hover:bg-black/5'
-                }`}
-                title="Switch to another role's phone number"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span>Switch Number / Role</span>
-              </button>
+
 
               <button
                 onClick={() => {

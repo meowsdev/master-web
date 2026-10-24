@@ -18,10 +18,8 @@ export function StatusViewerModal({
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    if (!isOpen) {
-      setCurrentIndex(0);
-      return;
-    }
+    if (!isOpen) return;
+
     const timer = setInterval(() => {
       setCurrentIndex((prev) => {
         if (prev < stories.length - 1) return prev + 1;

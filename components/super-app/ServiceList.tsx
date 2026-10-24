@@ -1,9 +1,11 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { LogIn } from 'lucide-react';
 import { Service } from '@/types/service.types';
 import { ChatMessage } from '@/types/super-app.types';
+import { User } from '@/types/auth.types';
 import { ServiceListItem } from './ServiceListItem';
 
 interface ServiceListProps {
@@ -15,9 +17,10 @@ interface ServiceListProps {
   activeServiceId: string | null;
   onSelectService: (service: Service) => void;
   isAuthenticated: boolean;
-  user: any;
+  user: User | null;
   activeRole: string | null;
   onOpenAuth: () => void;
+  onOpenProfile?: () => void;
   runningServiceIds?: string[];
   serviceMessages?: Record<string, ChatMessage[]>;
   activeFilterChip?: string;
@@ -36,6 +39,7 @@ export function ServiceList({
   user,
   activeRole,
   onOpenAuth,
+  onOpenProfile,
   runningServiceIds = [],
   serviceMessages = {},
   activeFilterChip,
@@ -121,12 +125,22 @@ export function ServiceList({
         }`}
       >
         {isAuthenticated ? (
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-[#008069] text-white flex items-center justify-center text-xs font-bold shrink-0">
-              {user?.name ? user.name[0].toUpperCase() : 'U'}
+          <div
+            onClick={onOpenProfile}
+            className="flex items-center gap-2.5 min-w-0 cursor-pointer group hover:opacity-90 transition-opacity"
+            title="Click to view & edit Profile"
+          >
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-[#008069] text-white flex items-center justify-center text-xs font-bold shrink-0 border border-[#25D366]">
+              {user?.profilePhoto ? (
+                <Image src={user.profilePhoto} alt="User" width={32} height={32} unoptimized className="object-cover w-full h-full" />
+              ) : (
+                <span>{user?.name ? user.name[0].toUpperCase() : 'U'}</span>
+              )}
             </div>
             <div className="min-w-0">
-              <p className={`text-xs font-bold truncate ${textPrimary}`}>{user?.name}</p>
+              <p className={`text-xs font-bold truncate ${textPrimary} group-hover:text-[#008069] dark:group-hover:text-[#25D366] transition-colors`}>
+                {user?.name}
+              </p>
               <p className="text-[11px] text-[#25D366] font-bold">{activeRole || 'CUSTOMER'}</p>
             </div>
           </div>
