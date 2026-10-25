@@ -12,6 +12,13 @@ export interface OrderCardData {
   completedAt?: string;
   hasActiveRevision?: boolean;
   revisionIssue?: string;
+  advancePaid?: number | string;
+  dueAmount?: number | string;
+  additionalPrice?: number | string;
+  totalPrice?: number | string;
+  hasPendingPriceEdit?: boolean;
+  resolvedRevision?: boolean;
+  needsSatisfactionConfirmation?: boolean;
 }
 
 // Message structure for in-chat conversations
@@ -43,7 +50,7 @@ export interface StatusStory {
 }
 
 // Navigation Rail tab identifiers
-export type RailTab = 'CHATS' | 'STATUS' | 'CHANNELS' | 'COMMUNITIES' | 'SETTINGS';
+export type RailTab = 'CHATS' | 'PROVIDERS' | 'STATUS' | 'CHANNELS' | 'COMMUNITIES' | 'SETTINGS';
 
 // Custom filter list structure for WhatsApp Web user-created lists
 export interface CustomFilterList {

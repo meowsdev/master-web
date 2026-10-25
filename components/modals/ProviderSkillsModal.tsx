@@ -6,6 +6,7 @@ import { X, Search, Check, Wrench, ShieldCheck, Save, Sparkles, Loader2 } from '
 import { toast } from 'sonner';
 import { servicesService } from '@/services/services.service';
 import { serviceAssigneeService } from '@/services/service-assignee.service';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Service } from '@/types/service.types';
 
 interface ProviderSkillsModalProps {
@@ -20,6 +21,7 @@ export function ProviderSkillsModal({
   isDarkMode,
 }: ProviderSkillsModalProps) {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -30,11 +32,11 @@ export function ProviderSkillsModal({
     enabled: isOpen,
   });
 
-  // 2. Fetch current provider assigned skills
+  // 2. Fetch current provider assigned skills (scoped to authenticated user)
   const { data: mySkills, isLoading: isLoadingMySkills } = useQuery({
-    queryKey: ['provider-my-skills'],
+    queryKey: ['provider-my-skills', user?.id],
     queryFn: () => serviceAssigneeService.getMySkills(),
-    enabled: isOpen,
+    enabled: isOpen && Boolean(user?.id),
   });
 
   // Sync loaded skills into local state once data is loaded (idempotent bail-out)

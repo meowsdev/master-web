@@ -15,6 +15,7 @@ import {
 import { toast } from 'sonner';
 import { ordersService } from '@/services/orders.service';
 import { revisionService } from '@/services/revision.service';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Order, OrderStatus } from '@/types/order.types';
 import { OrderRevisionModal } from './OrderRevisionModal';
 
@@ -41,16 +42,17 @@ export function OrdersDrawer({
 }: OrdersDrawerProps) {
   const [activeTab, setActiveTab] = useState<OrderTabFilter>('ALL');
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
 
-  // Fetch real user orders from backend API
+  // Fetch real user orders from backend API (scoped to authenticated user)
   const {
     data: orders = [],
     isLoading,
     refetch,
   } = useQuery<Order[]>({
-    queryKey: ['my-orders-drawer'],
+    queryKey: ['my-orders-drawer', user?.id],
     queryFn: () => ordersService.getOrders(),
-    enabled: isOpen && isAuthenticated,
+    enabled: isOpen && isAuthenticated && Boolean(user?.id),
   });
 
   // Complete Order Mutation directly inside Drawer

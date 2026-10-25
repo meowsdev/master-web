@@ -40,6 +40,19 @@ export const ordersService = {
 
   createOrder: async (dto: CreateCustomOrderDto) => {
     const response = await apiClient.post<Order>('/orders', dto);
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        const bc = new BroadcastChannel('master_job_dispatch');
+        bc.postMessage({
+          type: 'NEW_ORDER_DISPATCHED',
+          orderId: response.data.id,
+          serviceName: response.data.service?.name,
+        });
+        bc.close();
+      } catch {
+        // ignore
+      }
+    }
     return response.data;
   },
 

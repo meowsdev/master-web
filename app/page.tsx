@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
@@ -14,6 +15,7 @@ import { useServicesFilter } from '@/hooks/useServicesFilter';
 import { useSuperAppAudio } from '@/hooks/useSuperAppAudio';
 import { useSuperAppChat } from '@/hooks/useSuperAppChat';
 import { useProviderOrders } from '@/hooks/useProviderOrders';
+import { useOrderNegotiation } from '@/hooks/useOrderNegotiation';
 
 // Super App UI Components
 import { NavigationRail } from '@/components/super-app/NavigationRail';
@@ -21,15 +23,14 @@ import { SidebarHeader } from '@/components/super-app/SidebarHeader';
 import { SearchAndFilters } from '@/components/super-app/SearchAndFilters';
 import { ServiceList } from '@/components/super-app/ServiceList';
 import { ProviderOrderList } from '@/components/super-app/ProviderOrderList';
-import { ProviderOrderCanvas } from '@/components/super-app/ProviderOrderCanvas';
-import { CustomerChatCanvas } from '@/components/super-app/CustomerChatCanvas';
-import { WelcomeScreen } from '@/components/super-app/WelcomeScreen';
+import { MainCanvasArea } from '@/components/super-app/MainCanvasArea';
 import { SuperAppModals } from '@/components/super-app/SuperAppModals';
 
 const emptySubscribe = () => () => {};
 
 export default function SuperAppPage() {
   const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const queryClient = useQueryClient();
   const { user, isAuthenticated, activeRole, logout, setRole, setUser } = useAuthStore();
 
   const isProvider = Boolean(
@@ -77,7 +78,7 @@ export default function SuperAppPage() {
   const [bookingTime, setBookingTime] = useState('Today, Within 2 Hours');
   const [bookingPaymentMode, setBookingPaymentMode] = useState<PaymentMode>('CASH');
 
-  // Calling, Status viewer, and Service details modals
+  // Calling, Status, Settings, and Provider Management drawers
   const [callType, setCallType] = useState<'voice' | 'video'>('voice');
   const [isCallingModalOpen, setIsCallingModalOpen] = useState(false);
   const [isStatusViewerOpen, setIsStatusViewerOpen] = useState(false);
@@ -88,6 +89,10 @@ export default function SuperAppPage() {
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
   const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
   const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
+  const [isTeamManagementOpen, setIsTeamManagementOpen] = useState(false);
+  const [isLevelingDrawerOpen, setIsLevelingDrawerOpen] = useState(false);
+  const [isStartChatOpen, setIsStartChatOpen] = useState(false);
+
   const openSettings = useCallback(() => setIsSettingsDrawerOpen(true), []);
   const openOrders = useCallback(() => setIsOrdersDrawerOpen(true), []);
   const openSkillsModal = useCallback(() => setIsSkillsModalOpen(true), []);
@@ -97,6 +102,7 @@ export default function SuperAppPage() {
     activeServiceId,
     setActiveServiceId,
     serviceMessages,
+    setServiceMessages,
     inputText,
     setInputText,
     mobileView,
@@ -116,7 +122,21 @@ export default function SuperAppPage() {
     activeServiceRunningOrder,
     runningServiceIds,
     serviceLastActivity,
-  } = useSuperAppChat({ playSound });
+    resetChatSession,
+  } = useSuperAppChat({ playSound, userId: user?.id });
+
+  // In-Chat Order Negotiation & Add-On Hook (FR-PAY, FR-ORD, FR-REV)
+  const {
+    handlePayAdvance,
+    handleAcceptPrice,
+    handleRejectPrice,
+    handleSatisfactionResponse,
+  } = useOrderNegotiation({
+    activeServiceId,
+    setServiceMessages,
+    playWhatsAppChime: () => playSound('receive'),
+    userId: user?.id,
+  });
 
   // Services & Filter computation hook
   const {
@@ -152,7 +172,7 @@ export default function SuperAppPage() {
     setActiveFilter: setProviderActiveFilter,
     handleUpdateStatus,
     isUpdatingStatus,
-  } = useProviderOrders({ isProvider });
+  } = useProviderOrders({ isProvider, userId: user?.id });
 
   // Active selected service object (for Customer view)
   const activeService = useMemo(() => {
@@ -184,9 +204,11 @@ export default function SuperAppPage() {
   }, []);
 
   const handleLogout = useCallback(() => {
+    queryClient.clear();
+    resetChatSession();
     logout();
     toast.info('Logged out');
-  }, [logout]);
+  }, [queryClient, resetChatSession, logout]);
 
   const handleStartCall = useCallback(
     (type: 'voice' | 'video') => {
@@ -294,6 +316,9 @@ export default function SuperAppPage() {
             user={user}
             onOpenProfile={() => setIsProfileEditorOpen(true)}
             onOpenSkillsModal={openSkillsModal}
+            onOpenTeamManagement={() => setIsTeamManagementOpen(true)}
+            onOpenLeveling={() => setIsLevelingDrawerOpen(true)}
+            onOpenStartChat={() => setIsStartChatOpen(true)}
             isDarkMode={isDarkMode}
           />
         ) : (
@@ -344,63 +369,51 @@ export default function SuperAppPage() {
         )}
       </section>
 
-      {/* 3. Right Main Area: Provider Order Canvas OR Customer Service Chat OR Welcome Screen */}
-      <main
-        className={`${
-          mobileView === 'CHAT' ? 'flex' : 'hidden md:flex'
-        } flex-col flex-1 h-full relative z-0 min-w-0`}
-      >
-        {isProvider && activeProviderOrder ? (
-          /* Provider Order Workspace */
-          <ProviderOrderCanvas
-            order={activeProviderOrder}
-            onBack={() => setMobileView('LIST')}
-            onUpdateStatus={handleUpdateStatus}
-            isUpdatingStatus={isUpdatingStatus}
-            onStartCall={handleStartCall}
-            isDarkMode={isDarkMode}
-          />
-        ) : !isProvider && activeService && activeServiceId ? (
-          /* Customer Service Chat Window */
-          <CustomerChatCanvas
-            activeService={activeService}
-            activeServiceId={activeServiceId}
-            activeOrder={activeOrder}
-            activeOrderMessageId={activeOrderMessageId}
-            currentMessages={currentMessages}
-            inputText={inputText}
-            onInputChange={setInputText}
-            onBackMobile={() => setMobileView('LIST')}
-            onBackToWelcome={() => setActiveServiceId(null)}
-            onOpenBooking={handleOpenBooking}
-            onStartCall={handleStartCall}
-            onClearChat={handleClearChat}
-            isSaved={isServiceSaved(activeService.id)}
-            onToggleSave={handleToggleSave}
-            onOpenDetails={() => setIsServiceDetailsOpen(true)}
-            onCompleteOrder={handleCompleteOrder}
-            onReactToMessage={handleReactToMessage}
-            onSendMessage={() => handleSendMessage(isAuthenticated, () => handleOpenAuth('LOGIN'))}
-            onSendVoiceNote={() => handleSendVoiceNote(isAuthenticated, () => handleOpenAuth('LOGIN'))}
-            isAuthenticated={isAuthenticated}
-            onOpenAuth={() => handleOpenAuth('LOGIN')}
-            onOpenOrders={openOrders}
-            messagesEndRef={messagesEndRef}
-            isDarkMode={isDarkMode}
-          />
-        ) : (
-          <WelcomeScreen
-            isAuthenticated={isAuthenticated}
-            user={user}
-            activeRole={activeRole}
-            onOpenAuth={handleOpenAuth}
-            onOpenSettings={openSettings}
-            onOpenOrders={openOrders}
-            onLogout={handleLogout}
-            isDarkMode={isDarkMode}
-          />
-        )}
-      </main>
+      {/* 3. Right Main Area: Encapsulated Routing & Canvas Area */}
+      <MainCanvasArea
+        activeRailTab={activeRailTab}
+        mobileView={mobileView}
+        setMobileView={setMobileView}
+        isProvider={isProvider}
+        activeProviderOrder={activeProviderOrder}
+        handleUpdateStatus={handleUpdateStatus}
+        isUpdatingStatus={isUpdatingStatus}
+        activeService={activeService}
+        activeServiceId={activeServiceId}
+        setActiveServiceId={setActiveServiceId}
+        activeOrder={activeOrder}
+        activeOrderMessageId={activeOrderMessageId}
+        currentMessages={currentMessages}
+        inputText={inputText}
+        setInputText={setInputText}
+        handleOpenBooking={handleOpenBooking}
+        handleStartCall={handleStartCall}
+        handleClearChat={handleClearChat}
+        isServiceSaved={isServiceSaved}
+        handleToggleSave={handleToggleSave}
+        setIsServiceDetailsOpen={setIsServiceDetailsOpen}
+        handleCompleteOrder={handleCompleteOrder}
+        handleReactToMessage={handleReactToMessage}
+        handleSendMessage={handleSendMessage}
+        handleSendVoiceNote={handleSendVoiceNote}
+        isAuthenticated={isAuthenticated}
+        handleOpenAuth={handleOpenAuth}
+        openOrders={openOrders}
+        openSettings={openSettings}
+        handleLogout={handleLogout}
+        messagesEndRef={messagesEndRef}
+        isDarkMode={isDarkMode}
+        user={user}
+        activeRole={activeRole}
+        runningServiceIds={runningServiceIds}
+        dbServices={dbServices}
+        handleSelectService={handleSelectService}
+        setActiveRailTab={setActiveRailTab}
+        handlePayAdvance={handlePayAdvance}
+        handleAcceptPrice={handleAcceptPrice}
+        handleRejectPrice={handleRejectPrice}
+        handleSatisfactionResponse={handleSatisfactionResponse}
+      />
 
       {/* Global Modals & Drawers */}
       <SuperAppModals
@@ -418,17 +431,7 @@ export default function SuperAppPage() {
         onTimeChange={setBookingTime}
         bookingPaymentMode={bookingPaymentMode}
         onPaymentModeChange={setBookingPaymentMode}
-        onConfirmBooking={() =>
-          handleConfirmBooking(
-            activeService,
-            bookingAddress,
-            bookingTime,
-            bookingPaymentMode,
-            isAuthenticated,
-            handleOpenAuth,
-            () => setIsBookingModalOpen(false)
-          )
-        }
+        onConfirmBooking={() => handleConfirmBooking(activeService, bookingAddress, bookingTime, bookingPaymentMode, isAuthenticated, handleOpenAuth, () => setIsBookingModalOpen(false))}
         isAuthModalOpen={isAuthModalOpen}
         onCloseAuth={() => setIsAuthModalOpen(false)}
         authInitialMode={authInitialMode}
@@ -466,10 +469,14 @@ export default function SuperAppPage() {
         isOrdersDrawerOpen={isOrdersDrawerOpen}
         onCloseOrdersDrawer={() => setIsOrdersDrawerOpen(false)}
         onOrderRevisionRequested={handleReopenOrderRevision}
-        onSelectServiceById={(serviceId) => {
-          const target = dbServices.find((s) => s.id === serviceId);
-          if (target) handleSelectService(target);
-        }}
+        onSelectServiceById={(id) => { const target = dbServices.find((s) => s.id === id); if (target) handleSelectService(target); }}
+        isTeamManagementOpen={isTeamManagementOpen}
+        onCloseTeamManagement={() => setIsTeamManagementOpen(false)}
+        isLevelingDrawerOpen={isLevelingDrawerOpen}
+        onCloseLevelingDrawer={() => setIsLevelingDrawerOpen(false)}
+        isStartChatOpen={isStartChatOpen}
+        onCloseStartChat={() => setIsStartChatOpen(false)}
+        onProviderStartChat={(id) => { const target = dbServices.find((s) => s.id === id); if (target) handleSelectService(target); }}
       />
     </div>
   );

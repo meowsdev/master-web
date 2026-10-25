@@ -27,7 +27,7 @@ export function useServicesFilter({
   runningServiceIds = [],
   serviceLastActivity = {},
 }: UseServicesFilterProps = {}) {
-  const { isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activeFilterChip, setActiveFilterChip] = useState<FilterChip>('All');
@@ -57,11 +57,11 @@ export function useServicesFilter({
     queryFn: () => servicesService.getServices(),
   });
 
-  // Fetch customer orders (shares cache with OrdersDrawer)
+  // Fetch customer orders (shares cache with OrdersDrawer, scoped to authenticated user)
   const { data: customerOrders = [] } = useQuery<Order[]>({
-    queryKey: ['my-orders-drawer'],
+    queryKey: ['my-orders-drawer', user?.id],
     queryFn: () => ordersService.getOrders(),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && Boolean(user?.id),
     staleTime: 10000,
   });
 

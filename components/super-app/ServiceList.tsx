@@ -53,9 +53,9 @@ export function ServiceList({
 
   // Fetch customer orders (shares 'my-orders-drawer' cache) to detect running revisions
   const { data: customerOrders = [] } = useQuery<Order[]>({
-    queryKey: ['my-orders-drawer'],
+    queryKey: ['my-orders-drawer', user?.id],
     queryFn: () => ordersService.getOrders(),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && Boolean(user?.id),
     staleTime: 10000,
   });
 

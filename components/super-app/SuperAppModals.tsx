@@ -11,6 +11,9 @@ import { CreateFilterModal } from '@/components/modals/CreateFilterModal';
 import { ServiceDetailsDrawer } from '@/components/super-app/ServiceDetailsDrawer';
 import { OrdersDrawer } from '@/components/modals/OrdersDrawer';
 import { ProviderSkillsModal } from '@/components/modals/ProviderSkillsModal';
+import { TeamManagementDrawer } from '@/components/modals/TeamManagementDrawer';
+import { ProviderLevelingDrawer } from '@/components/modals/ProviderLevelingDrawer';
+import { ProviderStartChatModal } from '@/components/modals/ProviderStartChatModal';
 import { Service } from '@/types/service.types';
 import { User, UserRole } from '@/types/auth.types';
 import { PaymentMode, STATUS_STORIES } from '@/types/super-app.types';
@@ -79,6 +82,14 @@ interface SuperAppModalsProps {
   // Skills Modal
   isSkillsModalOpen: boolean;
   onCloseSkillsModal: () => void;
+  // Provider Specific Drawers & Modals
+  isTeamManagementOpen?: boolean;
+  onCloseTeamManagement?: () => void;
+  isLevelingDrawerOpen?: boolean;
+  onCloseLevelingDrawer?: () => void;
+  isStartChatOpen?: boolean;
+  onCloseStartChat?: () => void;
+  onProviderStartChat?: (serviceId: string, customerPhone: string) => void;
 }
 
 export function SuperAppModals({
@@ -135,23 +146,32 @@ export function SuperAppModals({
   onOrderRevisionRequested,
   isSkillsModalOpen,
   onCloseSkillsModal,
+  isTeamManagementOpen = false,
+  onCloseTeamManagement = () => {},
+  isLevelingDrawerOpen = false,
+  onCloseLevelingDrawer = () => {},
+  isStartChatOpen = false,
+  onCloseStartChat = () => {},
+  onProviderStartChat = () => {},
 }: SuperAppModalsProps) {
   return (
     <>
-      <BookingModal
-        isOpen={isBookingModalOpen}
-        onClose={onCloseBooking}
-        service={activeService}
-        runningOrder={activeServiceRunningOrder}
-        bookingAddress={bookingAddress}
-        onAddressChange={onAddressChange}
-        bookingTime={bookingTime}
-        onTimeChange={onTimeChange}
-        bookingPaymentMode={bookingPaymentMode}
-        onPaymentModeChange={onPaymentModeChange}
-        onConfirmBooking={onConfirmBooking}
-        isDarkMode={isDarkMode}
-      />
+      {activeService && (
+        <BookingModal
+          isOpen={isBookingModalOpen}
+          onClose={onCloseBooking}
+          service={activeService}
+          runningOrder={activeServiceRunningOrder}
+          bookingAddress={bookingAddress}
+          onAddressChange={onAddressChange}
+          bookingTime={bookingTime}
+          onTimeChange={onTimeChange}
+          bookingPaymentMode={bookingPaymentMode}
+          onPaymentModeChange={onPaymentModeChange}
+          onConfirmBooking={onConfirmBooking}
+          isDarkMode={isDarkMode}
+        />
+      )}
 
       <AuthModal
         isOpen={isAuthModalOpen}
@@ -160,13 +180,15 @@ export function SuperAppModals({
         isDarkMode={isDarkMode}
       />
 
-      <CallingModal
-        isOpen={isCallingModalOpen}
-        onClose={onCloseCalling}
-        service={activeService}
-        callType={callType}
-        isDarkMode={isDarkMode}
-      />
+      {isCallingModalOpen && (
+        <CallingModal
+          isOpen={isCallingModalOpen}
+          onClose={onCloseCalling}
+          service={activeService}
+          callType={callType}
+          isDarkMode={isDarkMode}
+        />
+      )}
 
       <StatusViewerModal
         isOpen={isStatusViewerOpen}
@@ -184,15 +206,14 @@ export function SuperAppModals({
         user={user}
         activeRole={activeRole}
         onSwitchRole={onSwitchRole}
-        onOpenAuth={() => onOpenAuth('LOGIN')}
         onOpenEditProfile={onOpenEditProfile}
         onOpenOrders={onOpenOrders}
         onOpenSkillsModal={onOpenSkillsModal}
+        onOpenAuth={() => onOpenAuth('LOGIN')}
         onLogout={onLogout}
       />
 
       <ProfileEditorModal
-        key={`${user?.id || 'guest'}-${isProfileEditorOpen}`}
         isOpen={isProfileEditorOpen}
         onClose={onCloseProfileEditor}
         user={user}
@@ -236,6 +257,29 @@ export function SuperAppModals({
           isDarkMode={isDarkMode}
         />
       )}
+
+      {/* Provider Team Management Drawer */}
+      <TeamManagementDrawer
+        isOpen={isTeamManagementOpen}
+        onClose={onCloseTeamManagement}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* Provider Leveling & Earnings Center */}
+      <ProviderLevelingDrawer
+        isOpen={isLevelingDrawerOpen}
+        onClose={onCloseLevelingDrawer}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* Provider Flow B Direct Chat Modal */}
+      <ProviderStartChatModal
+        services={dbServices}
+        isOpen={isStartChatOpen}
+        onClose={onCloseStartChat}
+        onChatStarted={onProviderStartChat}
+        isDarkMode={isDarkMode}
+      />
     </>
   );
 }

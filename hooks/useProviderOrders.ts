@@ -9,13 +9,19 @@ import { ProviderOrderFilter } from '@/components/super-app/ProviderOrderList';
 
 interface UseProviderOrdersProps {
   isProvider: boolean;
+  userId?: string | null;
 }
 
-export function useProviderOrders({ isProvider }: UseProviderOrdersProps) {
+export function useProviderOrders({ isProvider, userId }: UseProviderOrdersProps) {
   const queryClient = useQueryClient();
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<ProviderOrderFilter>('ALL');
+
+  // Reset active order when userId changes
+  useEffect(() => {
+    setActiveOrderId(null);
+  }, [userId]);
 
   // Fetch only assigned orders for the authenticated provider (auto-polling every 3s)
   const {
@@ -23,9 +29,9 @@ export function useProviderOrders({ isProvider }: UseProviderOrdersProps) {
     isLoading,
     refetch,
   } = useQuery<Order[]>({
-    queryKey: ['provider-assigned-orders'],
+    queryKey: ['provider-assigned-orders', userId],
     queryFn: () => ordersService.getOrders(),
-    enabled: isProvider,
+    enabled: isProvider && Boolean(userId),
     refetchInterval: isProvider ? 3000 : false,
     staleTime: 1000 * 2,
   });
@@ -43,6 +49,34 @@ export function useProviderOrders({ isProvider }: UseProviderOrdersProps) {
   const previousPendingIdsRef = useRef<Set<string>>(new Set());
   const isFirstLoadRef = useRef(true);
 
+  // Cross-tab real-time dispatch listener
+  useEffect(() => {
+    if (!isProvider || typeof window === 'undefined' || !('BroadcastChannel' in window)) return;
+    const channel = new BroadcastChannel('master_job_dispatch');
+
+    channel.onmessage = (event) => {
+      if (event.data?.type === 'NEW_ORDER_DISPATCHED') {
+        refetch();
+        try {
+          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+          audio.volume = 0.6;
+          audio.play().catch(() => {});
+        } catch {
+          // ignore
+        }
+
+        toast.info(
+          `🔔 New Job Dispatch: "${event.data?.serviceName || 'On-Demand Service'}" arrived! Tap to accept.`,
+          { duration: 7000 }
+        );
+      }
+    };
+
+    return () => {
+      channel.close();
+    };
+  }, [isProvider, refetch]);
+
   useEffect(() => {
     if (!isProvider) return;
     const currentPendingIds = new Set(
@@ -52,6 +86,20 @@ export function useProviderOrders({ isProvider }: UseProviderOrdersProps) {
     if (isFirstLoadRef.current) {
       previousPendingIdsRef.current = currentPendingIds;
       isFirstLoadRef.current = false;
+      if (currentPendingIds.size > 0) {
+        try {
+          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+          audio.volume = 0.6;
+          audio.play().catch(() => {});
+        } catch {
+          // audio blocked or unavailable
+        }
+
+        toast.info(
+          `🔔 You have ${currentPendingIds.size} pending job dispatch(es) waiting! Tap to review & accept.`,
+          { duration: 7000 }
+        );
+      }
       return;
     }
 
@@ -74,7 +122,7 @@ export function useProviderOrders({ isProvider }: UseProviderOrdersProps) {
         `🔔 New Job Dispatch: "${newOrder?.service?.name || 'On-Demand Service'}" (৳${
           newOrder?.totalPrice || 500
         })! Tap to accept.`,
-        { duration: 6000 }
+        { duration: 7000 }
       );
     }
 

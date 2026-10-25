@@ -13,6 +13,10 @@ interface ChatMessagesProps {
   onReact: (messageId: string, emoji: string) => void;
   onCompleteOrder?: (messageId: string, orderId: string) => void;
   onOpenOrders?: () => void;
+  onPayAdvance?: (messageId: string, orderId: string, amount: number) => void;
+  onAcceptPrice?: (messageId: string, orderId: string) => void;
+  onRejectPrice?: (messageId: string, orderId: string) => void;
+  onSatisfactionResponse?: (messageId: string, orderId: string, continueWith: boolean) => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   isDarkMode: boolean;
 }
@@ -24,6 +28,10 @@ export function ChatMessages({
   onReact,
   onCompleteOrder,
   onOpenOrders,
+  onPayAdvance,
+  onAcceptPrice,
+  onRejectPrice,
+  onSatisfactionResponse,
   messagesEndRef,
   isDarkMode,
 }: ChatMessagesProps) {
@@ -60,6 +68,10 @@ export function ChatMessages({
               msg={msg}
               onCompleteOrder={onCompleteOrder || (() => {})}
               onOpenOrders={onOpenOrders}
+              onPayAdvance={onPayAdvance}
+              onAcceptPrice={onAcceptPrice}
+              onRejectPrice={onRejectPrice}
+              onSatisfactionResponse={onSatisfactionResponse}
               isDarkMode={isDarkMode}
             />
           ) : msg.type === 'service_card' && msg.serviceCard ? (

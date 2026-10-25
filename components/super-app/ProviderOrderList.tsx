@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import Image from 'next/image';
-import { Search, X, RotateCcw, PackageCheck, Briefcase, Wrench } from 'lucide-react';
+import { Search, X, RotateCcw, PackageCheck, Briefcase, Wrench, Users, Award, UserPlus } from 'lucide-react';
 import { Order, OrderStatus } from '@/types/order.types';
 import { User } from '@/types/auth.types';
 import { ProviderOrderListItem } from './ProviderOrderListItem';
@@ -22,6 +22,9 @@ interface ProviderOrderListProps {
   user: User | null;
   onOpenProfile: () => void;
   onOpenSkillsModal: () => void;
+  onOpenTeamManagement?: () => void;
+  onOpenLeveling?: () => void;
+  onOpenStartChat?: () => void;
   isDarkMode: boolean;
 }
 
@@ -38,6 +41,9 @@ export function ProviderOrderList({
   user,
   onOpenProfile,
   onOpenSkillsModal,
+  onOpenTeamManagement,
+  onOpenLeveling,
+  onOpenStartChat,
   isDarkMode,
 }: ProviderOrderListProps) {
   const textPrimary = isDarkMode ? 'text-[#e9edef]' : 'text-[#111b21]';
@@ -135,12 +141,45 @@ export function ProviderOrderList({
 
           <button
             onClick={onOpenSkillsModal}
-            className="px-2.5 py-2 rounded-lg bg-[#008069]/10 hover:bg-[#008069]/20 text-[#008069] dark:text-[#25D366] text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs"
+            className="px-2 py-1.5 rounded-lg bg-[#008069]/10 hover:bg-[#008069]/20 text-[#008069] dark:text-[#25D366] text-xs font-bold transition-all flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs"
             title="Configure service skills you provide"
           >
             <Wrench className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">My Skills</span>
+            <span className="hidden sm:inline">Skills</span>
           </button>
+
+          {onOpenTeamManagement && (
+            <button
+              onClick={onOpenTeamManagement}
+              className="px-2 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-bold transition-all flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs"
+              title="Manage agency field technicians"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Team</span>
+            </button>
+          )}
+
+          {onOpenLeveling && (
+            <button
+              onClick={onOpenLeveling}
+              className="px-2 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold transition-all flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs"
+              title="View agency level, tier perks and earnings"
+            >
+              <Award className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Level</span>
+            </button>
+          )}
+
+          {onOpenStartChat && (
+            <button
+              onClick={onOpenStartChat}
+              className="px-2 py-1.5 rounded-lg bg-[#008069] hover:bg-[#00705c] text-white text-xs font-bold transition-all flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs"
+              title="Add customer and start direct chat (Flow B)"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">+ Chat</span>
+            </button>
+          )}
         </div>
 
 

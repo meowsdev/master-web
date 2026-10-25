@@ -23,6 +23,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Order, OrderStatus } from '@/types/order.types';
+import { ProviderPriceEditModal } from '@/components/modals/ProviderPriceEditModal';
+import { ProviderCompletionModal } from '@/components/modals/ProviderCompletionModal';
+import { AssignTechnicianModal } from '@/components/modals/AssignTechnicianModal';
 
 interface ProviderOrderCanvasProps {
   order: Order;
@@ -42,6 +45,10 @@ export function ProviderOrderCanvas({
   isDarkMode,
 }: ProviderOrderCanvasProps) {
   const [inputText, setInputText] = useState('');
+  const [isPriceEditOpen, setIsPriceEditOpen] = useState(false);
+  const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
+  const [isAssignTechOpen, setIsAssignTechOpen] = useState(false);
+  const [currentOrder, setCurrentOrder] = useState<Order>(order);
   const [messages, setMessages] = useState<Array<{ id: string; sender: 'provider' | 'system'; text: string; time: string }>>([
     {
       id: 'sys-1',
@@ -274,23 +281,50 @@ export function ProviderOrderCanvas({
             )}
 
             {isInProgress && (
-              <button
-                type="button"
-                disabled={isUpdatingStatus}
-                onClick={() => onUpdateStatus(OrderStatus.COMPLETED)}
-                className={`w-full py-3 px-4 rounded-xl text-white font-extrabold text-xs shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
-                  hasActiveRevision
-                    ? 'bg-gradient-to-r from-amber-500 via-emerald-600 to-emerald-700 hover:from-amber-600 hover:to-emerald-800 shadow-amber-500/20 ring-1 ring-amber-400'
-                    : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30'
-                }`}
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>
-                  {hasActiveRevision
-                    ? '✅ Solve Revision & Complete Order (রিভিশন সম্পন্ন করুন)'
-                    : 'Mark Service Finished & Complete Order'}
-                </span>
-              </button>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  disabled={isUpdatingStatus}
+                  onClick={() => onUpdateStatus(OrderStatus.COMPLETED)}
+                  className={`w-full py-3 px-4 rounded-xl text-white font-extrabold text-xs shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
+                    hasActiveRevision
+                      ? 'bg-gradient-to-r from-amber-500 via-emerald-600 to-emerald-700 hover:from-amber-600 hover:to-emerald-800 shadow-amber-500/20 ring-1 ring-amber-400'
+                      : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30'
+                  }`}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>
+                    {hasActiveRevision
+                      ? '✅ Solve Revision & Complete Order (রিভিশন সম্পন্ন করুন)'
+                      : 'Mark Service Finished & Complete Order'}
+                  </span>
+                </button>
+
+                {/* Additional Provider Actions: Price Edit, Complete on Behalf of Guest, Assign Tech */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsPriceEditOpen(true)}
+                    className="py-2 px-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold text-[11px] border border-amber-500/20 transition-all flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <span>✏️ Edit Price (+Add-on)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsAssignTechOpen(true)}
+                    className="py-2 px-2.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-bold text-[11px] border border-blue-500/20 transition-all flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <span>👷 Assign Technician</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCompletionModalOpen(true)}
+                    className="py-2 px-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-[#008069] dark:text-[#25D366] font-bold text-[11px] border border-emerald-500/20 transition-all flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <span>💵 Guest Cash Settle</span>
+                  </button>
+                </div>
+              </div>
             )}
 
             {isCompleted && (
@@ -380,6 +414,29 @@ export function ProviderOrderCanvas({
           )}
         </form>
       </footer>
+
+      {/* Provider Modals */}
+      <ProviderPriceEditModal
+        order={order}
+        isOpen={isPriceEditOpen}
+        onClose={() => setIsPriceEditOpen(false)}
+        onPriceUpdated={() => onUpdateStatus(order.orderStatus)}
+        isDarkMode={isDarkMode}
+      />
+      <ProviderCompletionModal
+        order={order}
+        isOpen={isCompletionModalOpen}
+        onClose={() => setIsCompletionModalOpen(false)}
+        onOrderCompleted={() => onUpdateStatus(OrderStatus.COMPLETED)}
+        isDarkMode={isDarkMode}
+      />
+      <AssignTechnicianModal
+        order={order}
+        isOpen={isAssignTechOpen}
+        onClose={() => setIsAssignTechOpen(false)}
+        onAssigned={() => onUpdateStatus(order.orderStatus)}
+        isDarkMode={isDarkMode}
+      />
     </div>
   );
 }

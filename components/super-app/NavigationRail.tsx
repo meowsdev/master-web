@@ -4,6 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import {
   MessageSquare,
+  Award,
   Radio,
   Users,
   Sparkles,
@@ -69,6 +70,21 @@ export function NavigationRail({
           ) : (
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#25D366] rounded-full ring-2 ring-white dark:ring-[#202c33]" />
           )}
+        </button>
+
+        {/* Providers Directory Tab */}
+        <button
+          onClick={() => onSelectTab('PROVIDERS')}
+          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer relative ${
+            activeRailTab === 'PROVIDERS'
+              ? isDarkMode
+                ? 'bg-[#374248] text-[#00a884]'
+                : 'bg-[#d9fdd3] text-[#008069]'
+              : `${textSecondary} hover:bg-black/5 dark:hover:bg-white/10`
+          }`}
+          title="Verified Providers Directory"
+        >
+          <Award className="w-5 h-5" />
         </button>
 
         {/* Status Updates Tab */}

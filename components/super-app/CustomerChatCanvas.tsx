@@ -30,6 +30,10 @@ interface CustomerChatCanvasProps {
   isAuthenticated: boolean;
   onOpenAuth: () => void;
   onOpenOrders?: () => void;
+  onPayAdvance?: (messageId: string, orderId: string, amount: number) => void;
+  onAcceptPrice?: (messageId: string, orderId: string) => void;
+  onRejectPrice?: (messageId: string, orderId: string) => void;
+  onSatisfactionResponse?: (messageId: string, orderId: string, continueWith: boolean) => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   isDarkMode: boolean;
 }
@@ -57,6 +61,10 @@ export function CustomerChatCanvas({
   isAuthenticated,
   onOpenAuth,
   onOpenOrders,
+  onPayAdvance,
+  onAcceptPrice,
+  onRejectPrice,
+  onSatisfactionResponse,
   messagesEndRef,
   isDarkMode,
 }: CustomerChatCanvasProps) {
@@ -104,6 +112,10 @@ export function CustomerChatCanvas({
         onReact={onReactToMessage}
         onCompleteOrder={onCompleteOrder}
         onOpenOrders={onOpenOrders}
+        onPayAdvance={onPayAdvance}
+        onAcceptPrice={onAcceptPrice}
+        onRejectPrice={onRejectPrice}
+        onSatisfactionResponse={onSatisfactionResponse}
         messagesEndRef={messagesEndRef}
         isDarkMode={isDarkMode}
       />

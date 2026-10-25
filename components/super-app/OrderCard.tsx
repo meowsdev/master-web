@@ -8,6 +8,10 @@ import {
   Calendar,
   CreditCard,
   RotateCcw,
+  AlertCircle,
+  ThumbsUp,
+  ThumbsDown,
+  Sparkles,
 } from 'lucide-react';
 import { ChatMessage } from '@/types/super-app.types';
 
@@ -15,10 +19,23 @@ interface OrderCardProps {
   msg: ChatMessage;
   onCompleteOrder: (messageId: string, orderId: string) => void;
   onOpenOrders?: () => void;
+  onPayAdvance?: (messageId: string, orderId: string, amount: number) => void;
+  onAcceptPrice?: (messageId: string, orderId: string) => void;
+  onRejectPrice?: (messageId: string, orderId: string) => void;
+  onSatisfactionResponse?: (messageId: string, orderId: string, continueWith: boolean) => void;
   isDarkMode: boolean;
 }
 
-export function OrderCard({ msg, onCompleteOrder, onOpenOrders, isDarkMode }: OrderCardProps) {
+export function OrderCard({
+  msg,
+  onCompleteOrder,
+  onOpenOrders,
+  onPayAdvance,
+  onAcceptPrice,
+  onRejectPrice,
+  onSatisfactionResponse,
+  isDarkMode,
+}: OrderCardProps) {
   const order = msg.orderCard;
   if (!order) return null;
 
@@ -27,6 +44,12 @@ export function OrderCard({ msg, onCompleteOrder, onOpenOrders, isDarkMode }: Or
   const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
   const bgCard = isDarkMode ? 'bg-[#202c33] border-[#2f3b43]' : 'bg-white border-[#e9edef]';
   const bgSubCard = isDarkMode ? 'bg-[#111b21] border-[#2f3b43]' : 'bg-[#f0f2f5] border-[#e9edef]';
+
+  const advancePaidNum = Number(order.advancePaid || 0);
+  const basePriceNum = Number(order.basePrice || 0);
+  const additionalPriceNum = Number(order.additionalPrice || 0);
+  const totalPriceNum = Number(order.totalPrice || basePriceNum + additionalPriceNum);
+  const dueAmountNum = Number(order.dueAmount || Math.max(0, totalPriceNum - advancePaidNum));
 
   return (
     <div className="flex justify-start my-2">
@@ -60,7 +83,7 @@ export function OrderCard({ msg, onCompleteOrder, onOpenOrders, isDarkMode }: Or
           )}
         </div>
 
-        {/* Service Title & Base Price */}
+        {/* Service Title & Pricing Breakdown */}
         <div className="flex items-start gap-3">
           <div className="w-11 h-11 rounded-2xl bg-[#d9fdd3] dark:bg-[#005c4b]/50 text-[#008069] dark:text-[#25D366] flex items-center justify-center text-xl shrink-0 shadow-2xs">
             {order.serviceIcon || '🛠️'}
@@ -69,10 +92,15 @@ export function OrderCard({ msg, onCompleteOrder, onOpenOrders, isDarkMode }: Or
             <h3 className={`text-[15px] font-bold leading-tight ${textPrimary}`}>
               {order.serviceName}
             </h3>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className="text-[13.5px] font-black text-[#008069] dark:text-[#25D366]">
-                ৳{order.basePrice} Fixed Base
+                ৳{totalPriceNum} Total
               </span>
+              {additionalPriceNum > 0 && (
+                <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                  (+৳{additionalPriceNum} Add-on)
+                </span>
+              )}
               <span className={`text-[11px] ${textSecondary}`}>• Verified Tech</span>
             </div>
           </div>
@@ -88,11 +116,53 @@ export function OrderCard({ msg, onCompleteOrder, onOpenOrders, isDarkMode }: Or
             <Calendar className="w-3.5 h-3.5 text-[#25D366] shrink-0" />
             <span className={`truncate font-medium ${textPrimary}`}>{order.scheduleTime}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <CreditCard className="w-3.5 h-3.5 text-[#25D366] shrink-0" />
-            <span className={`font-medium ${textPrimary}`}>Payment: {order.paymentMode}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-3.5 h-3.5 text-[#25D366] shrink-0" />
+              <span className={`font-medium ${textPrimary}`}>Payment: {order.paymentMode}</span>
+            </div>
+            {advancePaidNum > 0 && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                Advance Paid: ৳{advancePaidNum}
+              </span>
+            )}
           </div>
         </div>
+
+        {/* FR-ORD Add-On Price Re-Approval Banner */}
+        {order.hasPendingPriceEdit && (
+          <div className="p-3 rounded-xl bg-amber-500/15 border-2 border-amber-400 dark:border-amber-600 text-xs space-y-2">
+            <div className="flex items-center gap-1.5 font-bold text-amber-800 dark:text-amber-300">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>Provider Requested Price Modification</span>
+            </div>
+            <div className="p-2 rounded-lg bg-white/70 dark:bg-black/40 font-mono text-[11px] text-[#111b21] dark:text-[#e9edef] space-y-0.5">
+              <p>Original Base: ৳{basePriceNum}</p>
+              <p className="text-amber-600 dark:text-amber-400 font-bold">
+                Additional Add-On: +৳{additionalPriceNum}
+              </p>
+              <div className="border-t border-black/10 dark:border-white/10 pt-0.5 font-bold text-[#008069] dark:text-[#25D366]">
+                New Total Price: ৳{totalPriceNum}
+              </div>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => onAcceptPrice?.(msg.id, order.orderId)}
+                className="flex-1 py-1.5 px-3 rounded-lg bg-[#008069] hover:bg-[#00705c] text-white font-bold text-xs transition-colors cursor-pointer"
+              >
+                Accept New Price (গ্রহণ করুন)
+              </button>
+              <button
+                type="button"
+                onClick={() => onRejectPrice?.(msg.id, order.orderId)}
+                className="py-1.5 px-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 font-bold text-xs transition-colors cursor-pointer"
+              >
+                Decline
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Active Revision Banner if order is in revision */}
         {order.hasActiveRevision && order.revisionIssue && (
@@ -147,6 +217,49 @@ export function OrderCard({ msg, onCompleteOrder, onOpenOrders, isDarkMode }: Or
           </div>
         </div>
 
+        {/* FR-REV Post-Revision Satisfaction Auto-Ask Prompt */}
+        {order.needsSatisfactionConfirmation && (
+          <div className="p-3.5 rounded-xl bg-gradient-to-br from-emerald-500/10 via-[#d9fdd3]/80 to-amber-500/10 dark:from-emerald-950/40 dark:to-amber-950/30 border border-emerald-500/30 text-xs space-y-2.5">
+            <div className="flex items-center gap-1.5 font-bold text-[#008069] dark:text-[#25D366]">
+              <Sparkles className="w-4 h-4 text-emerald-500" />
+              <span>সার্ভিস কোয়ালিটি ফিডব্যাক (Satisfaction Prompt)</span>
+            </div>
+            <p className={`text-[12px] leading-relaxed ${textPrimary}`}>
+              আপনার কাজ কি সঠিকভাবে সম্পন্ন হয়েছে? আপনি কি পরবর্তীতে এই প্রোভাইডারের সাথেই কাজ চালিয়ে যেতে চান?
+            </p>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => onSatisfactionResponse?.(msg.id, order.orderId, true)}
+                className="flex-1 py-2 px-3 rounded-lg bg-[#008069] hover:bg-[#00705c] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              >
+                <ThumbsUp className="w-3.5 h-3.5" />
+                <span>YES (চালিয়ে যাব)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onSatisfactionResponse?.(msg.id, order.orderId, false)}
+                className="flex-1 py-2 px-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-rose-500/20"
+              >
+                <ThumbsDown className="w-3.5 h-3.5" />
+                <span>NO (প্রোভাইডার রিমুভ)</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* FR-PAY Advance Settlement Action */}
+        {!isCompleted && advancePaidNum === 0 && (
+          <button
+            type="button"
+            onClick={() => onPayAdvance?.(msg.id, order.orderId, 500)}
+            className="w-full py-2 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-[#008069] dark:text-[#25D366] text-xs font-bold border border-emerald-500/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <CreditCard className="w-3.5 h-3.5" />
+            <span>Pay Advance to Confirm (৳৫০০ অগ্রিম দিন)</span>
+          </button>
+        )}
+
         {/* Interactive Action Area: Complete Order Button or Completed Confirmation */}
         {isCompleted ? (
           <div className="p-3 rounded-xl bg-[#d9fdd3]/70 dark:bg-[#005c4b]/30 border border-[#25D366]/40 text-center space-y-2">
@@ -174,7 +287,11 @@ export function OrderCard({ msg, onCompleteOrder, onOpenOrders, isDarkMode }: Or
             className="w-full py-2.5 bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold text-[13px] rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer group"
           >
             <CheckCircle2 className="w-4 h-4 transition-transform group-hover:scale-110" />
-            <span>Complete Order (অর্ডার সম্পন্ন করুন)</span>
+            <span>
+              {dueAmountNum > 0
+                ? `Complete & Settle Due ৳${dueAmountNum} (অর্ডার সম্পন্ন)`
+                : 'Complete Order (অর্ডার সম্পন্ন করুন)'}
+            </span>
           </button>
         )}
 
