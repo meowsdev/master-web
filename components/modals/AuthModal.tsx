@@ -24,11 +24,10 @@ interface AuthModalProps {
 export function AuthModal({
   isOpen,
   onClose,
-  initialMode = 'LOGIN',
   isDarkMode,
 }: AuthModalProps) {
   const { setAuth, setRole } = useAuthStore();
-  const [authMode, setAuthMode] = useState<'LOGIN' | 'REGISTER' | 'TECH'>(initialMode);
+  const [isTechLogin, setIsTechLogin] = useState(false);
   const [step, setStep] = useState<'PHONE' | 'OTP' | 'PROFILE'>('PHONE');
 
   // Form Inputs
@@ -93,13 +92,7 @@ export function AuthModal({
       // Strict single role constraint: A mobile number cannot have more than one role.
       if (res.user.name) {
         setRole(res.user.role);
-        if (authMode === 'REGISTER') {
-          toast.info(
-            `এই ফোন নাম্বারটি ইতিমধ্যে ${res.user.role} হিসেবে নিবন্ধিত। একই নাম্বারে একের বেশি রোল সম্ভব নয়।`,
-          );
-        } else {
-          toast.success(`স্বাগতম, ${res.user.name}! (${res.user.role})`);
-        }
+        toast.success(`স্বাগতম, ${res.user.name}! (${res.user.role})`);
         onClose();
       } else {
         // Brand new number: Proceed to complete profile and choose its single permanent role
@@ -182,16 +175,16 @@ export function AuthModal({
             <h3 className={`text-lg font-bold ${textPrimary}`}>
               {step === 'PROFILE'
                 ? 'Complete Profile & Select Role'
-                : authMode === 'TECH'
+                : isTechLogin
                 ? 'Technician Login'
-                : authMode === 'LOGIN'
-                ? 'Login to Super app'
-                : 'Register Account'}
+                : 'Login with Phone Number'}
             </h3>
             <p className={`text-xs ${textSecondary}`}>
               {step === 'PROFILE'
                 ? 'Choose your active role in the Super app ecosystem'
-                : 'Directly integrated with database authentication'}
+                : isTechLogin
+                ? 'Enter technician mobile and credentials'
+                : 'Enter your phone number to login or register instantly'}
             </p>
           </div>
           <button
@@ -202,56 +195,8 @@ export function AuthModal({
           </button>
         </div>
 
-        {/* Tab switch (only if not on profile completion step) */}
-        {step !== 'PROFILE' && (
-          <div className="flex rounded-xl bg-black/5 dark:bg-white/5 p-1 text-xs font-bold gap-1">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode('LOGIN');
-                setStep('PHONE');
-              }}
-              className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
-                authMode === 'LOGIN'
-                  ? 'bg-white dark:bg-[#202c33] text-[#008069] dark:text-[#25D366] shadow-xs'
-                  : textSecondary
-              }`}
-            >
-              Login (OTP)
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode('REGISTER');
-                setStep('PHONE');
-              }}
-              className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
-                authMode === 'REGISTER'
-                  ? 'bg-white dark:bg-[#202c33] text-[#008069] dark:text-[#25D366] shadow-xs'
-                  : textSecondary
-              }`}
-            >
-              Register
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode('TECH');
-                setStep('PHONE');
-              }}
-              className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
-                authMode === 'TECH'
-                  ? 'bg-white dark:bg-[#202c33] text-[#008069] dark:text-[#25D366] shadow-xs'
-                  : textSecondary
-              }`}
-            >
-              Technician
-            </button>
-          </div>
-        )}
-
-        {/* STEP 1: Phone Entry */}
-        {step === 'PHONE' && authMode !== 'TECH' && (
+        {/* STEP 1: Single Phone Entry (Unified for Customer/Provider/Counselor) */}
+        {step === 'PHONE' && !isTechLogin && (
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div className="space-y-1.5">
               <label className={`text-xs font-bold ${textPrimary}`}>Mobile Number</label>
@@ -276,13 +221,23 @@ export function AuthModal({
               disabled={loading}
               className="w-full py-3 bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>{loading ? 'Sending OTP...' : 'Send Verification OTP'}</span>
+              <span>{loading ? 'Sending OTP...' : 'Continue with OTP'}</span>
             </button>
+
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                onClick={() => setIsTechLogin(true)}
+                className="text-xs text-[#008069] dark:text-[#25D366] hover:underline font-semibold cursor-pointer"
+              >
+                Technician with password? Click here →
+              </button>
+            </div>
           </form>
         )}
 
         {/* STEP 1 (TECH): Technician Password Login */}
-        {step === 'PHONE' && authMode === 'TECH' && (
+        {step === 'PHONE' && isTechLogin && (
           <form onSubmit={handleTechnicianLogin} className="space-y-3.5">
             <div className="space-y-1.5">
               <label className={`text-xs font-bold ${textPrimary}`}>Technician Phone</label>
@@ -322,6 +277,16 @@ export function AuthModal({
             >
               <span>{loading ? 'Logging in...' : 'Login as Technician'}</span>
             </button>
+
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                onClick={() => setIsTechLogin(false)}
+                className="text-xs text-[#008069] dark:text-[#25D366] hover:underline font-semibold cursor-pointer"
+              >
+                ← Back to Phone OTP Login
+              </button>
+            </div>
           </form>
         )}
 

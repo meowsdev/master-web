@@ -32,6 +32,7 @@ import { AuthModal } from '@/components/modals/AuthModal';
 import { CallingModal } from '@/components/modals/CallingModal';
 import { StatusViewerModal } from '@/components/modals/StatusViewerModal';
 import { SettingsDrawer } from '@/components/modals/SettingsDrawer';
+import { OrdersDrawer } from '@/components/modals/OrdersDrawer';
 import { CreateFilterModal } from '@/components/modals/CreateFilterModal';
 import { ProfileEditorModal } from '@/components/modals/ProfileEditorModal';
 
@@ -44,22 +45,12 @@ export default function SuperAppPage() {
   // Theme & Sound states
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window === 'undefined') return false;
-    try {
-      const theme = localStorage.getItem('superapp_theme');
-      return theme === 'dark' || (!theme && Boolean(window.matchMedia?.('(prefers-color-scheme: dark)').matches));
-    } catch {
-      return false;
-    }
+    const t = localStorage.getItem('superapp_theme');
+    return t === 'dark' || (!t && Boolean(window.matchMedia?.('(prefers-color-scheme: dark)').matches));
   });
 
   const [soundEnabled, setSoundEnabled] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    try {
-      const sound = localStorage.getItem('superapp_sound');
-      return sound !== null ? sound === 'true' : true;
-    } catch {
-      return true;
-    }
+    return typeof window !== 'undefined' ? localStorage.getItem('superapp_sound') !== 'false' : true;
   });
 
   const { playSound } = useSuperAppAudio(soundEnabled);
@@ -97,8 +88,13 @@ export default function SuperAppPage() {
   const [callType, setCallType] = useState<'voice' | 'video'>('voice');
   const [isStatusViewerOpen, setIsStatusViewerOpen] = useState(false);
   const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
+  const [isOrdersDrawerOpen, setIsOrdersDrawerOpen] = useState(() => {
+    return typeof window !== 'undefined' ? window.location.search.includes('view=orders') : false;
+  });
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
   const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
+  const openSettings = useCallback(() => setIsSettingsDrawerOpen(true), []);
+  const openOrders = useCallback(() => setIsOrdersDrawerOpen(true), []);
 
   // Chat management hook with strict authentication guards & running order tracking
   const {
@@ -179,17 +175,41 @@ export default function SuperAppPage() {
     toast.info('Logged out');
   }, [logout]);
 
-  // Centralized booking opener: prevents duplicate running orders for the SAME service,
-  // while allowing multiple concurrent orders across different services.
+  const handleStartCall = useCallback(
+    (type: 'voice' | 'video') => {
+      if (!isAuthenticated) {
+        toast.info('Please log in with your phone number to start a consultation call.');
+        handleOpenAuth();
+        return;
+      }
+      setCallType(type);
+      setIsCallingModalOpen(true);
+    },
+    [isAuthenticated, handleOpenAuth]
+  );
+
+  const handleToggleSave = useCallback(() => {
+    if (!activeService) return;
+    if (!isAuthenticated) {
+      toast.info('Please log in with your phone number to save services.');
+      handleOpenAuth();
+      return;
+    }
+    toggleSaveService(activeService.id);
+  }, [activeService, isAuthenticated, handleOpenAuth, toggleSaveService]);
+
+
+
+  // Centralized booking opener: prevents duplicate running orders for the SAME service
   const handleOpenBooking = () => {
     if (!isAuthenticated) {
       toast.info('Please log in with your phone number to book services.');
-      handleOpenAuth('LOGIN');
+      handleOpenAuth();
       return;
     }
     if (activeServiceRunningOrder) {
       toast.warning(
-        `Active Order #${activeServiceRunningOrder.orderId} for "${activeService?.name}" is already running! Please complete it before placing another order for this service.`
+        `Active Order #${activeServiceRunningOrder.orderId} for "${activeService?.name}" is already running!`
       );
       return;
     }
@@ -215,8 +235,9 @@ export default function SuperAppPage() {
         onSelectTab={setActiveRailTab}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
-        onOpenSettings={() => setIsSettingsDrawerOpen(true)}
+        onOpenSettings={openSettings}
         onOpenStatus={() => setIsStatusViewerOpen(true)}
+        onOpenOrders={openOrders}
         user={user}
         activeRole={activeRole}
         runningCount={runningServiceIds.length}
@@ -233,8 +254,9 @@ export default function SuperAppPage() {
           runningCount={runningServiceIds.length}
           onToggleSound={toggleSound}
           onSelectWelcome={() => setActiveServiceId(null)}
-          onOpenSettings={() => setIsSettingsDrawerOpen(true)}
-          onOpenAuth={() => handleOpenAuth()}
+          onOpenSettings={openSettings}
+          onOpenOrders={openOrders}
+          onOpenAuth={handleOpenAuth}
           isAuthenticated={isAuthenticated}
           userName={user?.name}
           onLogout={handleLogout}
@@ -296,31 +318,12 @@ export default function SuperAppPage() {
               onBackMobile={() => setMobileView('LIST')}
               onBackToWelcome={() => setActiveServiceId(null)}
               onOpenBooking={handleOpenBooking}
-              onStartCall={(type) => {
-                if (!isAuthenticated) {
-                  toast.info('Please log in with your phone number to start a consultation call.');
-                  handleOpenAuth('LOGIN');
-                  return;
-                }
-                setCallType(type);
-                setIsCallingModalOpen(true);
-              }}
+              onStartCall={handleStartCall}
               onClearChat={() => {
                 if (activeServiceId) handleClearChat(activeServiceId);
               }}
               isSaved={activeService ? isServiceSaved(activeService.id) : false}
-              onToggleSave={
-                activeService
-                  ? () => {
-                    if (!isAuthenticated) {
-                      toast.info('Please log in with your phone number to save services.');
-                      handleOpenAuth('LOGIN');
-                      return;
-                    }
-                    toggleSaveService(activeService.id);
-                  }
-                  : undefined
-              }
+              onToggleSave={activeService ? handleToggleSave : undefined}
               onOpenDetails={() => setIsServiceDetailsOpen(true)}
               isDarkMode={isDarkMode}
             />
@@ -373,7 +376,8 @@ export default function SuperAppPage() {
             user={user}
             activeRole={activeRole}
             onOpenAuth={handleOpenAuth}
-            onOpenSettings={() => setIsSettingsDrawerOpen(true)}
+            onOpenSettings={openSettings}
+            onOpenOrders={openOrders}
             onLogout={handleLogout}
             isDarkMode={isDarkMode}
           />
@@ -399,7 +403,7 @@ export default function SuperAppPage() {
             bookingTime,
             bookingPaymentMode,
             isAuthenticated,
-            () => handleOpenAuth('LOGIN'),
+            handleOpenAuth,
             () => setIsBookingModalOpen(false)
           )
         }
@@ -437,8 +441,9 @@ export default function SuperAppPage() {
         user={user}
         activeRole={activeRole}
         onSwitchRole={setRole}
-        onOpenAuth={() => handleOpenAuth()}
+        onOpenAuth={handleOpenAuth}
         onOpenEditProfile={() => setIsProfileEditorOpen(true)}
+        onOpenOrders={openOrders}
         onLogout={handleLogout}
       />
 
@@ -465,25 +470,22 @@ export default function SuperAppPage() {
         onClose={() => setIsServiceDetailsOpen(false)}
         service={activeService}
         isSaved={activeService ? isServiceSaved(activeService.id) : false}
-        onToggleSave={() => {
-          if (!activeService) return;
-          if (!isAuthenticated) {
-            toast.info('Please log in with your phone number to save services.');
-            handleOpenAuth('LOGIN');
-            return;
-          }
-          toggleSaveService(activeService.id);
-        }}
+        onToggleSave={handleToggleSave}
         onOpenBooking={handleOpenBooking}
-        onStartCall={(type) => {
-          if (!isAuthenticated) {
-            toast.info('Please log in with your phone number to start a consultation call.');
-            handleOpenAuth('LOGIN');
-            return;
-          }
-          setCallType(type);
-          setIsCallingModalOpen(true);
+        onStartCall={handleStartCall}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* 5. Slide-in Native WhatsApp Orders & Bookings Drawer */}
+      <OrdersDrawer
+        isOpen={isOrdersDrawerOpen}
+        onClose={() => setIsOrdersDrawerOpen(false)}
+        onSelectServiceById={(serviceId) => {
+          const target = dbServices.find((s) => s.id === serviceId);
+          if (target) handleSelectService(target);
         }}
+        onOpenAuth={handleOpenAuth}
+        isAuthenticated={isAuthenticated}
         isDarkMode={isDarkMode}
       />
     </div>

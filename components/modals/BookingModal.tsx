@@ -42,7 +42,7 @@ export function BookingModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div
-        className={`w-full max-w-md rounded-3xl p-6 shadow-2xl border space-y-5 animate-in zoom-in-95 duration-200 ${
+        className={`w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl p-6 shadow-2xl border space-y-5 animate-in zoom-in-95 duration-200 ${
           isDarkMode ? 'bg-[#182229] border-[#2f3b43]' : 'bg-white border-[#e9edef]'
         }`}
       >

@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Award,
   Lock,
+  Package,
 } from 'lucide-react';
 import { User } from '@/types/auth.types';
 
@@ -16,6 +17,7 @@ interface WelcomeScreenProps {
   activeRole: string | null;
   onOpenAuth: (mode?: 'LOGIN' | 'REGISTER') => void;
   onOpenSettings: () => void;
+  onOpenOrders?: () => void;
   onLogout: () => void;
   isDarkMode: boolean;
 }
@@ -26,6 +28,7 @@ export function WelcomeScreen({
   activeRole,
   onOpenAuth,
   onOpenSettings,
+  onOpenOrders,
   onLogout,
   isDarkMode,
 }: WelcomeScreenProps) {
@@ -98,6 +101,13 @@ export function WelcomeScreen({
               </p>
 
               <div className="flex items-center justify-center gap-3 pt-2">
+                <button
+                  onClick={onOpenOrders}
+                  className="px-4 py-2 bg-[#008069] dark:bg-[#005c4b] hover:bg-[#00705c] text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                >
+                  <Package className="w-3.5 h-3.5" />
+                  <span>My Orders</span>
+                </button>
                 <button
                   onClick={onOpenSettings}
                   className="px-4 py-2 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-[#25D366]/20"

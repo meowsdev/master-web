@@ -11,6 +11,7 @@ import {
   Settings,
   Sun,
   Moon,
+  Package,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { RailTab } from '@/types/super-app.types';
@@ -23,6 +24,7 @@ interface NavigationRailProps {
   onToggleTheme: () => void;
   onOpenSettings: () => void;
   onOpenStatus: () => void;
+  onOpenOrders?: () => void;
   user: User | null;
   activeRole: string | null;
   runningCount?: number;
@@ -35,6 +37,7 @@ export function NavigationRail({
   onToggleTheme,
   onOpenSettings,
   onOpenStatus,
+  onOpenOrders,
   user,
   activeRole,
   runningCount = 0,
@@ -141,6 +144,18 @@ export function NavigationRail({
           title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           {isDarkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5" />}
+        </button>
+
+        {/* My Orders / History Tab */}
+        <button
+          onClick={onOpenOrders}
+          className={`w-10 h-10 rounded-full flex items-center justify-center ${textSecondary} hover:bg-black/5 dark:hover:bg-white/10 transition-all cursor-pointer relative`}
+          title="My Orders & History"
+        >
+          <Package className="w-5 h-5" />
+          {runningCount > 0 && (
+            <span className="absolute top-1 right-1 w-2 h-2 bg-[#25D366] rounded-full ring-2 ring-[#f0f2f5] dark:ring-[#202c33]" />
+          )}
         </button>
 
         {/* Starred Messages */}

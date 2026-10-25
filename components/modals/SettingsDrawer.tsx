@@ -21,6 +21,8 @@ import {
   Lock,
   Pencil,
   LucideIcon,
+  Package,
+  ChevronRight,
 } from 'lucide-react';
 import { UserRole, User } from '@/types/auth.types';
 
@@ -36,6 +38,7 @@ interface SettingsDrawerProps {
   onSwitchRole?: (role: UserRole) => void;
   onOpenAuth: () => void;
   onOpenEditProfile?: () => void;
+  onOpenOrders?: () => void;
   onLogout: () => void;
 }
 
@@ -50,6 +53,7 @@ export function SettingsDrawer({
   activeRole,
   onOpenAuth,
   onOpenEditProfile,
+  onOpenOrders,
   onLogout,
 }: SettingsDrawerProps) {
   if (!isOpen) return null;
@@ -102,23 +106,29 @@ export function SettingsDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div
-        className={`w-full max-w-sm h-full shadow-2xl border-l flex flex-col justify-between p-6 animate-in slide-in-from-right duration-200 overflow-y-auto ${isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]'
-          }`}
-      >
-        {/* Top Header & Settings */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-black/5 dark:border-white/10">
-            <h3 className={`text-lg font-bold ${textPrimary}`}>Settings & Account</h3>
-            <button
-              onClick={onClose}
-              className={`p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 ${textSecondary} cursor-pointer`}
-              title="Close Settings"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+      {/* Click outside backdrop */}
+      <div className="absolute inset-0" onClick={onClose} aria-label="Close Settings" />
 
+      {/* Slide-in Drawer Container */}
+      <div
+        className={`relative z-10 w-full max-w-sm h-full shadow-2xl border-l flex flex-col overflow-hidden animate-in slide-in-from-right duration-200 ${
+          isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]'
+        }`}
+      >
+        {/* Top Header (Pinned) */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/5 dark:border-white/10 shrink-0">
+          <h3 className={`text-lg font-bold ${textPrimary}`}>Settings & Account</h3>
+          <button
+            onClick={onClose}
+            className={`p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 ${textSecondary} cursor-pointer transition-colors`}
+            title="Close Settings"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Scrollable Settings Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 overscroll-contain">
           {/* User Profile Card */}
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-black/5 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02]">
@@ -179,6 +189,21 @@ export function SettingsDrawer({
                   <span className={textPrimary}>Sound Notifications</span>
                 </div>
                 <span className={`text-xs ${textSecondary}`}>{soundEnabled ? 'ON' : 'OFF'}</span>
+              </div>
+
+              {/* My Orders & History link */}
+              <div
+                onClick={() => {
+                  onClose();
+                  onOpenOrders?.();
+                }}
+                className="p-3 rounded-2xl flex items-center justify-between border cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-black/5 dark:border-white/10"
+              >
+                <div className="flex items-center gap-2.5 text-sm">
+                  <Package className="w-4 h-4 text-[#008069] dark:text-[#25D366]" />
+                  <span className={textPrimary}>My Orders & History</span>
+                </div>
+                <ChevronRight className={`w-4 h-4 ${textSecondary}`} />
               </div>
             </div>
 
@@ -253,8 +278,8 @@ export function SettingsDrawer({
           </div>
         </div>
 
-        {/* Bottom Actions */}
-        <div className="pt-4 border-t border-black/5 dark:border-white/10 shrink-0 space-y-2">
+        {/* Bottom Actions (Pinned) */}
+        <div className="px-6 py-4 border-t border-black/5 dark:border-white/10 shrink-0 space-y-2">
           {user ? (
             <>
 

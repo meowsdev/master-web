@@ -9,6 +9,7 @@ import {
   VolumeX,
   LogIn,
   LogOut,
+  Package,
 } from 'lucide-react';
 
 interface SidebarHeaderProps {
@@ -18,6 +19,7 @@ interface SidebarHeaderProps {
   onToggleSound: () => void;
   onSelectWelcome: () => void;
   onOpenSettings: () => void;
+  onOpenOrders?: () => void;
   onOpenAuth: () => void;
   isAuthenticated: boolean;
   userName?: string | null;
@@ -31,6 +33,7 @@ export function SidebarHeader({
   onToggleSound,
   onSelectWelcome,
   onOpenSettings,
+  onOpenOrders,
   onOpenAuth,
   isAuthenticated,
   userName,
@@ -84,6 +87,17 @@ export function SidebarHeader({
               >
                 <Sparkles className="w-4 h-4 text-[#25D366]" />
                 <span>Welcome Screen</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onOpenOrders?.();
+                  setIsMenuOpen(false);
+                }}
+                className="w-full px-4 py-2 text-left hover:bg-black/5 dark:hover:bg-white/5 flex items-center gap-2 cursor-pointer"
+              >
+                <Package className="w-4 h-4 text-[#008069] dark:text-[#25D366]" />
+                <span>My Orders & History</span>
               </button>
 
               <button
