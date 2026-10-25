@@ -7,16 +7,18 @@ import {
   MapPin,
   Calendar,
   CreditCard,
+  RotateCcw,
 } from 'lucide-react';
 import { ChatMessage } from '@/types/super-app.types';
 
 interface OrderCardProps {
   msg: ChatMessage;
   onCompleteOrder: (messageId: string, orderId: string) => void;
+  onOpenOrders?: () => void;
   isDarkMode: boolean;
 }
 
-export function OrderCard({ msg, onCompleteOrder, isDarkMode }: OrderCardProps) {
+export function OrderCard({ msg, onCompleteOrder, onOpenOrders, isDarkMode }: OrderCardProps) {
   const order = msg.orderCard;
   if (!order) return null;
 
@@ -40,7 +42,12 @@ export function OrderCard({ msg, onCompleteOrder, isDarkMode }: OrderCardProps) 
           </div>
 
           {/* Live Status Badge */}
-          {isCompleted ? (
+          {order.hasActiveRevision ? (
+            <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-amber-400 text-black border border-amber-300 flex items-center gap-1.5 shadow-xs animate-pulse">
+              <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+              <span>Revision Running</span>
+            </span>
+          ) : isCompleted ? (
             <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#d9fdd3] dark:bg-[#005c4b]/80 text-[#008069] dark:text-[#25D366] border border-[#25D366]/40 flex items-center gap-1.5 shadow-2xs">
               <CheckCircle2 className="w-3.5 h-3.5 text-[#25D366]" />
               <span>Completed</span>
@@ -48,7 +55,7 @@ export function OrderCard({ msg, onCompleteOrder, isDarkMode }: OrderCardProps) 
           ) : (
             <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50 flex items-center gap-1.5 shadow-2xs animate-pulse">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping inline-block" />
-              <span>In Progress</span>
+              <span>Running</span>
             </span>
           )}
         </div>
@@ -86,6 +93,19 @@ export function OrderCard({ msg, onCompleteOrder, isDarkMode }: OrderCardProps) 
             <span className={`font-medium ${textPrimary}`}>Payment: {order.paymentMode}</span>
           </div>
         </div>
+
+        {/* Active Revision Banner if order is in revision */}
+        {order.hasActiveRevision && order.revisionIssue && (
+          <div className="p-2.5 rounded-xl bg-amber-100/80 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-xs space-y-1">
+            <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-300 text-[11px]">
+              <RotateCcw className="w-3.5 h-3.5 text-amber-600 animate-spin" />
+              <span>3-Day Warranty Revision Active</span>
+            </div>
+            <p className="text-[11px] text-amber-950 dark:text-amber-200 italic pl-4">
+              &ldquo;{order.revisionIssue}&rdquo;
+            </p>
+          </div>
+        )}
 
         {/* 3-Step Live Progress Stepper */}
         <div className="flex items-center justify-between px-1 py-1 text-[11px] font-semibold">
@@ -129,14 +149,24 @@ export function OrderCard({ msg, onCompleteOrder, isDarkMode }: OrderCardProps) 
 
         {/* Interactive Action Area: Complete Order Button or Completed Confirmation */}
         {isCompleted ? (
-          <div className="p-3 rounded-xl bg-[#d9fdd3]/70 dark:bg-[#005c4b]/30 border border-[#25D366]/40 text-center space-y-1">
+          <div className="p-3 rounded-xl bg-[#d9fdd3]/70 dark:bg-[#005c4b]/30 border border-[#25D366]/40 text-center space-y-2">
             <div className="text-[12.5px] font-bold text-[#008069] dark:text-[#25D366] flex items-center justify-center gap-1.5">
               <CheckCircle2 className="w-4 h-4" />
               <span>Service Successfully Completed!</span>
             </div>
             <p className={`text-[11px] ${textSecondary}`}>
-              Completed at {order.completedAt || msg.time} • 7 Days Free Warranty Active ⭐
+              Completed at {order.completedAt || msg.time} • 3 Days Free Warranty Active ⭐
             </p>
+            {onOpenOrders && (
+              <button
+                type="button"
+                onClick={onOpenOrders}
+                className="w-full py-1.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-amber-500/30"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Request 3-Day Free Revision (রিভিশন দিন)</span>
+              </button>
+            )}
           </div>
         ) : (
           <button

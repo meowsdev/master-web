@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { ChatMessage, OrderCardData } from '@/types/super-app.types';
 import { Service } from '@/types/service.types';
+import { ordersService } from '@/services/orders.service';
 
 interface UseSuperAppChatProps {
   playSound: (type: 'send' | 'receive') => void;
@@ -197,6 +198,11 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
     return orderMsgs[orderMsgs.length - 1].id;
   }, [serviceMessages, activeServiceId]);
 
+  // Helper to check if order status is actively running
+  const isActiveOrderStatus = (status?: string) => {
+    return status === 'PENDING' || status === 'ACCEPTED' || status === 'IN_PROGRESS';
+  };
+
   // Any running order across all services
   const runningOrder: OrderCardData | null = useMemo(() => {
     for (const sId of Object.keys(serviceMessages)) {
@@ -204,7 +210,7 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
       const found = msgs
         .slice()
         .reverse()
-        .find((m) => m.type === 'order_card' && m.orderCard?.status === 'IN_PROGRESS');
+        .find((m) => m.type === 'order_card' && isActiveOrderStatus(m.orderCard?.status));
       if (found && found.orderCard) {
         return found.orderCard;
       }
@@ -219,17 +225,17 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
     const found = msgs
       .slice()
       .reverse()
-      .find((m) => m.type === 'order_card' && m.orderCard?.status === 'IN_PROGRESS');
+      .find((m) => m.type === 'order_card' && isActiveOrderStatus(m.orderCard?.status));
     return found?.orderCard || null;
   }, [serviceMessages, activeServiceId]);
 
-  // Array of service IDs that currently have an IN_PROGRESS order
+  // Array of service IDs that currently have an active running order
   const runningServiceIds: string[] = useMemo(() => {
     const ids: string[] = [];
     for (const sId of Object.keys(serviceMessages)) {
       const msgs = serviceMessages[sId] || [];
       const hasRunning = msgs.some(
-        (m) => m.type === 'order_card' && m.orderCard?.status === 'IN_PROGRESS'
+        (m) => m.type === 'order_card' && isActiveOrderStatus(m.orderCard?.status)
       );
       if (hasRunning) {
         ids.push(sId);
@@ -239,7 +245,7 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
   }, [serviceMessages]);
 
   // Confirm in-chat booking with auth check and dispatch Order Card
-  const handleConfirmBooking = (
+  const handleConfirmBooking = async (
     activeService: Service | null,
     address: string,
     time: string,
@@ -255,7 +261,7 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
     }
     if (!activeService || !activeServiceId) return;
 
-    // Rule: Same service-e 2 bar order running kora jabe na, kintu alada alada service-e eksathe running thakte parbe
+    // Rule: Same service cannot have 2 concurrent running orders
     if (activeServiceRunningOrder) {
       toast.error(
         `Active Order #${activeServiceRunningOrder.orderId} for "${activeService.name}" is already in progress! Please complete it before booking this service again.`
@@ -263,38 +269,54 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
       return;
     }
 
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const generatedOrderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
-
-    const orderCardMsg: ChatMessage = {
-      id: 'order-' + Date.now(),
-      sender: 'them',
-      type: 'order_card',
-      text: `🎉 Order #${generatedOrderId} Placed Successfully!`,
-      time: currentTime,
-      orderCard: {
-        orderId: generatedOrderId,
+    try {
+      // Create real order in backend: automatically matches provider by skill!
+      const createdOrder = await ordersService.createOrder({
         serviceId: activeService.id,
-        serviceName: activeService.name,
-        serviceIcon: activeService.category?.iconUrl || '🛠️',
-        address,
-        scheduleTime: time,
-        paymentMode,
-        basePrice: activeService.basePrice,
-        status: 'IN_PROGRESS',
-      },
-    };
+        originalPrice: Number(activeService.basePrice || 500),
+      });
 
-    setServiceMessages((prev) => ({
-      ...prev,
-      [activeServiceId]: [...(prev[activeServiceId] || []), orderCardMsg],
-    }));
-    setServiceLastActivity((prev) => ({ ...prev, [activeServiceId]: Date.now() }));
+      const orderShortId = createdOrder.id.slice(0, 8).toUpperCase();
+      const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    playSound('receive');
-    toast.success(`Booked ${activeService.name} successfully! Order #${generatedOrderId} is In Progress.`);
-    onSuccess();
+      const orderCardMsg: ChatMessage = {
+        id: 'order-' + Date.now(),
+        sender: 'them',
+        type: 'order_card',
+        text: `🎉 Order #${orderShortId} Placed Successfully!`,
+        time: currentTime,
+        orderCard: {
+          orderId: orderShortId,
+          serviceId: activeService.id,
+          serviceName: activeService.name,
+          serviceIcon: activeService.category?.iconUrl || '🛠️',
+          address,
+          scheduleTime: time,
+          paymentMode,
+          basePrice: activeService.basePrice,
+          status: 'IN_PROGRESS',
+        },
+      };
+
+      setServiceMessages((prev) => ({
+        ...prev,
+        [activeServiceId]: [...(prev[activeServiceId] || []), orderCardMsg],
+      }));
+      setServiceLastActivity((prev) => ({ ...prev, [activeServiceId]: Date.now() }));
+
+      playSound('receive');
+      toast.success(
+        `Booked ${activeService.name} successfully! Dispatched to skill-matched provider. Order #${orderShortId}`
+      );
+      onSuccess();
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Failed to confirm booking order';
+      toast.error(msg);
+    }
   };
+
 
   // Mark an active order as completed directly from the chat card
   const handleCompleteOrder = (messageId: string, orderId: string) => {
@@ -345,6 +367,64 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
     toast.success('Chat cleared');
   };
 
+  // Mark an order as reopened for revision in chat
+  const handleReopenOrderRevision = (orderId: string, issue: string) => {
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const shortId = orderId.slice(0, 8).toUpperCase();
+
+    setServiceMessages((prev) => {
+      let targetServiceId: string | null = null;
+      const updated = { ...prev };
+
+      for (const sId of Object.keys(updated)) {
+        const msgs = updated[sId] || [];
+        const found = msgs.some(
+          (m) =>
+            m.orderCard &&
+            (m.orderCard.orderId === shortId ||
+              m.orderCard.orderId.toLowerCase() === orderId.toLowerCase() ||
+              orderId.toLowerCase().startsWith(m.orderCard.orderId.toLowerCase()))
+        );
+        if (found) {
+          targetServiceId = sId;
+          updated[sId] = msgs.map((m) => {
+            if (
+              m.orderCard &&
+              (m.orderCard.orderId === shortId ||
+                m.orderCard.orderId.toLowerCase() === orderId.toLowerCase() ||
+                orderId.toLowerCase().startsWith(m.orderCard.orderId.toLowerCase()))
+            ) {
+              return {
+                ...m,
+                orderCard: {
+                  ...m.orderCard,
+                  status: 'IN_PROGRESS' as const,
+                  hasActiveRevision: true,
+                  revisionIssue: issue,
+                },
+              };
+            }
+            return m;
+          });
+          break;
+        }
+      }
+
+      if (targetServiceId) {
+        const revisionNotice: ChatMessage = {
+          id: 'rev-notice-' + Date.now(),
+          sender: 'them',
+          text: `🔄 3-Day Warranty Revision requested for Order #${shortId}. Re-opened in Running status for rework. Problem: "${issue}"`,
+          time: currentTime,
+          status: 'read',
+        };
+        updated[targetServiceId] = [...(updated[targetServiceId] || []), revisionNotice];
+      }
+
+      return updated;
+    });
+  };
+
   return {
     activeServiceId,
     setActiveServiceId,
@@ -367,6 +447,7 @@ export function useSuperAppChat({ playSound }: UseSuperAppChatProps) {
     handleReactToMessage,
     handleConfirmBooking,
     handleCompleteOrder,
+    handleReopenOrderRevision,
     handleClearChat,
   };
 }

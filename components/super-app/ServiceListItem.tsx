@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CheckCheck, ChevronDown } from 'lucide-react';
+import { CheckCheck, ChevronDown, RotateCcw } from 'lucide-react';
 import { Service } from '@/types/service.types';
 import { ChatMessage } from '@/types/super-app.types';
 
@@ -11,6 +11,8 @@ interface ServiceListItemProps {
   onSelect: (service: Service) => void;
   isRunning?: boolean;
   runningOrderId?: string | null;
+  hasActiveRevision?: boolean;
+  revisionIssue?: string;
   lastMessage?: ChatMessage | null;
   isDarkMode: boolean;
 }
@@ -21,6 +23,8 @@ export function ServiceListItem({
   onSelect,
   isRunning = false,
   runningOrderId,
+  hasActiveRevision = false,
+  revisionIssue,
   lastMessage,
   isDarkMode,
 }: ServiceListItemProps) {
@@ -32,6 +36,10 @@ export function ServiceListItem({
     <div
       onClick={() => onSelect(service)}
       className={`flex items-center gap-3 px-3 py-1 cursor-pointer transition-colors relative group select-none ${
+        hasActiveRevision
+          ? 'border-l-4 border-l-amber-500 bg-amber-500/10 dark:bg-amber-950/25'
+          : ''
+      } ${
         isSelected
           ? isDarkMode
             ? 'bg-[#2a3942]'
@@ -48,25 +56,34 @@ export function ServiceListItem({
         </div>
         <span
           className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-[#111b21] ${
-            isRunning ? 'bg-amber-500 animate-pulse' : 'bg-[#25D366]'
+            hasActiveRevision
+              ? 'bg-amber-500 animate-ping ring-2 ring-amber-400'
+              : isRunning
+              ? 'bg-amber-500 animate-pulse'
+              : 'bg-[#25D366]'
           }`}
         />
       </div>
 
       {/* Service Content with WhatsApp indented border */}
       <div className="flex-1 min-w-0 py-2 border-b border-[#e9edef] dark:border-[#222e35]">
-        {/* Top Row: Service Name, Running Badge, and Timestamp or Price */}
+        {/* Top Row: Service Name, Revision/Running Badge, and Timestamp or Price */}
         <div className="flex items-center justify-between">
           <span className={`text-[15.5px] font-normal leading-tight truncate ${textPrimary}`}>
             {service.name}
           </span>
           <div className="flex items-center gap-1.5 shrink-0 ml-2">
-            {isRunning && (
+            {hasActiveRevision ? (
+              <span className="text-[10px] font-black uppercase px-1.5 py-0.2 rounded-md bg-amber-400 text-black shadow-xs flex items-center gap-1 animate-pulse">
+                <RotateCcw className="w-2.5 h-2.5" />
+                <span>REVISION</span>
+              </span>
+            ) : isRunning ? (
               <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping inline-block" />
                 <span>Running</span>
               </span>
-            )}
+            ) : null}
             <span
               className={`text-[12px] font-normal ${
                 lastMessage ? 'text-[#00a884] dark:text-[#25D366] font-medium' : textSecondary
@@ -79,7 +96,18 @@ export function ServiceListItem({
 
         {/* Bottom Row: Blue Double Tick or Running Status + Chevron */}
         <div className="flex items-center justify-between mt-1 text-[13px]">
-          {isRunning ? (
+          {hasActiveRevision ? (
+            <div className="flex items-center gap-1.5 min-w-0 truncate text-amber-700 dark:text-amber-400 font-semibold text-[12.5px]">
+              <RotateCcw className="w-3.5 h-3.5 text-amber-500 inline-block shrink-0 animate-spin" />
+              <span className="truncate">
+                {revisionIssue
+                  ? `⚠️ Revision: "${revisionIssue}"`
+                  : runningOrderId
+                  ? `Order #${runningOrderId} • Revision Running`
+                  : '⚠️ 3-Day Warranty Revision in progress'}
+              </span>
+            </div>
+          ) : isRunning ? (
             <div className="flex items-center gap-1.5 min-w-0 truncate text-amber-600 dark:text-amber-400 font-medium text-[12.5px]">
               <span className="w-2 h-2 rounded-full bg-amber-500 inline-block shrink-0" />
               <span className="truncate">

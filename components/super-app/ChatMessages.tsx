@@ -12,6 +12,7 @@ interface ChatMessagesProps {
   onOpenBooking: () => void;
   onReact: (messageId: string, emoji: string) => void;
   onCompleteOrder?: (messageId: string, orderId: string) => void;
+  onOpenOrders?: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   isDarkMode: boolean;
 }
@@ -22,6 +23,7 @@ export function ChatMessages({
   onOpenBooking,
   onReact,
   onCompleteOrder,
+  onOpenOrders,
   messagesEndRef,
   isDarkMode,
 }: ChatMessagesProps) {
@@ -57,6 +59,7 @@ export function ChatMessages({
             <OrderCard
               msg={msg}
               onCompleteOrder={onCompleteOrder || (() => {})}
+              onOpenOrders={onOpenOrders}
               isDarkMode={isDarkMode}
             />
           ) : msg.type === 'service_card' && msg.serviceCard ? (

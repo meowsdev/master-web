@@ -2,8 +2,8 @@ import { apiClient } from '@/lib/axios';
 import { Order, OrderStatus, PaymentStatus } from '@/types/order.types';
 
 export interface CreateCustomOrderDto {
-  providerId: string;
-  customerId: string;
+  providerId?: string;
+  customerId?: string;
   serviceId: string;
   technicianId?: string;
   originalPrice: number;

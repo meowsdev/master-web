@@ -10,6 +10,8 @@ export interface OrderCardData {
   basePrice: number | string;
   status: 'PENDING' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   completedAt?: string;
+  hasActiveRevision?: boolean;
+  revisionIssue?: string;
 }
 
 // Message structure for in-chat conversations

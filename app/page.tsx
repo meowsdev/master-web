@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
   RailTab,
-  STATUS_STORIES,
   DHAKA_AREAS,
   PaymentMode,
 } from '@/types/super-app.types';
@@ -14,33 +13,28 @@ import {
 import { useServicesFilter } from '@/hooks/useServicesFilter';
 import { useSuperAppAudio } from '@/hooks/useSuperAppAudio';
 import { useSuperAppChat } from '@/hooks/useSuperAppChat';
+import { useProviderOrders } from '@/hooks/useProviderOrders';
 
 // Super App UI Components
 import { NavigationRail } from '@/components/super-app/NavigationRail';
 import { SidebarHeader } from '@/components/super-app/SidebarHeader';
 import { SearchAndFilters } from '@/components/super-app/SearchAndFilters';
 import { ServiceList } from '@/components/super-app/ServiceList';
-import { ChatHeader } from '@/components/super-app/ChatHeader';
-import { ChatMessages } from '@/components/super-app/ChatMessages';
-import { ChatComposer } from '@/components/super-app/ChatComposer';
+import { ProviderOrderList } from '@/components/super-app/ProviderOrderList';
+import { ProviderOrderCanvas } from '@/components/super-app/ProviderOrderCanvas';
+import { CustomerChatCanvas } from '@/components/super-app/CustomerChatCanvas';
 import { WelcomeScreen } from '@/components/super-app/WelcomeScreen';
-import { ServiceDetailsDrawer } from '@/components/super-app/ServiceDetailsDrawer';
-
-// Dialogs & Drawers
-import { BookingModal } from '@/components/modals/BookingModal';
-import { AuthModal } from '@/components/modals/AuthModal';
-import { CallingModal } from '@/components/modals/CallingModal';
-import { StatusViewerModal } from '@/components/modals/StatusViewerModal';
-import { SettingsDrawer } from '@/components/modals/SettingsDrawer';
-import { OrdersDrawer } from '@/components/modals/OrdersDrawer';
-import { CreateFilterModal } from '@/components/modals/CreateFilterModal';
-import { ProfileEditorModal } from '@/components/modals/ProfileEditorModal';
+import { SuperAppModals } from '@/components/super-app/SuperAppModals';
 
 const emptySubscribe = () => () => {};
 
 export default function SuperAppPage() {
   const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const { user, isAuthenticated, activeRole, logout, setRole, setUser } = useAuthStore();
+
+  const isProvider = Boolean(
+    isAuthenticated && (activeRole === 'PROVIDER' || user?.role === 'PROVIDER')
+  );
 
   // Theme & Sound states
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -84,8 +78,8 @@ export default function SuperAppPage() {
   const [bookingPaymentMode, setBookingPaymentMode] = useState<PaymentMode>('CASH');
 
   // Calling, Status viewer, and Service details modals
-  const [isCallingModalOpen, setIsCallingModalOpen] = useState(false);
   const [callType, setCallType] = useState<'voice' | 'video'>('voice');
+  const [isCallingModalOpen, setIsCallingModalOpen] = useState(false);
   const [isStatusViewerOpen, setIsStatusViewerOpen] = useState(false);
   const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
   const [isOrdersDrawerOpen, setIsOrdersDrawerOpen] = useState(() => {
@@ -93,8 +87,10 @@ export default function SuperAppPage() {
   });
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
   const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
+  const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
   const openSettings = useCallback(() => setIsSettingsDrawerOpen(true), []);
   const openOrders = useCallback(() => setIsOrdersDrawerOpen(true), []);
+  const openSkillsModal = useCallback(() => setIsSkillsModalOpen(true), []);
 
   // Chat management hook with strict authentication guards & running order tracking
   const {
@@ -113,6 +109,7 @@ export default function SuperAppPage() {
     handleReactToMessage,
     handleConfirmBooking,
     handleCompleteOrder,
+    handleReopenOrderRevision,
     handleClearChat,
     activeOrder,
     activeOrderMessageId,
@@ -141,7 +138,23 @@ export default function SuperAppPage() {
     filteredServices,
   } = useServicesFilter({ runningServiceIds, serviceLastActivity });
 
-  // Active selected service object
+  // Dedicated Provider Orders Hook
+  const {
+    orders: providerOrders,
+    isLoading: isProviderOrdersLoading,
+    refetch: refetchProviderOrders,
+    activeOrderId,
+    setActiveOrderId,
+    activeOrder: activeProviderOrder,
+    searchQuery: providerSearchQuery,
+    setSearchQuery: setProviderSearchQuery,
+    activeFilter: providerActiveFilter,
+    setActiveFilter: setProviderActiveFilter,
+    handleUpdateStatus,
+    isUpdatingStatus,
+  } = useProviderOrders({ isProvider });
+
+  // Active selected service object (for Customer view)
   const activeService = useMemo(() => {
     if (!activeServiceId) return null;
     return dbServices.find((s) => s.id === activeServiceId) || null;
@@ -153,7 +166,7 @@ export default function SuperAppPage() {
     return serviceMessages[activeServiceId] || [];
   }, [serviceMessages, activeServiceId]);
 
-  // Sync dark class on document element for accurate Tailwind dark styling
+  // Sync dark class on document element
   useEffect(() => {
     if (typeof document !== 'undefined') {
       document.documentElement.classList.toggle('dark', isDarkMode);
@@ -198,9 +211,6 @@ export default function SuperAppPage() {
     toggleSaveService(activeService.id);
   }, [activeService, isAuthenticated, handleOpenAuth, toggleSaveService]);
 
-
-
-  // Centralized booking opener: prevents duplicate running orders for the SAME service
   const handleOpenBooking = () => {
     if (!isAuthenticated) {
       toast.info('Please log in with your phone number to book services.');
@@ -240,20 +250,24 @@ export default function SuperAppPage() {
         onOpenOrders={openOrders}
         user={user}
         activeRole={activeRole}
-        runningCount={runningServiceIds.length}
+        runningCount={isProvider ? providerOrders.length : runningServiceIds.length}
       />
 
-      {/* 2. Middle Column: Sidebar (Chats/Services List) */}
+      {/* 2. Middle Column: Sidebar (Provider Assigned Orders OR Customer Services) */}
       <section
-        className={`${mobileView === 'LIST' ? 'flex' : 'hidden md:flex'
-          } flex-col w-full md:w-[380px] lg:w-[420px] border-r shrink-0 h-full relative z-10 ${bgSidebar}`}
+        className={`${
+          mobileView === 'LIST' ? 'flex' : 'hidden md:flex'
+        } flex-col w-full md:w-[380px] lg:w-[420px] border-r shrink-0 h-full relative z-10 ${bgSidebar}`}
       >
         <SidebarHeader
           isDarkMode={isDarkMode}
           soundEnabled={soundEnabled}
-          runningCount={runningServiceIds.length}
+          runningCount={isProvider ? providerOrders.length : runningServiceIds.length}
           onToggleSound={toggleSound}
-          onSelectWelcome={() => setActiveServiceId(null)}
+          onSelectWelcome={() => {
+            setActiveServiceId(null);
+            setActiveOrderId(null);
+          }}
           onOpenSettings={openSettings}
           onOpenOrders={openOrders}
           onOpenAuth={handleOpenAuth}
@@ -262,114 +276,118 @@ export default function SuperAppPage() {
           onLogout={handleLogout}
         />
 
-        <SearchAndFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          isSearchFocused={isSearchFocused}
-          onSearchFocus={() => setIsSearchFocused(true)}
-          onSearchBlur={() => setIsSearchFocused(false)}
-          activeFilterChip={activeFilterChip}
-          onSelectFilterChip={setActiveFilterChip}
-          customFilters={customFilters}
-          onOpenCreateFilter={() => {
-            if (!isAuthenticated) {
-              toast.info('Please log in with your phone number to create custom filter lists.');
-              handleOpenAuth('LOGIN');
-              return;
-            }
-            setIsFilterModalOpen(true);
-          }}
-          onDeleteCustomFilter={deleteCustomFilter}
-          activeRole={activeRole}
-          runningCount={runningServiceIds.length}
-          isDarkMode={isDarkMode}
-        />
-
-        <ServiceList
-          services={filteredServices}
-          allDbServicesCount={dbServices.length}
-          isLoading={isServicesLoading}
-          searchQuery={searchQuery}
-          onClearSearch={() => setSearchQuery('')}
-          activeServiceId={activeServiceId}
-          onSelectService={handleSelectService}
-          isAuthenticated={isAuthenticated}
-          user={user}
-          activeRole={activeRole}
-          onOpenAuth={() => handleOpenAuth('LOGIN')}
-          onOpenProfile={() => setIsProfileEditorOpen(true)}
-          runningServiceIds={runningServiceIds}
-          serviceMessages={serviceMessages}
-          activeFilterChip={activeFilterChip}
-          isDarkMode={isDarkMode}
-        />
-      </section>
-
-      {/* 3. Right Main Area: Active Service Chat Window OR Welcome Screen */}
-      <main
-        className={`${mobileView === 'CHAT' ? 'flex' : 'hidden md:flex'
-          } flex-col flex-1 h-full relative z-0 min-w-0`}
-      >
-        {activeService ? (
+        {isProvider ? (
+          /* Role: PROVIDER - Shows Assigned Job Orders & Dispatches */
+          <ProviderOrderList
+            orders={providerOrders}
+            isLoading={isProviderOrdersLoading}
+            onRefresh={refetchProviderOrders}
+            activeOrderId={activeOrderId}
+            onSelectOrder={(order) => {
+              setActiveOrderId(order.id);
+              setMobileView('CHAT');
+            }}
+            searchQuery={providerSearchQuery}
+            onSearchChange={setProviderSearchQuery}
+            activeFilter={providerActiveFilter}
+            onSelectFilter={setProviderActiveFilter}
+            user={user}
+            onOpenProfile={() => setIsProfileEditorOpen(true)}
+            onOpenSkillsModal={openSkillsModal}
+            isDarkMode={isDarkMode}
+          />
+        ) : (
+          /* Role: CUSTOMER / GUEST - Shows Services Catalog */
           <>
-            <ChatHeader
-              activeService={activeService}
-              activeOrder={activeOrder}
-              onBackMobile={() => setMobileView('LIST')}
-              onBackToWelcome={() => setActiveServiceId(null)}
-              onOpenBooking={handleOpenBooking}
-              onStartCall={handleStartCall}
-              onClearChat={() => {
-                if (activeServiceId) handleClearChat(activeServiceId);
+            <SearchAndFilters
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              isSearchFocused={isSearchFocused}
+              onSearchFocus={() => setIsSearchFocused(true)}
+              onSearchBlur={() => setIsSearchFocused(false)}
+              activeFilterChip={activeFilterChip}
+              onSelectFilterChip={setActiveFilterChip}
+              customFilters={customFilters}
+              onOpenCreateFilter={() => {
+                if (!isAuthenticated) {
+                  toast.info('Please log in with your phone number to create custom filter lists.');
+                  handleOpenAuth('LOGIN');
+                  return;
+                }
+                setIsFilterModalOpen(true);
               }}
-              isSaved={activeService ? isServiceSaved(activeService.id) : false}
-              onToggleSave={activeService ? handleToggleSave : undefined}
-              onOpenDetails={() => setIsServiceDetailsOpen(true)}
+              onDeleteCustomFilter={deleteCustomFilter}
+              activeRole={activeRole}
+              runningCount={runningServiceIds.length}
               isDarkMode={isDarkMode}
             />
 
-            {/* Active Order Banner: Shows live status & quick completion action */}
-            {activeOrder && activeOrder.status === 'IN_PROGRESS' && activeOrderMessageId && (
-              <div className="bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-800/60 px-4 py-2 flex items-center justify-between text-xs z-10 shrink-0 select-text">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping shrink-0" />
-                  <span className="font-bold text-amber-900 dark:text-amber-200 truncate">
-                    Order #{activeOrder.orderId} • In Progress
-                  </span>
-                  <span className="hidden sm:inline text-amber-700 dark:text-amber-400">
-                    ({activeOrder.scheduleTime} • {activeOrder.address})
-                  </span>
-                </div>
-                <button
-                  onClick={() => handleCompleteOrder(activeOrderMessageId, activeOrder.orderId)}
-                  className="shrink-0 ml-2 px-3 py-1 bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold rounded-full text-xs shadow-xs cursor-pointer transition-colors"
-                >
-                  Complete Order
-                </button>
-              </div>
-            )}
-
-            <ChatMessages
-              activeService={activeService}
-              messages={currentMessages}
-              onOpenBooking={handleOpenBooking}
-              onReact={handleReactToMessage}
-              onCompleteOrder={handleCompleteOrder}
-              messagesEndRef={messagesEndRef}
-              isDarkMode={isDarkMode}
-            />
-
-            <ChatComposer
-              inputText={inputText}
-              onInputChange={setInputText}
-              onSendMessage={() => handleSendMessage(isAuthenticated, () => handleOpenAuth('LOGIN'))}
-              onSendVoiceNote={() => handleSendVoiceNote(isAuthenticated, () => handleOpenAuth('LOGIN'))}
-              onOpenBooking={handleOpenBooking}
+            <ServiceList
+              services={filteredServices}
+              allDbServicesCount={dbServices.length}
+              isLoading={isServicesLoading}
+              searchQuery={searchQuery}
+              onClearSearch={() => setSearchQuery('')}
+              activeServiceId={activeServiceId}
+              onSelectService={handleSelectService}
               isAuthenticated={isAuthenticated}
+              user={user}
+              activeRole={activeRole}
               onOpenAuth={() => handleOpenAuth('LOGIN')}
+              onOpenProfile={() => setIsProfileEditorOpen(true)}
+              runningServiceIds={runningServiceIds}
+              serviceMessages={serviceMessages}
+              activeFilterChip={activeFilterChip}
               isDarkMode={isDarkMode}
             />
           </>
+        )}
+      </section>
+
+      {/* 3. Right Main Area: Provider Order Canvas OR Customer Service Chat OR Welcome Screen */}
+      <main
+        className={`${
+          mobileView === 'CHAT' ? 'flex' : 'hidden md:flex'
+        } flex-col flex-1 h-full relative z-0 min-w-0`}
+      >
+        {isProvider && activeProviderOrder ? (
+          /* Provider Order Workspace */
+          <ProviderOrderCanvas
+            order={activeProviderOrder}
+            onBack={() => setMobileView('LIST')}
+            onUpdateStatus={handleUpdateStatus}
+            isUpdatingStatus={isUpdatingStatus}
+            onStartCall={handleStartCall}
+            isDarkMode={isDarkMode}
+          />
+        ) : !isProvider && activeService && activeServiceId ? (
+          /* Customer Service Chat Window */
+          <CustomerChatCanvas
+            activeService={activeService}
+            activeServiceId={activeServiceId}
+            activeOrder={activeOrder}
+            activeOrderMessageId={activeOrderMessageId}
+            currentMessages={currentMessages}
+            inputText={inputText}
+            onInputChange={setInputText}
+            onBackMobile={() => setMobileView('LIST')}
+            onBackToWelcome={() => setActiveServiceId(null)}
+            onOpenBooking={handleOpenBooking}
+            onStartCall={handleStartCall}
+            onClearChat={handleClearChat}
+            isSaved={isServiceSaved(activeService.id)}
+            onToggleSave={handleToggleSave}
+            onOpenDetails={() => setIsServiceDetailsOpen(true)}
+            onCompleteOrder={handleCompleteOrder}
+            onReactToMessage={handleReactToMessage}
+            onSendMessage={() => handleSendMessage(isAuthenticated, () => handleOpenAuth('LOGIN'))}
+            onSendVoiceNote={() => handleSendVoiceNote(isAuthenticated, () => handleOpenAuth('LOGIN'))}
+            isAuthenticated={isAuthenticated}
+            onOpenAuth={() => handleOpenAuth('LOGIN')}
+            onOpenOrders={openOrders}
+            messagesEndRef={messagesEndRef}
+            isDarkMode={isDarkMode}
+          />
         ) : (
           <WelcomeScreen
             isAuthenticated={isAuthenticated}
@@ -384,12 +402,16 @@ export default function SuperAppPage() {
         )}
       </main>
 
-      {/* Modals & Dialogs */}
-      <BookingModal
-        isOpen={isBookingModalOpen}
-        onClose={() => setIsBookingModalOpen(false)}
-        service={activeService}
-        runningOrder={activeServiceRunningOrder}
+      {/* Global Modals & Drawers */}
+      <SuperAppModals
+        isDarkMode={isDarkMode}
+        user={user}
+        activeRole={activeRole}
+        isAuthenticated={isAuthenticated}
+        isBookingModalOpen={isBookingModalOpen}
+        onCloseBooking={() => setIsBookingModalOpen(false)}
+        activeService={activeService}
+        activeServiceRunningOrder={activeServiceRunningOrder}
         bookingAddress={bookingAddress}
         onAddressChange={setBookingAddress}
         bookingTime={bookingTime}
@@ -407,86 +429,47 @@ export default function SuperAppPage() {
             () => setIsBookingModalOpen(false)
           )
         }
-        isDarkMode={isDarkMode}
-      />
-
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        initialMode={authInitialMode}
-        isDarkMode={isDarkMode}
-      />
-
-      <CallingModal
-        isOpen={isCallingModalOpen}
-        onClose={() => setIsCallingModalOpen(false)}
-        service={activeService}
+        isAuthModalOpen={isAuthModalOpen}
+        onCloseAuth={() => setIsAuthModalOpen(false)}
+        authInitialMode={authInitialMode}
+        onOpenAuth={handleOpenAuth}
+        isCallingModalOpen={isCallingModalOpen}
+        onCloseCalling={() => setIsCallingModalOpen(false)}
         callType={callType}
-        isDarkMode={isDarkMode}
-      />
-
-      <StatusViewerModal
-        isOpen={isStatusViewerOpen}
-        onClose={() => setIsStatusViewerOpen(false)}
-        stories={STATUS_STORIES}
-      />
-
-      <SettingsDrawer
-        isOpen={isSettingsDrawerOpen}
-        onClose={() => setIsSettingsDrawerOpen(false)}
-        isDarkMode={isDarkMode}
+        onStartCall={handleStartCall}
+        isStatusViewerOpen={isStatusViewerOpen}
+        onCloseStatusViewer={() => setIsStatusViewerOpen(false)}
+        isSettingsDrawerOpen={isSettingsDrawerOpen}
+        onCloseSettings={() => setIsSettingsDrawerOpen(false)}
         onToggleTheme={toggleTheme}
         soundEnabled={soundEnabled}
         onToggleSound={toggleSound}
-        user={user}
-        activeRole={activeRole}
         onSwitchRole={setRole}
-        onOpenAuth={handleOpenAuth}
         onOpenEditProfile={() => setIsProfileEditorOpen(true)}
         onOpenOrders={openOrders}
+        onOpenSkillsModal={openSkillsModal}
         onLogout={handleLogout}
-      />
-
-      <ProfileEditorModal
-        key={`${user?.id || 'guest'}-${isProfileEditorOpen}`}
-        isOpen={isProfileEditorOpen}
-        onClose={() => setIsProfileEditorOpen(false)}
-        user={user}
+        isProfileEditorOpen={isProfileEditorOpen}
+        onCloseProfileEditor={() => setIsProfileEditorOpen(false)}
         onUserUpdated={setUser}
-        isDarkMode={isDarkMode}
-      />
-
-      <CreateFilterModal
-        isOpen={isFilterModalOpen}
-        onClose={() => setIsFilterModalOpen(false)}
-        services={dbServices}
-        onCreateFilter={createCustomFilter}
-        isDarkMode={isDarkMode}
-      />
-
-      {/* 4. Slide-in Service Details Drawer on the Right */}
-      <ServiceDetailsDrawer
-        isOpen={isServiceDetailsOpen}
-        onClose={() => setIsServiceDetailsOpen(false)}
-        service={activeService}
-        isSaved={activeService ? isServiceSaved(activeService.id) : false}
+        isSkillsModalOpen={isSkillsModalOpen}
+        onCloseSkillsModal={() => setIsSkillsModalOpen(false)}
+        isFilterModalOpen={isFilterModalOpen}
+        onCloseFilterModal={() => setIsFilterModalOpen(false)}
+        dbServices={dbServices}
+        createCustomFilter={createCustomFilter}
+        isServiceDetailsOpen={isServiceDetailsOpen}
+        onCloseServiceDetails={() => setIsServiceDetailsOpen(false)}
+        isServiceSaved={activeService ? isServiceSaved(activeService.id) : false}
         onToggleSave={handleToggleSave}
         onOpenBooking={handleOpenBooking}
-        onStartCall={handleStartCall}
-        isDarkMode={isDarkMode}
-      />
-
-      {/* 5. Slide-in Native WhatsApp Orders & Bookings Drawer */}
-      <OrdersDrawer
-        isOpen={isOrdersDrawerOpen}
-        onClose={() => setIsOrdersDrawerOpen(false)}
+        isOrdersDrawerOpen={isOrdersDrawerOpen}
+        onCloseOrdersDrawer={() => setIsOrdersDrawerOpen(false)}
+        onOrderRevisionRequested={handleReopenOrderRevision}
         onSelectServiceById={(serviceId) => {
           const target = dbServices.find((s) => s.id === serviceId);
           if (target) handleSelectService(target);
         }}
-        onOpenAuth={handleOpenAuth}
-        isAuthenticated={isAuthenticated}
-        isDarkMode={isDarkMode}
       />
     </div>
   );

@@ -38,6 +38,36 @@ export interface ProviderReview {
   updatedAt: string;
 }
 
+export interface OrderUserProfile {
+  id: string;
+  name?: string | null;
+  mobileNumber: string;
+  profilePhoto?: string | null;
+}
+
+export interface OrderCustomer {
+  id: string;
+  userId: string;
+  user?: OrderUserProfile;
+}
+
+export interface OrderProvider {
+  id: string;
+  userId: string;
+  user?: OrderUserProfile;
+}
+
+export interface ServiceRevision {
+  id: string;
+  orderId: string;
+  issueDescription: string;
+  attachedImages?: string[];
+  revisionStatus: 'REQUESTED' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED';
+  warrantyExpiresAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Order {
   id: string;
   providerId: string;
@@ -45,6 +75,9 @@ export interface Order {
   technicianId?: string | null;
   serviceId: string;
   service?: Service;
+  customer?: OrderCustomer;
+  provider?: OrderProvider;
+  technician?: OrderProvider;
   originalPrice: string | number;
   adminCommission: string | number;
   additionalPrice: string | number;
@@ -59,4 +92,6 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   providerReview?: ProviderReview | null;
+  revisions?: ServiceRevision[];
 }
+

@@ -14,13 +14,16 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ordersService } from '@/services/orders.service';
+import { revisionService } from '@/services/revision.service';
 import { Order, OrderStatus } from '@/types/order.types';
+import { OrderRevisionModal } from './OrderRevisionModal';
 
 interface OrdersDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectServiceById: (serviceId: string) => void;
   onOpenAuth: () => void;
+  onOrderRevisionRequested?: (orderId: string, issue: string) => void;
   isAuthenticated: boolean;
   isDarkMode: boolean;
 }
@@ -32,6 +35,7 @@ export function OrdersDrawer({
   onClose,
   onSelectServiceById,
   onOpenAuth,
+  onOrderRevisionRequested,
   isAuthenticated,
   isDarkMode,
 }: OrdersDrawerProps) {
@@ -55,7 +59,7 @@ export function OrdersDrawer({
       ordersService.updateStatus(orderId, OrderStatus.COMPLETED),
     onSuccess: (_, orderId) => {
       queryClient.invalidateQueries({ queryKey: ['my-orders-drawer'] });
-      toast.success(`Order #${orderId.slice(0, 8)} marked as Completed! 🎉`);
+      toast.success(`Order #${orderId.slice(0, 8).toUpperCase()} marked as Completed! 🎉`);
     },
     onError: (err: unknown) => {
       const msg =
@@ -65,20 +69,77 @@ export function OrdersDrawer({
     },
   });
 
+  // Cancel Order Mutation inside Drawer
+  const cancelOrderMutation = useMutation({
+    mutationFn: (orderId: string) =>
+      ordersService.updateStatus(orderId, OrderStatus.CANCELLED),
+    onSuccess: (_, orderId) => {
+      queryClient.invalidateQueries({ queryKey: ['my-orders-drawer'] });
+      toast.success(`Order #${orderId.slice(0, 8).toUpperCase()} has been cancelled.`);
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Failed to cancel order';
+      toast.error(msg);
+    },
+  });
+
+  // 3-Day Warranty Revision State & Mutation
+  const [revisionOrderId, setRevisionOrderId] = useState<string | null>(null);
+  const [issueDescription, setIssueDescription] = useState('');
+
+  const revisionMutation = useMutation({
+    mutationFn: ({ orderId, issue }: { orderId: string; issue: string }) =>
+      revisionService.createRevision({ orderId, issueDescription: issue }),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['my-orders-drawer'] });
+      queryClient.invalidateQueries({ queryKey: ['provider-assigned-orders'] });
+      toast.success(
+        `3-Day Free Revision requested for Order #${vars.orderId.slice(0, 8).toUpperCase()}! Switched to Running orders.`
+      );
+      setRevisionOrderId(null);
+      setIssueDescription('');
+      setActiveTab('RUNNING'); // Immediately switch to RUNNING tab!
+      onOrderRevisionRequested?.(vars.orderId, vars.issue);
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Failed to request revision';
+      toast.error(msg);
+    },
+  });
+
+  const hasActiveRevision = (o: Order) =>
+    o.revisions?.some(
+      (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
+    );
+
   const filteredOrders = useMemo(() => {
+    let list: Order[] = [];
     if (activeTab === 'RUNNING') {
-      return orders.filter(
+      list = orders.filter(
         (o) =>
           o.orderStatus === OrderStatus.IN_PROGRESS ||
           o.orderStatus === OrderStatus.ACCEPTED ||
           o.orderStatus === OrderStatus.PENDING
       );
+    } else if (activeTab === 'COMPLETED') {
+      list = orders.filter((o) => o.orderStatus === OrderStatus.COMPLETED);
+    } else {
+      list = orders;
     }
-    if (activeTab === 'COMPLETED') {
-      return orders.filter((o) => o.orderStatus === OrderStatus.COMPLETED);
-    }
-    return orders;
+    // Revisions always appear at top of list
+    return [...list].sort((a, b) => {
+      const aRev = hasActiveRevision(a) ? 1 : 0;
+      const bRev = hasActiveRevision(b) ? 1 : 0;
+      if (aRev !== bRev) return bRev - aRev;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   }, [orders, activeTab]);
+
+  const activeRevisionCount = orders.filter(hasActiveRevision).length;
 
   if (!isOpen) return null;
 
@@ -161,6 +222,11 @@ export function OrdersDrawer({
                 {runningCount}
               </span>
             )}
+            {activeRevisionCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-400 text-black font-black animate-pulse">
+                ⚠️ {activeRevisionCount} Revision
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('COMPLETED')}
@@ -228,11 +294,19 @@ export function OrdersDrawer({
                 order.orderStatus === OrderStatus.ACCEPTED ||
                 order.orderStatus === OrderStatus.PENDING;
               const isCompleted = order.orderStatus === OrderStatus.COMPLETED;
+              const activeRevision = order.revisions?.find(
+                (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
+              );
+              const isOrderRevision = !!activeRevision;
 
               return (
                 <div
                   key={order.id}
-                  className={`p-4 rounded-2xl border transition-all space-y-3 ${bgCard}`}
+                  className={`p-4 rounded-2xl border transition-all space-y-3 ${
+                    isOrderRevision
+                      ? 'border-l-4 border-l-amber-500 bg-amber-500/10 dark:bg-amber-950/25 border-amber-300 dark:border-amber-700/50'
+                      : bgCard
+                  }`}
                 >
                   {/* Top Bar: ID and Status Pill */}
                   <div className="flex items-center justify-between gap-2">
@@ -242,19 +316,31 @@ export function OrdersDrawer({
 
                     <span
                       className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                        isCompleted
+                        isOrderRevision
+                          ? 'bg-amber-400 dark:bg-amber-500 text-black font-black border border-amber-300 shadow-xs animate-pulse'
+                          : isCompleted
                           ? 'bg-[#d9fdd3] text-[#008069] dark:bg-[#005c4b]/60 dark:text-[#25D366]'
                           : isRunning
                           ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
                           : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
                       }`}
                     >
-                      {isCompleted ? (
-                        <CheckCircle2 className="w-3 h-3" />
+                      {isOrderRevision ? (
+                        <>
+                          <RotateCcw className="w-3 h-3 animate-spin" />
+                          <span>REVISION RUNNING</span>
+                        </>
+                      ) : isCompleted ? (
+                        <>
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>{order.orderStatus}</span>
+                        </>
                       ) : (
-                        <Clock className="w-3 h-3" />
+                        <>
+                          <Clock className="w-3 h-3" />
+                          <span>{order.orderStatus}</span>
+                        </>
                       )}
-                      <span>{order.orderStatus}</span>
                     </span>
                   </div>
 
@@ -275,6 +361,22 @@ export function OrdersDrawer({
                       </span>
                     </p>
                   </div>
+
+                  {/* Active Revision Banner if order is in revision */}
+                  {isOrderRevision && activeRevision && (
+                    <div className="p-2.5 rounded-xl bg-amber-100/80 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-xs space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-300 text-[11px]">
+                        <RotateCcw className="w-3 h-3 text-amber-600 animate-spin" />
+                        <span>3-Day Free Warranty Revision Active</span>
+                      </div>
+                      <p className="text-[11px] text-amber-950 dark:text-amber-200 italic pl-4">
+                        &ldquo;{activeRevision.issueDescription}&rdquo;
+                      </p>
+                      <p className="text-[10px] text-amber-700 dark:text-amber-400 pl-4">
+                        Technician is re-working on this issue with top priority.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Price & Payment Mode */}
                   <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/10 text-xs">
@@ -298,22 +400,75 @@ export function OrdersDrawer({
                     </button>
 
                     {isRunning && (
-                      <button
-                        onClick={() => completeOrderMutation.mutate(order.id)}
-                        disabled={completeOrderMutation.isPending}
-                        className="py-2 px-3 rounded-xl bg-[#d9fdd3] dark:bg-[#005c4b]/50 hover:bg-[#c2f7b8] text-[#008069] dark:text-[#25D366] text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
-                        title="Mark as Completed"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Complete</span>
-                      </button>
+                      <>
+                        <button
+                          onClick={() => cancelOrderMutation.mutate(order.id)}
+                          disabled={cancelOrderMutation.isPending}
+                          className="py-2 px-2.5 rounded-xl border border-rose-300 dark:border-rose-800/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                          title="Cancel Order"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Cancel</span>
+                        </button>
+                        <button
+                          onClick={() => completeOrderMutation.mutate(order.id)}
+                          disabled={completeOrderMutation.isPending}
+                          className="py-2 px-3 rounded-xl bg-[#d9fdd3] dark:bg-[#005c4b]/50 hover:bg-[#c2f7b8] text-[#008069] dark:text-[#25D366] text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                          title="Mark as Completed"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Complete</span>
+                        </button>
+                      </>
                     )}
+
+                    {isCompleted && (() => {
+                      const completedAt = new Date(order.updatedAt).getTime();
+                      const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
+                      const isWithin3Days = Date.now() - completedAt <= threeDaysMs;
+                      const daysLeft = Math.max(
+                        1,
+                        Math.ceil((completedAt + threeDaysMs - Date.now()) / (24 * 60 * 60 * 1000))
+                      );
+
+                      if (isWithin3Days) {
+                        return (
+                          <button
+                            onClick={() => setRevisionOrderId(order.id)}
+                            className="py-2 px-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                            title="Request Free 3-Day Warranty Revision"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Revision ({daysLeft}d left)</span>
+                          </button>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                 </div>
               );
             })
           )}
         </div>
+
+        {/* 3-Day Warranty Revision Dialog */}
+        <OrderRevisionModal
+          isOpen={!!revisionOrderId}
+          orderId={revisionOrderId}
+          issueDescription={issueDescription}
+          onIssueDescriptionChange={setIssueDescription}
+          onClose={() => setRevisionOrderId(null)}
+          onSubmit={() =>
+            revisionOrderId &&
+            revisionMutation.mutate({
+              orderId: revisionOrderId,
+              issue: issueDescription.trim(),
+            })
+          }
+          isSubmitting={revisionMutation.isPending}
+          isDarkMode={isDarkMode}
+        />
       </div>
     </div>
   );

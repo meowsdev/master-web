@@ -1,11 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Image from 'next/image';
+import { useQuery } from '@tanstack/react-query';
 import { LogIn } from 'lucide-react';
 import { Service } from '@/types/service.types';
 import { ChatMessage } from '@/types/super-app.types';
 import { User } from '@/types/auth.types';
+import { Order } from '@/types/order.types';
+import { ordersService } from '@/services/orders.service';
 import { ServiceListItem } from './ServiceListItem';
 
 interface ServiceListProps {
@@ -47,6 +50,49 @@ export function ServiceList({
 }: ServiceListProps) {
   const textPrimary = isDarkMode ? 'text-[#e9edef]' : 'text-[#111b21]';
   const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
+
+  // Fetch customer orders (shares 'my-orders-drawer' cache) to detect running revisions
+  const { data: customerOrders = [] } = useQuery<Order[]>({
+    queryKey: ['my-orders-drawer'],
+    queryFn: () => ordersService.getOrders(),
+    enabled: isAuthenticated,
+    staleTime: 10000,
+  });
+
+  // Sort services so that any service with an active revision floats to the very top
+  const displayServices = useMemo(() => {
+    return [...services].sort((a, b) => {
+      const aRev =
+        Boolean(
+          (serviceMessages[a.id] || []).some(
+            (m) => m.type === 'order_card' && m.orderCard?.hasActiveRevision
+          )
+        ) ||
+        customerOrders.some(
+          (o) =>
+            o.serviceId === a.id &&
+            o.revisions?.some(
+              (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
+            )
+        );
+      const bRev =
+        Boolean(
+          (serviceMessages[b.id] || []).some(
+            (m) => m.type === 'order_card' && m.orderCard?.hasActiveRevision
+          )
+        ) ||
+        customerOrders.some(
+          (o) =>
+            o.serviceId === b.id &&
+            o.revisions?.some(
+              (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
+            )
+        );
+      if (aRev && !bRev) return -1;
+      if (!aRev && bRev) return 1;
+      return 0;
+    });
+  }, [services, customerOrders, serviceMessages]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -92,23 +138,62 @@ export function ServiceList({
             )}
           </div>
         ) : (
-          services.map((service) => {
+          displayServices.map((service) => {
             const msgs = serviceMessages[service.id] || [];
             const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
-            const runningOrder = msgs
+
+            // In-chat order card check
+            const inChatOrderCard = msgs
               .slice()
               .reverse()
-              .find(
-                (m) => m.type === 'order_card' && m.orderCard?.status === 'IN_PROGRESS'
-              )?.orderCard;
+              .find((m) => m.type === 'order_card' && m.orderCard)?.orderCard;
+
+            // DB order revision check
+            const dbOrderWithRev = customerOrders.find(
+              (o) =>
+                o.serviceId === service.id &&
+                o.revisions?.some(
+                  (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
+                )
+            );
+            const dbActiveRevision = dbOrderWithRev?.revisions?.find(
+              (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
+            );
+
+            const hasActiveRevision =
+              Boolean(inChatOrderCard?.hasActiveRevision) || Boolean(dbActiveRevision);
+
+            const revisionIssue =
+              inChatOrderCard?.revisionIssue ||
+              dbActiveRevision?.issueDescription ||
+              undefined;
+
+            // Active running order check
+            const activeDbRunningOrder = customerOrders.find(
+              (o) =>
+                o.serviceId === service.id &&
+                ['ACCEPTED', 'ASSIGNED', 'IN_PROGRESS', 'CONFIRMED'].includes(o.orderStatus)
+            );
+
+            const isRunning =
+              hasActiveRevision ||
+              runningServiceIds.includes(service.id) ||
+              Boolean(activeDbRunningOrder);
+
+            const runningOrderId =
+              (hasActiveRevision && (dbOrderWithRev?.id ? dbOrderWithRev.id.slice(0, 8).toUpperCase() : inChatOrderCard?.orderId)) ||
+              inChatOrderCard?.orderId ||
+              (activeDbRunningOrder?.id ? activeDbRunningOrder.id.slice(0, 8).toUpperCase() : null);
 
             return (
               <ServiceListItem
                 key={service.id}
                 service={service}
                 isSelected={service.id === activeServiceId}
-                isRunning={runningServiceIds.includes(service.id)}
-                runningOrderId={runningOrder?.orderId || null}
+                isRunning={isRunning}
+                runningOrderId={runningOrderId}
+                hasActiveRevision={hasActiveRevision}
+                revisionIssue={revisionIssue}
                 lastMessage={lastMsg}
                 onSelect={onSelectService}
                 isDarkMode={isDarkMode}

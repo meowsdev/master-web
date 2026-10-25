@@ -1,62 +1,94 @@
 'use client';
 
 import React from 'react';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, X } from 'lucide-react';
 
 interface OrderRevisionModalProps {
   isOpen: boolean;
+  orderId?: string | null;
+  issueDescription?: string;
+  revisionDesc?: string;
+  onIssueDescriptionChange?: (text: string) => void;
+  onDescChange?: (text: string) => void;
   onClose: () => void;
-  revisionDesc: string;
-  onDescChange: (val: string) => void;
   onSubmit: () => void;
-  isPending: boolean;
+  isSubmitting?: boolean;
+  isPending?: boolean;
+  isDarkMode?: boolean;
 }
 
 export function OrderRevisionModal({
   isOpen,
-  onClose,
+  orderId,
+  issueDescription,
   revisionDesc,
+  onIssueDescriptionChange,
   onDescChange,
+  onClose,
   onSubmit,
+  isSubmitting,
   isPending,
+  isDarkMode = false,
 }: OrderRevisionModalProps) {
   if (!isOpen) return null;
 
+  const desc = issueDescription ?? revisionDesc ?? '';
+  const setDesc = onIssueDescriptionChange ?? onDescChange ?? (() => {});
+  const submitting = isSubmitting ?? isPending ?? false;
+
+  const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
-        <h3 className="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-          <RotateCcw className="w-5 h-5 text-emerald-600" />
-          Claim 3-Day Warranty Revision
-        </h3>
-        <p className="text-xs text-zinc-500">
-          Describe the unresolved issue. The provider will re-visit at zero extra cost.
+    <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+      <div
+        className={`w-full max-w-sm rounded-2xl p-5 shadow-2xl border space-y-4 ${
+          isDarkMode ? 'bg-[#202c33] border-[#2f3b43]' : 'bg-white border-[#e9edef]'
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-[#008069] dark:text-[#25D366] font-bold text-sm">
+            <RotateCcw className="w-4 h-4" />
+            <span>3-Day Warranty Revision</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-full text-[#8696a0] hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <p className={`text-xs ${textSecondary}`}>
+          If the completed work has any defect or needs re-servicing, describe the issue below. The order will be reopened in the Running tab for the technician to rework.
         </p>
 
         <textarea
-          value={revisionDesc}
-          onChange={(e) => onDescChange(e.target.value)}
-          placeholder="E.g., The AC cooling stopped again after 1 day..."
-          rows={4}
-          className="w-full p-3 text-xs sm:text-sm bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-zinc-900 dark:text-white"
-          required
+          value={desc}
+          onChange={(e) => setDesc(e.target.value)}
+          placeholder="Describe what needs to be fixed or re-done..."
+          rows={3}
+          className={`w-full p-3 rounded-xl text-xs border outline-none resize-none ${
+            isDarkMode
+              ? 'bg-[#111b21] border-[#2f3b43] text-white placeholder:text-[#8696a0]'
+              : 'bg-[#f0f2f5] border-[#d1d7db] text-black placeholder:text-[#667781]'
+          }`}
         />
 
-        <div className="flex items-center justify-end gap-2 pt-2">
+        <div className="flex items-center gap-2 pt-1">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl"
+            className="flex-1 py-2 rounded-xl text-xs font-semibold text-[#8696a0] hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="button"
+            disabled={!desc.trim() || submitting}
             onClick={onSubmit}
-            disabled={!revisionDesc.trim() || isPending}
-            className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-md transition-all disabled:opacity-50"
+            className="flex-1 py-2 rounded-xl bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
           >
-            {isPending ? 'Submitting...' : 'Submit Request'}
+            {submitting ? 'Submitting...' : 'Submit Revision'}
           </button>
         </div>
       </div>

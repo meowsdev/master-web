@@ -11,12 +11,15 @@ export const apiClient = axios.create({
   withCredentials: true,
 });
 
-// Request Interceptor: Attach JWT Access Token
+// Request Interceptor: Attach JWT Access Token & Active Role
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = useAuthStore.getState().accessToken;
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const { accessToken, activeRole } = useAuthStore.getState();
+    if (accessToken && config.headers) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    if (activeRole && config.headers) {
+      config.headers['x-active-role'] = activeRole;
     }
     return config;
   },

@@ -39,6 +39,7 @@ interface SettingsDrawerProps {
   onOpenAuth: () => void;
   onOpenEditProfile?: () => void;
   onOpenOrders?: () => void;
+  onOpenSkillsModal?: () => void;
   onLogout: () => void;
 }
 
@@ -54,6 +55,7 @@ export function SettingsDrawer({
   onOpenAuth,
   onOpenEditProfile,
   onOpenOrders,
+  onOpenSkillsModal,
   onLogout,
 }: SettingsDrawerProps) {
   if (!isOpen) return null;
@@ -253,7 +255,21 @@ export function SettingsDrawer({
                       এই ফোন নাম্বারে স্থায়ীভাবে <strong>{currentRole}</strong> রোল সক্রিয়। অন্য কোনো রোলে (যেমন Provider বা Counselor) কাজ করতে চাইলে সেই রোলের রেজিস্ট্রিকৃত ফোন নাম্বার দিয়ে লগইন করুন।
                     </p>
                   </div>
+
+                  {currentRole === UserRole.PROVIDER && onOpenSkillsModal && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onOpenSkillsModal();
+                      }}
+                      className="w-full py-2.5 px-3 rounded-xl bg-[#008069]/10 hover:bg-[#008069]/20 text-[#008069] dark:text-[#25D366] text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border border-[#008069]/25 shadow-2xs"
+                    >
+                      <Wrench className="w-3.5 h-3.5" />
+                      <span>Manage My Service Skills (স্কিল নির্বাচন)</span>
+                    </button>
+                  )}
                 </div>
+
               ) : (
                 <div
                   className={`p-3.5 rounded-2xl border text-center space-y-2.5 ${isDarkMode ? 'bg-[#202c33]/60 border-[#2f3b43]' : 'bg-[#f0f2f5] border-[#e9edef]'

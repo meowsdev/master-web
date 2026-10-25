@@ -87,10 +87,10 @@ export function ChatHeader({
             </h2>
             {activeOrder ? (
               <p className="text-[12px] font-medium flex items-center gap-1.5 mt-0.5">
-                {activeOrder.status === 'IN_PROGRESS' ? (
+                {activeOrder.status === 'IN_PROGRESS' || activeOrder.status === 'PENDING' || activeOrder.status === 'ACCEPTED' ? (
                   <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold">
                     <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping inline-block" />
-                    <span>Order #{activeOrder.orderId} • In Progress ⚡</span>
+                    <span>Order #{activeOrder.orderId} • {activeOrder.status} ⚡</span>
                   </span>
                 ) : activeOrder.status === 'COMPLETED' ? (
                   <span className="flex items-center gap-1.5 text-[#008069] dark:text-[#25D366] font-bold">
@@ -115,15 +115,15 @@ export function ChatHeader({
 
       {/* Right Action Buttons in Authentic WhatsApp Web Desktop Style */}
       <div className="flex items-center gap-1">
-        {/* Book Service Button (Shows Order Running if currently in progress) */}
-        {activeOrder?.status === 'IN_PROGRESS' ? (
+        {/* Book Service Button (Shows Order Running if currently active) */}
+        {activeOrder && (activeOrder.status === 'PENDING' || activeOrder.status === 'ACCEPTED' || activeOrder.status === 'IN_PROGRESS') ? (
           <button
             onClick={onOpenBooking}
             className="border border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 text-[12px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer mr-1"
-            title="Order is currently in progress. Complete it first."
+            title={`Order #${activeOrder.orderId} is currently ${activeOrder.status}. Complete or cancel it before re-booking.`}
           >
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping inline-block" />
-            <span>Order Running</span>
+            <span>Order #{activeOrder.orderId} ({activeOrder.status})</span>
           </button>
         ) : (
           <button

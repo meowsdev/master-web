@@ -4,7 +4,10 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { servicesService } from '@/services/services.service';
+import { ordersService } from '@/services/orders.service';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Service } from '@/types/service.types';
+import { Order } from '@/types/order.types';
 import { FilterChip, CustomFilterList } from '@/types/super-app.types';
 
 const STORAGE_KEY_CUSTOM_FILTERS = 'superapp_custom_filters_v1';
@@ -24,6 +27,7 @@ export function useServicesFilter({
   runningServiceIds = [],
   serviceLastActivity = {},
 }: UseServicesFilterProps = {}) {
+  const { isAuthenticated } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activeFilterChip, setActiveFilterChip] = useState<FilterChip>('All');
@@ -51,6 +55,14 @@ export function useServicesFilter({
   const { data: dbServices = [], isLoading: isServicesLoading } = useQuery<Service[]>({
     queryKey: ['super-app-services'],
     queryFn: () => servicesService.getServices(),
+  });
+
+  // Fetch customer orders (shares cache with OrdersDrawer)
+  const { data: customerOrders = [] } = useQuery<Order[]>({
+    queryKey: ['my-orders-drawer'],
+    queryFn: () => ordersService.getOrders(),
+    enabled: isAuthenticated,
+    staleTime: 10000,
   });
 
   // Create a new custom filter list and persist
@@ -137,7 +149,19 @@ export function useServicesFilter({
 
     // Filter by Active Chip
     if (activeFilterChip === 'Running') {
-      list = list.filter((s) => runningServiceIds.includes(s.id));
+      const dbRunningIds = customerOrders
+        .filter(
+          (o) =>
+            ['PENDING', 'ACCEPTED', 'ASSIGNED', 'IN_PROGRESS', 'CONFIRMED'].includes(o.orderStatus) ||
+            o.revisions?.some(
+              (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
+            )
+        )
+        .map((o) => o.serviceId);
+
+      list = list.filter(
+        (s) => runningServiceIds.includes(s.id) || dbRunningIds.includes(s.id)
+      );
     } else if (activeFilterChip === 'Unread') {
       list = list.slice(0, 3);
     } else if (activeFilterChip === 'Favorites') {
@@ -154,8 +178,25 @@ export function useServicesFilter({
       }
     }
 
-    // WhatsApp Standard: Sort conversations by latest chat activity (most recent message on top)
+    // WhatsApp Standard: Sort conversations with Active Revisions first, then by latest chat activity
     list = [...list].sort((a, b) => {
+      const aRev = customerOrders.some(
+        (o) =>
+          o.serviceId === a.id &&
+          o.revisions?.some(
+            (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
+          )
+      );
+      const bRev = customerOrders.some(
+        (o) =>
+          o.serviceId === b.id &&
+          o.revisions?.some(
+            (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
+          )
+      );
+      if (aRev && !bRev) return -1;
+      if (!aRev && bRev) return 1;
+
       const timeA = serviceLastActivity[a.id] || 0;
       const timeB = serviceLastActivity[b.id] || 0;
       return timeB - timeA;
@@ -170,6 +211,7 @@ export function useServicesFilter({
     customFilters,
     runningServiceIds,
     serviceLastActivity,
+    customerOrders,
   ]);
 
   return {
