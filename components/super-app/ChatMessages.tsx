@@ -11,7 +11,7 @@ interface ChatMessagesProps {
   messages: ChatMessage[];
   onOpenBooking: () => void;
   onReact: (messageId: string, emoji: string) => void;
-  onCompleteOrder?: (messageId: string, orderId: string) => void;
+  onCompleteOrder?: (messageId: string, orderId: string) => Promise<void> | void;
   onOpenOrders?: () => void;
   onPayAdvance?: (messageId: string, orderId: string, amount: number) => void;
   onAcceptPrice?: (messageId: string, orderId: string) => void;

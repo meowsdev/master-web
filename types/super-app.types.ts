@@ -1,6 +1,7 @@
 // Order Card details embedded within in-chat messages
 export interface OrderCardData {
-  orderId: string;
+  id?: string; // Real UUID from database
+  orderId: string; // Short display ID (e.g. #A1B2C3D4)
   serviceId: string;
   serviceName: string;
   serviceIcon?: string;

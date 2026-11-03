@@ -35,7 +35,7 @@ interface MainCanvasAreaProps {
   isServiceSaved: (id: string) => boolean;
   handleToggleSave: () => void;
   setIsServiceDetailsOpen: (open: boolean) => void;
-  handleCompleteOrder: (msgId: string, orderId: string) => void;
+  handleCompleteOrder: (msgId: string, orderId: string, realId?: string) => Promise<void> | void;
   handleReactToMessage: (msgId: string, emoji: string) => void;
   handleSendMessage: (isAuth: boolean, onAuth: () => void) => void;
   handleSendVoiceNote: (isAuth: boolean, onAuth: () => void) => void;
@@ -154,7 +154,13 @@ export function MainCanvasArea({
           isSaved={isServiceSaved(activeService.id)}
           onToggleSave={handleToggleSave}
           onOpenDetails={() => setIsServiceDetailsOpen(true)}
-          onCompleteOrder={handleCompleteOrder}
+          onCompleteOrder={async (msgId, oId) => {
+            // Find the real UUID if available in the messages
+            const msg = currentMessages.find((m) => m.id === msgId);
+            const realId = msg?.orderCard?.id || (oId.length > 20 ? oId : undefined);
+            const displayOrderId = msg?.orderCard?.orderId || oId;
+            await handleCompleteOrder(msgId, displayOrderId, realId);
+          }}
           onReactToMessage={handleReactToMessage}
           onSendMessage={() => handleSendMessage(isAuthenticated, () => handleOpenAuth('LOGIN'))}
           onSendVoiceNote={() => handleSendVoiceNote(isAuthenticated, () => handleOpenAuth('LOGIN'))}

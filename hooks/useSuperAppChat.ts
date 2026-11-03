@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ChatMessage, OrderCardData } from '@/types/super-app.types';
 import { Service } from '@/types/service.types';
+import { OrderStatus } from '@/types/order.types';
 import { ordersService } from '@/services/orders.service';
+import { useChatStorage } from './useChatStorage';
 
 interface UseSuperAppChatProps {
   playSound: (type: 'send' | 'receive') => void;
@@ -12,92 +15,20 @@ interface UseSuperAppChatProps {
 }
 
 export function useSuperAppChat({ playSound, userId }: UseSuperAppChatProps) {
+  const queryClient = useQueryClient();
   const [activeServiceId, setActiveServiceId] = useState<string | null>(null);
-  const storageKey = userId ? `master_msgs_${userId}` : 'master_msgs_guest';
-  const activityKey = userId ? `master_act_${userId}` : 'master_act_guest';
-
-  const [serviceMessages, setServiceMessages] = useState<Record<string, ChatMessage[]>>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(storageKey);
-        if (saved) return JSON.parse(saved);
-      } catch {
-        // ignore
-      }
-    }
-    return {};
-  });
   const [inputText, setInputText] = useState('');
   const [mobileView, setMobileView] = useState<'LIST' | 'CHAT'>('LIST');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Track latest chat activity timestamps so active conversations jump to top
-  const [serviceLastActivity, setServiceLastActivity] = useState<Record<string, number>>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(activityKey);
-        if (saved) return JSON.parse(saved);
-      } catch {
-        // ignore
-      }
-    }
-    return {};
-  });
-
-  // User Session Isolation: When user changes or logs out, immediately switch to their scoped storage
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const savedMsgs = localStorage.getItem(storageKey);
-      setServiceMessages(savedMsgs ? JSON.parse(savedMsgs) : {});
-      const savedAct = localStorage.getItem(activityKey);
-      setServiceLastActivity(savedAct ? JSON.parse(savedAct) : {});
-      setActiveServiceId(null);
-    } catch {
-      setServiceMessages({});
-      setServiceLastActivity({});
-    }
-  }, [storageKey, activityKey]);
-
-  // Sync activity map to user-scoped localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined' && Object.keys(serviceLastActivity).length > 0) {
-      try {
-        localStorage.setItem(activityKey, JSON.stringify(serviceLastActivity));
-      } catch {
-        // ignore
-      }
-    }
-  }, [serviceLastActivity, activityKey]);
-
-  // Sync chat messages to user-scoped localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined' && Object.keys(serviceMessages).length > 0) {
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(serviceMessages));
-      } catch {
-        // ignore
-      }
-    }
-  }, [serviceMessages, storageKey]);
-
-  // Reset chat session on logout
-  const resetChatSession = () => {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(storageKey);
-        localStorage.removeItem(activityKey);
-        // Also wipe legacy keys if they exist
-        localStorage.removeItem('master_service_messages');
-        localStorage.removeItem('master_service_activity');
-      } catch {
-        // ignore
-      }
-    }
-    setServiceMessages({});
-    setServiceLastActivity({});
-    setActiveServiceId(null);
-  };
+  // Modular persistent storage with user session isolation
+  const {
+    serviceMessages,
+    setServiceMessages,
+    serviceLastActivity,
+    setServiceLastActivity,
+    resetChatSession,
+  } = useChatStorage({ userId });
 
   // Auto-scroll chat to latest message
   const scrollToBottom = () => {
@@ -323,6 +254,7 @@ export function useSuperAppChat({ playSound, userId }: UseSuperAppChatProps) {
         text: `🎉 Order #${orderShortId} Placed Successfully!`,
         time: currentTime,
         orderCard: {
+          id: createdOrder.id, // Store the REAL UUID here
           orderId: orderShortId,
           serviceId: activeService.id,
           serviceName: activeService.name,
@@ -354,49 +286,93 @@ export function useSuperAppChat({ playSound, userId }: UseSuperAppChatProps) {
     }
   };
 
-
   // Mark an active order as completed directly from the chat card
-  const handleCompleteOrder = (messageId: string, orderId: string) => {
+  const handleCompleteOrder = async (messageId: string, orderId: string, realId?: string) => {
     if (!activeServiceId) return;
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    setServiceMessages((prev) => {
-      const list = prev[activeServiceId] || [];
-      return {
-        ...prev,
-        [activeServiceId]: list.map((msg) => {
-          if (msg.id === messageId && msg.orderCard) {
-            return {
-              ...msg,
-              orderCard: {
-                ...msg.orderCard,
-                status: 'COMPLETED',
-                completedAt: currentTime,
-              },
-            };
-          }
-          return msg;
-        }),
+    try {
+      // PERMANENT ROBUST FIX: Find the real UUID even if it's missing from localStorage
+      let targetId = realId;
+
+      if (!targetId || targetId.length < 10) {
+        // If realId is missing or is just the short ID, fetch orders to find the UUID mapping
+        const allOrders = await ordersService.getOrders();
+        const matchedOrder = allOrders.find(
+          (o) =>
+            o.id === orderId ||
+            o.id.startsWith(orderId.toLowerCase()) ||
+            o.id.replace(/-/g, '').slice(0, 8).toUpperCase() === orderId.toUpperCase()
+        );
+        if (matchedOrder) {
+          targetId = matchedOrder.id;
+        } else {
+          targetId = orderId; // Fallback to whatever we have
+        }
+      }
+
+      // 1. Call real backend API.
+      await ordersService.updateStatus(targetId, OrderStatus.COMPLETED);
+
+      // 2. Update local UI state only after successful API call
+      setServiceMessages((prev) => {
+        const list = prev[activeServiceId] || [];
+        return {
+          ...prev,
+          [activeServiceId]: list.map((msg) => {
+            if (
+              (msg.id === messageId ||
+                (msg.orderCard &&
+                  (msg.orderCard.orderId === orderId ||
+                    msg.orderCard.id === targetId ||
+                    msg.orderCard.orderId.toUpperCase() === orderId.toUpperCase()))) &&
+              msg.orderCard
+            ) {
+              return {
+                ...msg,
+                orderCard: {
+                  ...msg.orderCard,
+                  status: 'COMPLETED',
+                  hasActiveRevision: false,
+                  completedAt: currentTime,
+                },
+              };
+            }
+            return msg;
+          }),
+        };
+      });
+
+      // Append celebration confirmation notice from the counselor
+      const completionNotice: ChatMessage = {
+        id: 'compl-' + Date.now(),
+        sender: 'them',
+        text: `✅ Order #${orderId} has been successfully completed! Thank you for choosing Master Services. Your 3-day service warranty is now active. ⭐⭐⭐⭐⭐`,
+        time: currentTime,
+        status: 'read',
       };
-    });
 
-    // Append celebration confirmation notice from the counselor
-    const completionNotice: ChatMessage = {
-      id: 'compl-' + Date.now(),
-      sender: 'them',
-      text: `✅ Order #${orderId} has been successfully completed! Thank you for choosing Master Services. Your 7-day service warranty is now active. ⭐⭐⭐⭐⭐`,
-      time: currentTime,
-      status: 'read',
-    };
+      setServiceMessages((prev) => ({
+        ...prev,
+        [activeServiceId]: [...(prev[activeServiceId] || []), completionNotice],
+      }));
+      setServiceLastActivity((prev) => ({ ...prev, [activeServiceId]: Date.now() }));
 
-    setServiceMessages((prev) => ({
-      ...prev,
-      [activeServiceId]: [...(prev[activeServiceId] || []), completionNotice],
-    }));
-    setServiceLastActivity((prev) => ({ ...prev, [activeServiceId]: Date.now() }));
+      // Refresh cache across app
+      queryClient.invalidateQueries({ queryKey: ['my-orders-drawer'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['provider-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
 
-    playSound('receive');
-    toast.success(`Order #${orderId} marked as COMPLETED! 🎉`);
+      playSound('receive');
+      toast.success(`Order #${orderId} marked as COMPLETED! 🎉`);
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Failed to complete order in backend';
+      toast.error(errorMsg);
+      throw err; // Re-throw to handle loading state in component
+    }
   };
 
   const handleClearChat = (serviceId: string) => {

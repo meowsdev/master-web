@@ -17,7 +17,7 @@ import { ChatMessage } from '@/types/super-app.types';
 
 interface OrderCardProps {
   msg: ChatMessage;
-  onCompleteOrder: (messageId: string, orderId: string) => void;
+  onCompleteOrder: (messageId: string, orderId: string) => Promise<void> | void;
   onOpenOrders?: () => void;
   onPayAdvance?: (messageId: string, orderId: string, amount: number) => void;
   onAcceptPrice?: (messageId: string, orderId: string) => void;
@@ -36,8 +36,23 @@ export function OrderCard({
   onSatisfactionResponse,
   isDarkMode,
 }: OrderCardProps) {
+  const [isCompleting, setIsCompleting] = React.useState(false);
   const order = msg.orderCard;
   if (!order) return null;
+
+  const handleComplete = async () => {
+    if (isCompleting || isCompleted) return;
+    setIsCompleting(true);
+    try {
+      // Pass the real ID if available, else fallback to orderId
+      const realId = order.id || order.orderId;
+      await onCompleteOrder(msg.id, realId);
+    } catch (err) {
+      console.error("Completion error:", err);
+    } finally {
+      setIsCompleting(false);
+    }
+  };
 
   const isCompleted = order.status === 'COMPLETED';
   const textPrimary = isDarkMode ? 'text-[#e9edef]' : 'text-[#111b21]';
@@ -73,12 +88,12 @@ export function OrderCard({
           ) : isCompleted ? (
             <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#d9fdd3] dark:bg-[#005c4b]/80 text-[#008069] dark:text-[#25D366] border border-[#25D366]/40 flex items-center gap-1.5 shadow-2xs">
               <CheckCircle2 className="w-3.5 h-3.5 text-[#25D366]" />
-              <span>Completed</span>
+              <span>Completed (সম্পন্ন)</span>
             </span>
           ) : (
             <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50 flex items-center gap-1.5 shadow-2xs animate-pulse">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping inline-block" />
-              <span>Running</span>
+              <span>Running (চলমান)</span>
             </span>
           )}
         </div>
@@ -260,40 +275,63 @@ export function OrderCard({
           </button>
         )}
 
-        {/* Interactive Action Area: Complete Order Button or Completed Confirmation */}
-        {isCompleted ? (
-          <div className="p-3 rounded-xl bg-[#d9fdd3]/70 dark:bg-[#005c4b]/30 border border-[#25D366]/40 text-center space-y-2">
-            <div className="text-[12.5px] font-bold text-[#008069] dark:text-[#25D366] flex items-center justify-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Service Successfully Completed!</span>
-            </div>
-            <p className={`text-[11px] ${textSecondary}`}>
-              Completed at {order.completedAt || msg.time} • 3 Days Free Warranty Active ⭐
-            </p>
-            {onOpenOrders && (
-              <button
-                type="button"
-                onClick={onOpenOrders}
-                className="w-full py-1.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-amber-500/30"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Request 3-Day Free Revision (রিভিশন দিন)</span>
-              </button>
-            )}
-          </div>
-        ) : (
+        {/* Interactive Action Area: Complete Order Button & Status Details */}
+        <div className="space-y-2 pt-1">
           <button
-            onClick={() => onCompleteOrder(msg.id, order.orderId)}
-            className="w-full py-2.5 bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold text-[13px] rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer group"
+            type="button"
+            onClick={handleComplete}
+            disabled={isCompleting || isCompleted}
+            className={`w-full py-2.5 font-bold text-[13px] rounded-xl transition-all flex items-center justify-center gap-2 select-none ${
+              isCompleted
+                ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-[#008069] dark:text-[#25D366] border border-emerald-500/30 cursor-not-allowed opacity-90'
+                : 'bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] shadow-md cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed group'
+            }`}
           >
-            <CheckCircle2 className="w-4 h-4 transition-transform group-hover:scale-110" />
-            <span>
-              {dueAmountNum > 0
-                ? `Complete & Settle Due ৳${dueAmountNum} (অর্ডার সম্পন্ন)`
-                : 'Complete Order (অর্ডার সম্পন্ন করুন)'}
-            </span>
+            {isCompleting ? (
+              <span className="flex items-center justify-center gap-2">
+                <Clock className="w-4 h-4 animate-spin" />
+                <span>Processing... (সম্পন্ন হচ্ছে...)</span>
+              </span>
+            ) : isCompleted ? (
+              <span className="flex items-center justify-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#008069] dark:text-[#25D366]" />
+                <span>Order Completed (অর্ডার সম্পন্ন)</span>
+              </span>
+            ) : (
+              <>
+                <CheckCircle2 className="w-4 h-4 transition-transform group-hover:scale-110" />
+                <span>
+                  {dueAmountNum > 0
+                    ? `Complete & Settle Due ৳${dueAmountNum} (অর্ডার সম্পন্ন)`
+                    : 'Complete Order (অর্ডার সম্পন্ন করুন)'}
+                </span>
+              </>
+            )}
           </button>
-        )}
+
+          {/* Completed Order Details & 3-Day Warranty Banner */}
+          {isCompleted && !order.hasActiveRevision && (
+            <div className="p-3 rounded-xl bg-[#d9fdd3]/70 dark:bg-[#005c4b]/30 border border-[#25D366]/40 text-center space-y-2">
+              <div className="text-[12.5px] font-bold text-[#008069] dark:text-[#25D366] flex items-center justify-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Service Successfully Completed! (অর্ডার সম্পন্ন)</span>
+              </div>
+              <p className={`text-[11px] ${textSecondary}`}>
+                Completed at {order.completedAt || msg.time} • 3 Days Free Warranty Active ⭐
+              </p>
+              {onOpenOrders && (
+                <button
+                  type="button"
+                  onClick={onOpenOrders}
+                  className="w-full py-1.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-amber-500/30"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Request 3-Day Free Revision (রিভিশন দিন)</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Bottom Time Stamp */}
         <div className="flex justify-end pt-0.5">

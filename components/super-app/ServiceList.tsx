@@ -52,11 +52,11 @@ export function ServiceList({
   const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
 
   // Fetch customer orders (shares 'my-orders-drawer' cache) to detect running revisions
-  const { data: customerOrders = [] } = useQuery<Order[]>({
+  const { data: customerOrders = [], refetch } = useQuery<Order[]>({
     queryKey: ['my-orders-drawer', user?.id],
     queryFn: () => ordersService.getOrders(),
     enabled: isAuthenticated && Boolean(user?.id),
-    staleTime: 10000,
+    staleTime: 0, // Ensure we fetch fresh data often
   });
 
   // Sort services so that any service with an active revision floats to the very top
@@ -153,11 +153,11 @@ export function ServiceList({
               (o) =>
                 o.serviceId === service.id &&
                 o.revisions?.some(
-                  (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
+                  (r) => r.revisionStatus !== 'COMPLETED' // Only check for non-completed revisions
                 )
             );
             const dbActiveRevision = dbOrderWithRev?.revisions?.find(
-              (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
+              (r) => r.revisionStatus !== 'COMPLETED'
             );
 
             const hasActiveRevision =
