@@ -6,8 +6,10 @@ import { Service } from '@/types/service.types';
 import { Order, OrderStatus } from '@/types/order.types';
 import { User } from '@/types/auth.types';
 import { ChatMessage, OrderCardData } from '@/types/super-app.types';
+import { CounselorChatItem } from '@/types/counselor.types';
 import { ProviderOrderCanvas } from './ProviderOrderCanvas';
 import { CustomerChatCanvas } from './CustomerChatCanvas';
+import { CounselorChatCanvas } from './CounselorChatCanvas';
 import { WelcomeScreen } from './WelcomeScreen';
 import { ProviderDirectory, ProviderItem } from './ProviderDirectory';
 
@@ -20,6 +22,13 @@ interface MainCanvasAreaProps {
   activeProviderOrder: Order | null;
   handleUpdateStatus: (status: OrderStatus) => Promise<void>;
   isUpdatingStatus: boolean;
+  // Counselor states
+  isCounselor?: boolean;
+  activeCounselorChat?: CounselorChatItem | null;
+  onOpenCounselorCreateOrder?: () => void;
+  onOpenCounselorModifyPrice?: () => void;
+  onCounselorSendDueReminder?: (orderId: string, dueAmount: number, phone: string) => void;
+  onCounselorHoldProvider?: (orderId: string, remarks: string) => void;
   // Customer states
   activeService: Service | null;
   activeServiceId: string | null;
@@ -67,6 +76,12 @@ export function MainCanvasArea({
   activeProviderOrder,
   handleUpdateStatus,
   isUpdatingStatus,
+  isCounselor,
+  activeCounselorChat,
+  onOpenCounselorCreateOrder,
+  onOpenCounselorModifyPrice,
+  onCounselorSendDueReminder,
+  onCounselorHoldProvider,
   activeService,
   activeServiceId,
   setActiveServiceId,
@@ -136,7 +151,19 @@ export function MainCanvasArea({
           onStartCall={handleStartCall}
           isDarkMode={isDarkMode}
         />
-      ) : !isProvider && activeService && activeServiceId ? (
+      ) : isCounselor && activeCounselorChat ? (
+        /* 2.5 Counselor Chat Workspace */
+        <CounselorChatCanvas
+          chatItem={activeCounselorChat}
+          onBack={() => setMobileView('LIST')}
+          onOpenCreateOrder={onOpenCounselorCreateOrder || (() => {})}
+          onOpenModifyPrice={onOpenCounselorModifyPrice || (() => {})}
+          onSendDueReminder={onCounselorSendDueReminder || (() => {})}
+          onHoldProvider={onCounselorHoldProvider || (() => {})}
+          onStartCall={handleStartCall}
+          isDarkMode={isDarkMode}
+        />
+      ) : !isProvider && !isCounselor && activeService && activeServiceId ? (
         /* 3. Customer Service Chat Canvas */
         <CustomerChatCanvas
           activeService={activeService}

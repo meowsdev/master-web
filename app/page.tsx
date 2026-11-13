@@ -4,11 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback, useSyncExternalStore 
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
-import {
-  RailTab,
-  DHAKA_AREAS,
-  PaymentMode,
-} from '@/types/super-app.types';
+import { RailTab } from '@/types/super-app.types';
 
 // Custom Hooks
 import { useServicesFilter } from '@/hooks/useServicesFilter';
@@ -16,15 +12,19 @@ import { useSuperAppAudio } from '@/hooks/useSuperAppAudio';
 import { useSuperAppChat } from '@/hooks/useSuperAppChat';
 import { useProviderOrders } from '@/hooks/useProviderOrders';
 import { useOrderNegotiation } from '@/hooks/useOrderNegotiation';
+import { useCounselorWorkspace } from '@/hooks/useCounselorWorkspace';
+import { useSuperAppModals } from '@/hooks/useSuperAppModals';
 
 // Super App UI Components
 import { NavigationRail } from '@/components/super-app/NavigationRail';
-import { SidebarHeader } from '@/components/super-app/SidebarHeader';
-import { SearchAndFilters } from '@/components/super-app/SearchAndFilters';
-import { ServiceList } from '@/components/super-app/ServiceList';
-import { ProviderOrderList } from '@/components/super-app/ProviderOrderList';
+import { SuperAppSidebar } from '@/components/super-app/SuperAppSidebar';
 import { MainCanvasArea } from '@/components/super-app/MainCanvasArea';
 import { SuperAppModals } from '@/components/super-app/SuperAppModals';
+import {
+  AddCustomerModal,
+  CreateCustomOrderModal,
+  ModifyPriceModal,
+} from '@/components/modals/CounselorActionModals';
 
 const emptySubscribe = () => () => {};
 
@@ -33,11 +33,9 @@ export default function SuperAppPage() {
   const queryClient = useQueryClient();
   const { user, isAuthenticated, activeRole, logout, setRole, setUser } = useAuthStore();
 
-  const isProvider = Boolean(
-    isAuthenticated && (activeRole === 'PROVIDER' || user?.role === 'PROVIDER')
-  );
+  const isProvider = Boolean(isAuthenticated && (activeRole === 'PROVIDER' || user?.role === 'PROVIDER'));
+  const isCounselor = Boolean(isAuthenticated && (activeRole === 'COUNSELOR' || user?.role === 'COUNSELOR'));
 
-  // Theme & Sound states
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window === 'undefined') return false;
     const t = localStorage.getItem('superapp_theme');
@@ -67,37 +65,9 @@ export default function SuperAppPage() {
     });
   }, []);
 
-  // Far-left Rail Tab
   const [activeRailTab, setActiveRailTab] = useState<RailTab>('CHATS');
+  const modals = useSuperAppModals();
 
-  // Modals state
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authInitialMode, setAuthInitialMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [bookingAddress, setBookingAddress] = useState(DHAKA_AREAS[0]);
-  const [bookingTime, setBookingTime] = useState('Today, Within 2 Hours');
-  const [bookingPaymentMode, setBookingPaymentMode] = useState<PaymentMode>('CASH');
-
-  // Calling, Status, Settings, and Provider Management drawers
-  const [callType, setCallType] = useState<'voice' | 'video'>('voice');
-  const [isCallingModalOpen, setIsCallingModalOpen] = useState(false);
-  const [isStatusViewerOpen, setIsStatusViewerOpen] = useState(false);
-  const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
-  const [isOrdersDrawerOpen, setIsOrdersDrawerOpen] = useState(() => {
-    return typeof window !== 'undefined' ? window.location.search.includes('view=orders') : false;
-  });
-  const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
-  const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
-  const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
-  const [isTeamManagementOpen, setIsTeamManagementOpen] = useState(false);
-  const [isLevelingDrawerOpen, setIsLevelingDrawerOpen] = useState(false);
-  const [isStartChatOpen, setIsStartChatOpen] = useState(false);
-
-  const openSettings = useCallback(() => setIsSettingsDrawerOpen(true), []);
-  const openOrders = useCallback(() => setIsOrdersDrawerOpen(true), []);
-  const openSkillsModal = useCallback(() => setIsSkillsModalOpen(true), []);
-
-  // Chat management hook with strict authentication guards & running order tracking
   const {
     activeServiceId,
     setActiveServiceId,
@@ -125,7 +95,6 @@ export default function SuperAppPage() {
     resetChatSession,
   } = useSuperAppChat({ playSound, userId: user?.id });
 
-  // In-Chat Order Negotiation & Add-On Hook (FR-PAY, FR-ORD, FR-REV)
   const {
     handlePayAdvance,
     handleAcceptPrice,
@@ -138,7 +107,6 @@ export default function SuperAppPage() {
     userId: user?.id,
   });
 
-  // Services & Filter computation hook
   const {
     dbServices,
     isServicesLoading,
@@ -158,7 +126,6 @@ export default function SuperAppPage() {
     filteredServices,
   } = useServicesFilter({ runningServiceIds, serviceLastActivity });
 
-  // Dedicated Provider Orders Hook
   const {
     orders: providerOrders,
     isLoading: isProviderOrdersLoading,
@@ -174,34 +141,45 @@ export default function SuperAppPage() {
     isUpdatingStatus,
   } = useProviderOrders({ isProvider, userId: user?.id });
 
-  // Active selected service object (for Customer view)
+  const {
+    activeTab: counselorActiveTab,
+    setActiveTab: setCounselorActiveTab,
+    searchQuery: counselorSearchQuery,
+    setSearchQuery: setCounselorSearchQuery,
+    selectedChatId: counselorSelectedChatId,
+    setSelectedChatId: setCounselorSelectedChatId,
+    activeChatItem: activeCounselorChat,
+    filteredChatItems: counselorChatItems,
+    tabCounts: counselorTabCounts,
+    isOrdersLoading: isCounselorOrdersLoading,
+    isOnline: isCounselorOnline,
+    handleToggleOnlineStatus,
+    handleCreateManualLead,
+    handleCreateCustomOrder,
+    handleModifyPrice,
+    handleSendDueReminder,
+    handleHoldProvider,
+  } = useCounselorWorkspace({ isCounselor, userId: user?.id });
+
   const activeService = useMemo(() => {
     if (!activeServiceId) return null;
     return dbServices.find((s) => s.id === activeServiceId) || null;
   }, [dbServices, activeServiceId]);
 
-  // Current active service chat messages
   const currentMessages = useMemo(() => {
     if (!activeServiceId) return [];
     return serviceMessages[activeServiceId] || [];
   }, [serviceMessages, activeServiceId]);
 
-  // Sync dark class on document element
   useEffect(() => {
     if (typeof document !== 'undefined') {
       document.documentElement.classList.toggle('dark', isDarkMode);
     }
   }, [isDarkMode]);
 
-  // Auto-scroll chat to latest message
   useEffect(() => {
     scrollToBottom();
   }, [currentMessages, scrollToBottom]);
-
-  const handleOpenAuth = useCallback((mode: 'LOGIN' | 'REGISTER' = 'LOGIN') => {
-    setAuthInitialMode(mode);
-    setIsAuthModalOpen(true);
-  }, []);
 
   const handleLogout = useCallback(() => {
     queryClient.clear();
@@ -214,38 +192,36 @@ export default function SuperAppPage() {
     (type: 'voice' | 'video') => {
       if (!isAuthenticated) {
         toast.info('Please log in with your phone number to start a consultation call.');
-        handleOpenAuth();
+        modals.handleOpenAuth();
         return;
       }
-      setCallType(type);
-      setIsCallingModalOpen(true);
+      modals.setCallType(type);
+      modals.setIsCallingModalOpen(true);
     },
-    [isAuthenticated, handleOpenAuth]
+    [isAuthenticated, modals]
   );
 
   const handleToggleSave = useCallback(() => {
     if (!activeService) return;
     if (!isAuthenticated) {
       toast.info('Please log in with your phone number to save services.');
-      handleOpenAuth();
+      modals.handleOpenAuth();
       return;
     }
     toggleSaveService(activeService.id);
-  }, [activeService, isAuthenticated, handleOpenAuth, toggleSaveService]);
+  }, [activeService, isAuthenticated, modals, toggleSaveService]);
 
   const handleOpenBooking = () => {
     if (!isAuthenticated) {
       toast.info('Please log in with your phone number to book services.');
-      handleOpenAuth();
+      modals.handleOpenAuth();
       return;
     }
     if (activeServiceRunningOrder) {
-      toast.warning(
-        `Active Order #${activeServiceRunningOrder.orderId} for "${activeService?.name}" is already running!`
-      );
+      toast.warning(`Active Order #${activeServiceRunningOrder.orderId} for "${activeService?.name}" is already running!`);
       return;
     }
-    setIsBookingModalOpen(true);
+    modals.setIsBookingModalOpen(true);
   };
 
   if (!isMounted) {
@@ -257,7 +233,7 @@ export default function SuperAppPage() {
   }
 
   const bgMain = isDarkMode ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#f0f2f5] text-[#111b21]';
-  const bgSidebar = isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]';
+  const runningBadgeCount = isProvider ? providerOrders.length : isCounselor ? counselorTabCounts.ongoing : runningServiceIds.length;
 
   return (
     <div className={`flex h-screen w-screen overflow-hidden font-sans ${bgMain}`}>
@@ -267,107 +243,79 @@ export default function SuperAppPage() {
         onSelectTab={setActiveRailTab}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
-        onOpenSettings={openSettings}
-        onOpenStatus={() => setIsStatusViewerOpen(true)}
-        onOpenOrders={openOrders}
+        onOpenSettings={modals.openSettings}
+        onOpenStatus={() => modals.setIsStatusViewerOpen(true)}
+        onOpenOrders={modals.openOrders}
         user={user}
         activeRole={activeRole}
-        runningCount={isProvider ? providerOrders.length : runningServiceIds.length}
+        runningCount={runningBadgeCount}
       />
 
-      {/* 2. Middle Column: Sidebar (Provider Assigned Orders OR Customer Services) */}
-      <section
-        className={`${
-          mobileView === 'LIST' ? 'flex' : 'hidden md:flex'
-        } flex-col w-full md:w-[380px] lg:w-[420px] border-r shrink-0 h-full relative z-10 ${bgSidebar}`}
-      >
-        <SidebarHeader
-          isDarkMode={isDarkMode}
-          soundEnabled={soundEnabled}
-          runningCount={isProvider ? providerOrders.length : runningServiceIds.length}
-          onToggleSound={toggleSound}
-          onSelectWelcome={() => {
-            setActiveServiceId(null);
-            setActiveOrderId(null);
-          }}
-          onOpenSettings={openSettings}
-          onOpenOrders={openOrders}
-          onOpenAuth={handleOpenAuth}
-          isAuthenticated={isAuthenticated}
-          userName={user?.name}
-          onLogout={handleLogout}
-        />
-
-        {isProvider ? (
-          /* Role: PROVIDER - Shows Assigned Job Orders & Dispatches */
-          <ProviderOrderList
-            orders={providerOrders}
-            isLoading={isProviderOrdersLoading}
-            onRefresh={refetchProviderOrders}
-            activeOrderId={activeOrderId}
-            onSelectOrder={(order) => {
-              setActiveOrderId(order.id);
-              setMobileView('CHAT');
-            }}
-            searchQuery={providerSearchQuery}
-            onSearchChange={setProviderSearchQuery}
-            activeFilter={providerActiveFilter}
-            onSelectFilter={setProviderActiveFilter}
-            user={user}
-            onOpenProfile={() => setIsProfileEditorOpen(true)}
-            onOpenSkillsModal={openSkillsModal}
-            onOpenTeamManagement={() => setIsTeamManagementOpen(true)}
-            onOpenLeveling={() => setIsLevelingDrawerOpen(true)}
-            onOpenStartChat={() => setIsStartChatOpen(true)}
-            isDarkMode={isDarkMode}
-          />
-        ) : (
-          /* Role: CUSTOMER / GUEST - Shows Services Catalog */
-          <>
-            <SearchAndFilters
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              isSearchFocused={isSearchFocused}
-              onSearchFocus={() => setIsSearchFocused(true)}
-              onSearchBlur={() => setIsSearchFocused(false)}
-              activeFilterChip={activeFilterChip}
-              onSelectFilterChip={setActiveFilterChip}
-              customFilters={customFilters}
-              onOpenCreateFilter={() => {
-                if (!isAuthenticated) {
-                  toast.info('Please log in with your phone number to create custom filter lists.');
-                  handleOpenAuth('LOGIN');
-                  return;
-                }
-                setIsFilterModalOpen(true);
-              }}
-              onDeleteCustomFilter={deleteCustomFilter}
-              activeRole={activeRole}
-              runningCount={runningServiceIds.length}
-              isDarkMode={isDarkMode}
-            />
-
-            <ServiceList
-              services={filteredServices}
-              allDbServicesCount={dbServices.length}
-              isLoading={isServicesLoading}
-              searchQuery={searchQuery}
-              onClearSearch={() => setSearchQuery('')}
-              activeServiceId={activeServiceId}
-              onSelectService={handleSelectService}
-              isAuthenticated={isAuthenticated}
-              user={user}
-              activeRole={activeRole}
-              onOpenAuth={() => handleOpenAuth('LOGIN')}
-              onOpenProfile={() => setIsProfileEditorOpen(true)}
-              runningServiceIds={runningServiceIds}
-              serviceMessages={serviceMessages}
-              activeFilterChip={activeFilterChip}
-              isDarkMode={isDarkMode}
-            />
-          </>
-        )}
-      </section>
+      {/* 2. Middle Column: Role-Based Dynamic WhatsApp List */}
+      <SuperAppSidebar
+        mobileView={mobileView}
+        setMobileView={setMobileView}
+        isDarkMode={isDarkMode}
+        soundEnabled={soundEnabled}
+        onToggleSound={toggleSound}
+        runningCount={runningBadgeCount}
+        onSelectWelcome={() => { setActiveServiceId(null); setActiveOrderId(null); setCounselorSelectedChatId(null); }}
+        onOpenSettings={modals.openSettings}
+        onOpenOrders={modals.openOrders}
+        onOpenAuth={modals.handleOpenAuth}
+        isAuthenticated={isAuthenticated}
+        userName={user?.name}
+        onLogout={handleLogout}
+        isProvider={isProvider}
+        isCounselor={isCounselor}
+        user={user}
+        activeRole={activeRole}
+        providerOrders={providerOrders}
+        isProviderOrdersLoading={isProviderOrdersLoading}
+        refetchProviderOrders={refetchProviderOrders}
+        activeOrderId={activeOrderId}
+        setActiveOrderId={setActiveOrderId}
+        providerSearchQuery={providerSearchQuery}
+        setProviderSearchQuery={setProviderSearchQuery}
+        providerActiveFilter={providerActiveFilter}
+        setProviderActiveFilter={setProviderActiveFilter}
+        onOpenProfile={() => modals.setIsProfileEditorOpen(true)}
+        onOpenSkillsModal={modals.openSkillsModal}
+        onOpenTeamManagement={() => modals.setIsTeamManagementOpen(true)}
+        onOpenLeveling={() => modals.setIsLevelingDrawerOpen(true)}
+        onOpenStartChat={() => modals.setIsStartChatOpen(true)}
+        counselorChatItems={counselorChatItems}
+        isCounselorOrdersLoading={isCounselorOrdersLoading}
+        counselorActiveTab={counselorActiveTab}
+        setCounselorActiveTab={setCounselorActiveTab}
+        counselorSearchQuery={counselorSearchQuery}
+        setCounselorSearchQuery={setCounselorSearchQuery}
+        counselorSelectedChatId={counselorSelectedChatId}
+        onSelectCounselorChat={(item) => { setCounselorSelectedChatId(item.id); setMobileView('CHAT'); }}
+        counselorTabCounts={counselorTabCounts}
+        isCounselorOnline={isCounselorOnline}
+        onToggleCounselorOnline={handleToggleOnlineStatus}
+        onOpenAddCustomer={() => modals.setIsAddCustomerModalOpen(true)}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        isSearchFocused={isSearchFocused}
+        setIsSearchFocused={setIsSearchFocused}
+        activeFilterChip={activeFilterChip}
+        setActiveFilterChip={setActiveFilterChip}
+        customFilters={customFilters}
+        onOpenCreateFilter={() => {
+          if (!isAuthenticated) { toast.info('Please log in with your phone number to create custom filter lists.'); modals.handleOpenAuth('LOGIN'); return; }
+          setIsFilterModalOpen(true);
+        }}
+        onDeleteCustomFilter={deleteCustomFilter}
+        runningServiceIds={runningServiceIds}
+        filteredServices={filteredServices}
+        allDbServicesCount={dbServices.length}
+        isServicesLoading={isServicesLoading}
+        activeServiceId={activeServiceId}
+        onSelectService={handleSelectService}
+        serviceMessages={serviceMessages}
+      />
 
       {/* 3. Right Main Area: Encapsulated Routing & Canvas Area */}
       <MainCanvasArea
@@ -378,6 +326,12 @@ export default function SuperAppPage() {
         activeProviderOrder={activeProviderOrder}
         handleUpdateStatus={handleUpdateStatus}
         isUpdatingStatus={isUpdatingStatus}
+        isCounselor={isCounselor}
+        activeCounselorChat={activeCounselorChat}
+        onOpenCounselorCreateOrder={() => modals.setIsCreateCustomOrderModalOpen(true)}
+        onOpenCounselorModifyPrice={() => modals.setIsModifyPriceModalOpen(true)}
+        onCounselorSendDueReminder={handleSendDueReminder}
+        onCounselorHoldProvider={handleHoldProvider}
         activeService={activeService}
         activeServiceId={activeServiceId}
         setActiveServiceId={setActiveServiceId}
@@ -391,15 +345,15 @@ export default function SuperAppPage() {
         handleClearChat={handleClearChat}
         isServiceSaved={isServiceSaved}
         handleToggleSave={handleToggleSave}
-        setIsServiceDetailsOpen={setIsServiceDetailsOpen}
+        setIsServiceDetailsOpen={modals.setIsServiceDetailsOpen}
         handleCompleteOrder={handleCompleteOrder}
         handleReactToMessage={handleReactToMessage}
         handleSendMessage={handleSendMessage}
         handleSendVoiceNote={handleSendVoiceNote}
         isAuthenticated={isAuthenticated}
-        handleOpenAuth={handleOpenAuth}
-        openOrders={openOrders}
-        openSettings={openSettings}
+        handleOpenAuth={modals.handleOpenAuth}
+        openOrders={modals.openOrders}
+        openSettings={modals.openSettings}
         handleLogout={handleLogout}
         messagesEndRef={messagesEndRef}
         isDarkMode={isDarkMode}
@@ -415,69 +369,98 @@ export default function SuperAppPage() {
         handleSatisfactionResponse={handleSatisfactionResponse}
       />
 
-      {/* Global Modals & Drawers */}
+      {/* 4. Global Drawers & Modals */}
       <SuperAppModals
         isDarkMode={isDarkMode}
         user={user}
         activeRole={activeRole}
         isAuthenticated={isAuthenticated}
-        isBookingModalOpen={isBookingModalOpen}
-        onCloseBooking={() => setIsBookingModalOpen(false)}
+        isBookingModalOpen={modals.isBookingModalOpen}
+        onCloseBooking={() => modals.setIsBookingModalOpen(false)}
         activeService={activeService}
         activeServiceRunningOrder={activeServiceRunningOrder}
-        bookingAddress={bookingAddress}
-        onAddressChange={setBookingAddress}
-        bookingTime={bookingTime}
-        onTimeChange={setBookingTime}
-        bookingPaymentMode={bookingPaymentMode}
-        onPaymentModeChange={setBookingPaymentMode}
-        onConfirmBooking={() => handleConfirmBooking(activeService, bookingAddress, bookingTime, bookingPaymentMode, isAuthenticated, handleOpenAuth, () => setIsBookingModalOpen(false))}
-        isAuthModalOpen={isAuthModalOpen}
-        onCloseAuth={() => setIsAuthModalOpen(false)}
-        authInitialMode={authInitialMode}
-        onOpenAuth={handleOpenAuth}
-        isCallingModalOpen={isCallingModalOpen}
-        onCloseCalling={() => setIsCallingModalOpen(false)}
-        callType={callType}
+        bookingAddress={modals.bookingAddress}
+        onAddressChange={modals.setBookingAddress}
+        bookingTime={modals.bookingTime}
+        onTimeChange={modals.setBookingTime}
+        bookingPaymentMode={modals.bookingPaymentMode}
+        onPaymentModeChange={modals.setBookingPaymentMode}
+        onConfirmBooking={() => handleConfirmBooking(activeService, modals.bookingAddress, modals.bookingTime, modals.bookingPaymentMode, isAuthenticated, modals.handleOpenAuth, () => modals.setIsBookingModalOpen(false))}
+        isAuthModalOpen={modals.isAuthModalOpen}
+        onCloseAuth={() => modals.setIsAuthModalOpen(false)}
+        authInitialMode={modals.authInitialMode}
+        onOpenAuth={modals.handleOpenAuth}
+        isCallingModalOpen={modals.isCallingModalOpen}
+        onCloseCalling={() => modals.setIsCallingModalOpen(false)}
+        callType={modals.callType}
         onStartCall={handleStartCall}
-        isStatusViewerOpen={isStatusViewerOpen}
-        onCloseStatusViewer={() => setIsStatusViewerOpen(false)}
-        isSettingsDrawerOpen={isSettingsDrawerOpen}
-        onCloseSettings={() => setIsSettingsDrawerOpen(false)}
+        isStatusViewerOpen={modals.isStatusViewerOpen}
+        onCloseStatusViewer={() => modals.setIsStatusViewerOpen(false)}
+        isSettingsDrawerOpen={modals.isSettingsDrawerOpen}
+        onCloseSettings={() => modals.setIsSettingsDrawerOpen(false)}
         onToggleTheme={toggleTheme}
         soundEnabled={soundEnabled}
         onToggleSound={toggleSound}
         onSwitchRole={setRole}
-        onOpenEditProfile={() => setIsProfileEditorOpen(true)}
-        onOpenOrders={openOrders}
-        onOpenSkillsModal={openSkillsModal}
+        onOpenEditProfile={() => modals.setIsProfileEditorOpen(true)}
+        onOpenOrders={modals.openOrders}
+        onOpenSkillsModal={modals.openSkillsModal}
         onLogout={handleLogout}
-        isProfileEditorOpen={isProfileEditorOpen}
-        onCloseProfileEditor={() => setIsProfileEditorOpen(false)}
+        isProfileEditorOpen={modals.isProfileEditorOpen}
+        onCloseProfileEditor={() => modals.setIsProfileEditorOpen(false)}
         onUserUpdated={setUser}
-        isSkillsModalOpen={isSkillsModalOpen}
-        onCloseSkillsModal={() => setIsSkillsModalOpen(false)}
+        isSkillsModalOpen={modals.isSkillsModalOpen}
+        onCloseSkillsModal={() => modals.setIsSkillsModalOpen(false)}
         isFilterModalOpen={isFilterModalOpen}
         onCloseFilterModal={() => setIsFilterModalOpen(false)}
         dbServices={dbServices}
         createCustomFilter={createCustomFilter}
-        isServiceDetailsOpen={isServiceDetailsOpen}
-        onCloseServiceDetails={() => setIsServiceDetailsOpen(false)}
+        isServiceDetailsOpen={modals.isServiceDetailsOpen}
+        onCloseServiceDetails={() => modals.setIsServiceDetailsOpen(false)}
         isServiceSaved={activeService ? isServiceSaved(activeService.id) : false}
         onToggleSave={handleToggleSave}
         onOpenBooking={handleOpenBooking}
-        isOrdersDrawerOpen={isOrdersDrawerOpen}
-        onCloseOrdersDrawer={() => setIsOrdersDrawerOpen(false)}
+        isOrdersDrawerOpen={modals.isOrdersDrawerOpen}
+        onCloseOrdersDrawer={() => modals.setIsOrdersDrawerOpen(false)}
         onOrderRevisionRequested={handleReopenOrderRevision}
         onSelectServiceById={(id) => { const target = dbServices.find((s) => s.id === id); if (target) handleSelectService(target); }}
-        isTeamManagementOpen={isTeamManagementOpen}
-        onCloseTeamManagement={() => setIsTeamManagementOpen(false)}
-        isLevelingDrawerOpen={isLevelingDrawerOpen}
-        onCloseLevelingDrawer={() => setIsLevelingDrawerOpen(false)}
-        isStartChatOpen={isStartChatOpen}
-        onCloseStartChat={() => setIsStartChatOpen(false)}
+        isTeamManagementOpen={modals.isTeamManagementOpen}
+        onCloseTeamManagement={() => modals.setIsTeamManagementOpen(false)}
+        isLevelingDrawerOpen={modals.isLevelingDrawerOpen}
+        onCloseLevelingDrawer={() => modals.setIsLevelingDrawerOpen(false)}
+        isStartChatOpen={modals.isStartChatOpen}
+        onCloseStartChat={() => modals.setIsStartChatOpen(false)}
         onProviderStartChat={(id) => { const target = dbServices.find((s) => s.id === id); if (target) handleSelectService(target); }}
       />
+
+      {/* 5. Counselor Action Modals (Flow B Manual Lead, Custom Order & Price Modification) */}
+      <AddCustomerModal
+        isOpen={modals.isAddCustomerModalOpen}
+        onClose={() => modals.setIsAddCustomerModalOpen(false)}
+        services={dbServices}
+        onSubmit={handleCreateManualLead}
+        isDarkMode={isDarkMode}
+      />
+
+      {activeCounselorChat && (
+        <>
+          <CreateCustomOrderModal
+            isOpen={modals.isCreateCustomOrderModalOpen}
+            onClose={() => modals.setIsCreateCustomOrderModalOpen(false)}
+            chatItem={activeCounselorChat}
+            onSubmit={(dto) => handleCreateCustomOrder(dto, activeCounselorChat.id)}
+            isDarkMode={isDarkMode}
+          />
+
+          <ModifyPriceModal
+            isOpen={modals.isModifyPriceModalOpen}
+            onClose={() => modals.setIsModifyPriceModalOpen(false)}
+            chatItem={activeCounselorChat}
+            onSubmit={handleModifyPrice}
+            isDarkMode={isDarkMode}
+          />
+        </>
+      )}
     </div>
   );
 }
