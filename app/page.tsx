@@ -5,6 +5,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
 import { RailTab } from '@/types/super-app.types';
+import { chatService } from '@/services/chat.service';
+import { ChatSession } from '@/types/chat.types';
 
 // Custom Hooks
 import { useServicesFilter } from '@/hooks/useServicesFilter';
@@ -20,11 +22,7 @@ import { NavigationRail } from '@/components/super-app/NavigationRail';
 import { SuperAppSidebar } from '@/components/super-app/SuperAppSidebar';
 import { MainCanvasArea } from '@/components/super-app/MainCanvasArea';
 import { SuperAppModals } from '@/components/super-app/SuperAppModals';
-import {
-  AddCustomerModal,
-  CreateCustomOrderModal,
-  ModifyPriceModal,
-} from '@/components/modals/CounselorActionModals';
+import { AddCustomerModal, CreateCustomOrderModal, ModifyPriceModal } from '@/components/modals/CounselorActionModals';
 
 const emptySubscribe = () => () => {};
 
@@ -124,6 +122,7 @@ export default function SuperAppPage() {
     isFilterModalOpen,
     setIsFilterModalOpen,
     filteredServices,
+    conversationByServiceId,
   } = useServicesFilter({ runningServiceIds, serviceLastActivity });
 
   const {
@@ -210,6 +209,28 @@ export default function SuperAppPage() {
     }
     toggleSaveService(activeService.id);
   }, [activeService, isAuthenticated, modals, toggleSaveService]);
+
+  const handleSelectServiceWithReadSync = useCallback(
+    (service: any) => {
+      handleSelectService(service);
+      const conv = conversationByServiceId.get(service.id);
+      if (conv && (conv.unreadCount ?? 0) > 0) {
+        queryClient.setQueryData<ChatSession[]>(['user-conversations', user?.id], (old = []) => {
+          if (!Array.isArray(old)) return old;
+          return old.map((c) => (c.id === conv.id ? { ...c, unreadCount: 0 } : c));
+        });
+        chatService
+          .markConversationAsRead(conv.id)
+          .then(() => {
+            queryClient.invalidateQueries({ queryKey: ['user-conversations', user?.id] });
+          })
+          .catch((err) => {
+            console.error('Failed to mark conversation as read', err);
+          });
+      }
+    },
+    [handleSelectService, conversationByServiceId, queryClient, user?.id]
+  );
 
   const handleOpenBooking = () => {
     if (!isAuthenticated) {
@@ -313,8 +334,9 @@ export default function SuperAppPage() {
         allDbServicesCount={dbServices.length}
         isServicesLoading={isServicesLoading}
         activeServiceId={activeServiceId}
-        onSelectService={handleSelectService}
+        onSelectService={handleSelectServiceWithReadSync}
         serviceMessages={serviceMessages}
+        conversationByServiceId={conversationByServiceId}
       />
 
       {/* 3. Right Main Area: Encapsulated Routing & Canvas Area */}
@@ -423,14 +445,14 @@ export default function SuperAppPage() {
         isOrdersDrawerOpen={modals.isOrdersDrawerOpen}
         onCloseOrdersDrawer={() => modals.setIsOrdersDrawerOpen(false)}
         onOrderRevisionRequested={handleReopenOrderRevision}
-        onSelectServiceById={(id) => { const target = dbServices.find((s) => s.id === id); if (target) handleSelectService(target); }}
+        onSelectServiceById={(id) => { const target = dbServices.find((s) => s.id === id); if (target) handleSelectServiceWithReadSync(target); }}
         isTeamManagementOpen={modals.isTeamManagementOpen}
         onCloseTeamManagement={() => modals.setIsTeamManagementOpen(false)}
         isLevelingDrawerOpen={modals.isLevelingDrawerOpen}
         onCloseLevelingDrawer={() => modals.setIsLevelingDrawerOpen(false)}
         isStartChatOpen={modals.isStartChatOpen}
         onCloseStartChat={() => modals.setIsStartChatOpen(false)}
-        onProviderStartChat={(id) => { const target = dbServices.find((s) => s.id === id); if (target) handleSelectService(target); }}
+        onProviderStartChat={(id) => { const target = dbServices.find((s) => s.id === id); if (target) handleSelectServiceWithReadSync(target); }}
       />
 
       {/* 5. Counselor Action Modals (Flow B Manual Lead, Custom Order & Price Modification) */}

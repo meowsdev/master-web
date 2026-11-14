@@ -76,6 +76,8 @@ export interface ChatSession {
     profilePhoto?: string | null;
   };
   messages?: Message[];
+  unreadCount?: number;
+  lastMessage?: Message | null;
   _count?: {
     messages: number;
   };

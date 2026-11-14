@@ -9,6 +9,7 @@ import { ServiceList } from './ServiceList';
 import { Order } from '@/types/order.types';
 import { User } from '@/types/auth.types';
 import { Service } from '@/types/service.types';
+import { ChatSession } from '@/types/chat.types';
 import { ChatMessage, CustomFilterList } from '@/types/super-app.types';
 import { CounselorTab, CounselorChatItem } from '@/types/counselor.types';
 
@@ -76,6 +77,7 @@ interface SuperAppSidebarProps {
   activeServiceId: string | null;
   onSelectService: (s: Service) => void;
   serviceMessages: Record<string, ChatMessage[]>;
+  conversationByServiceId?: Map<string, ChatSession>;
 }
 
 export function SuperAppSidebar({
@@ -138,6 +140,7 @@ export function SuperAppSidebar({
   activeServiceId,
   onSelectService,
   serviceMessages,
+  conversationByServiceId,
 }: SuperAppSidebarProps) {
   const bgSidebar = isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]';
 
@@ -235,6 +238,7 @@ export function SuperAppSidebar({
             onOpenProfile={onOpenProfile}
             runningServiceIds={runningServiceIds}
             serviceMessages={serviceMessages}
+            conversationByServiceId={conversationByServiceId}
             activeFilterChip={activeFilterChip}
             isDarkMode={isDarkMode}
           />

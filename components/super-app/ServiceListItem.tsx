@@ -14,6 +14,8 @@ interface ServiceListItemProps {
   hasActiveRevision?: boolean;
   revisionIssue?: string;
   lastMessage?: ChatMessage | null;
+  unreadCount?: number;
+  isOnline?: boolean;
   isDarkMode: boolean;
 }
 
@@ -26,6 +28,8 @@ export function ServiceListItem({
   hasActiveRevision = false,
   revisionIssue,
   lastMessage,
+  unreadCount = 0,
+  isOnline = false,
   isDarkMode,
 }: ServiceListItemProps) {
   const categoryIcon = service.category?.iconUrl || '🛠️';
@@ -49,20 +53,22 @@ export function ServiceListItem({
           : 'hover:bg-[#f5f6f6]'
       }`}
     >
-      {/* Service Icon Avatar */}
+      {/* Service Icon Avatar - only show active indicator if revision, running, or online */}
       <div className="relative shrink-0 my-1">
         <div className="w-12 h-12 rounded-full bg-[#e9edef] dark:bg-[#202c33] flex items-center justify-center text-xl shadow-2xs">
           {categoryIcon}
         </div>
-        <span
-          className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-[#111b21] ${
-            hasActiveRevision
-              ? 'bg-amber-500 animate-ping ring-2 ring-amber-400'
-              : isRunning
-              ? 'bg-amber-500 animate-pulse'
-              : 'bg-[#25D366]'
-          }`}
-        />
+        {(hasActiveRevision || isRunning || isOnline) && (
+          <span
+            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-[#111b21] ${
+              hasActiveRevision
+                ? 'bg-amber-500 animate-ping ring-2 ring-amber-400'
+                : isRunning
+                ? 'bg-amber-500 animate-pulse'
+                : 'bg-[#25D366]'
+            }`}
+          />
+        )}
       </div>
 
       {/* Service Content with WhatsApp indented border */}
@@ -86,7 +92,7 @@ export function ServiceListItem({
             ) : null}
             <span
               className={`text-[12px] font-normal ${
-                lastMessage ? 'text-[#00a884] dark:text-[#25D366] font-medium' : textSecondary
+                unreadCount > 0 ? 'text-[#00a884] dark:text-[#25D366] font-medium' : textSecondary
               }`}
             >
               {lastMessage ? lastMessage.time : `৳${service.basePrice}`}
@@ -94,7 +100,7 @@ export function ServiceListItem({
           </div>
         </div>
 
-        {/* Bottom Row: Blue Double Tick or Running Status + Chevron */}
+        {/* Bottom Row: Message preview and Unread Badge + WhatsApp Dropdown Chevron */}
         <div className="flex items-center justify-between mt-1 text-[13px]">
           {hasActiveRevision ? (
             <div className="flex items-center gap-1.5 min-w-0 truncate text-amber-700 dark:text-amber-400 font-semibold text-[12.5px]">
@@ -130,12 +136,18 @@ export function ServiceListItem({
             </div>
           )}
 
-          {/* WhatsApp Dropdown Chevron */}
-          <ChevronDown
-            className={`w-4 h-4 text-[#8696a0] shrink-0 ml-1.5 transition-opacity ${
-              isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-            }`}
-          />
+          <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
+            {unreadCount > 0 && (
+              <span className="min-w-[19px] h-[19px] px-1.5 rounded-full bg-[#25D366] text-white text-[11px] font-bold flex items-center justify-center shadow-xs">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+            <ChevronDown
+              className={`w-4 h-4 text-[#8696a0] shrink-0 transition-opacity ${
+                isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+              }`}
+            />
+          </div>
         </div>
       </div>
     </div>

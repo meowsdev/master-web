@@ -5,9 +5,11 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { servicesService } from '@/services/services.service';
 import { ordersService } from '@/services/orders.service';
+import { chatService } from '@/services/chat.service';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Service } from '@/types/service.types';
 import { Order } from '@/types/order.types';
+import { ChatSession } from '@/types/chat.types';
 import { FilterChip, CustomFilterList } from '@/types/super-app.types';
 
 const STORAGE_KEY_CUSTOM_FILTERS = 'superapp_custom_filters_v1';
@@ -64,6 +66,25 @@ export function useServicesFilter({
     enabled: isAuthenticated && Boolean(user?.id),
     staleTime: 10000,
   });
+
+  // Fetch real user conversations from database for authenticated session
+  const { data: userConversations = [] } = useQuery<ChatSession[]>({
+    queryKey: ['user-conversations', user?.id],
+    queryFn: () => chatService.getUserConversations(),
+    enabled: isAuthenticated && Boolean(user?.id),
+    staleTime: 5000,
+  });
+
+  // Index conversations by serviceId for fast O(1) unread state resolution
+  const conversationByServiceId = useMemo(() => {
+    const map = new Map<string, ChatSession>();
+    for (const conv of userConversations) {
+      if (conv.serviceId) {
+        map.set(conv.serviceId, conv);
+      }
+    }
+    return map;
+  }, [userConversations]);
 
   // Create a new custom filter list and persist
   const createCustomFilter = (name: string, serviceIds: string[]) => {
@@ -163,7 +184,11 @@ export function useServicesFilter({
         (s) => runningServiceIds.includes(s.id) || dbRunningIds.includes(s.id)
       );
     } else if (activeFilterChip === 'Unread') {
-      list = list.slice(0, 3);
+      // Strictly reflect real unread records from database for authenticated session
+      list = list.filter((s) => {
+        const conv = conversationByServiceId.get(s.id);
+        return (conv?.unreadCount ?? 0) > 0;
+      });
     } else if (activeFilterChip === 'Favorites') {
       list = list.filter((s: Service) => s.isPopular || Number(s.basePrice) >= 800);
     } else if (activeFilterChip === 'Save') {
@@ -212,6 +237,7 @@ export function useServicesFilter({
     runningServiceIds,
     serviceLastActivity,
     customerOrders,
+    conversationByServiceId,
   ]);
 
   return {
@@ -232,5 +258,7 @@ export function useServicesFilter({
     isFilterModalOpen,
     setIsFilterModalOpen,
     filteredServices,
+    userConversations,
+    conversationByServiceId,
   };
 }

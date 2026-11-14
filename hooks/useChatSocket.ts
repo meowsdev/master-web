@@ -67,20 +67,25 @@ export function useChatSocket({ activeSessionId }: UseChatSocketProps) {
         );
       }
 
-      // 2. Update user-conversations query data so sidebar immediately reflects the latest message
-      queryClient.setQueryData<ChatSession[]>(['user-conversations'], (oldConvs = []) => {
+      // 2. Update user-conversations query data so sidebar immediately reflects the latest message and unread count
+      queryClient.setQueryData<ChatSession[]>(['user-conversations', user?.id], (oldConvs = []) => {
         if (!Array.isArray(oldConvs)) return oldConvs;
         const convIndex = oldConvs.findIndex((c) => c.id === newMsg.sessionId);
         if (convIndex === -1) {
           // If conversation isn't in sidebar yet, refetch conversations
-          queryClient.invalidateQueries({ queryKey: ['user-conversations'] });
+          queryClient.invalidateQueries({ queryKey: ['user-conversations', user?.id] });
           return oldConvs;
         }
+
+        const isIncomingUnread = user?.id && newMsg.senderId !== user.id && activeSessionId !== newMsg.sessionId;
+        const currentUnread = oldConvs[convIndex].unreadCount || 0;
 
         const updatedConv = {
           ...oldConvs[convIndex],
           updatedAt: newMsg.createdAt,
           messages: [newMsg],
+          lastMessage: newMsg,
+          unreadCount: isIncomingUnread ? currentUnread + 1 : activeSessionId === newMsg.sessionId ? 0 : currentUnread,
         };
 
         const remaining = oldConvs.filter((_, idx) => idx !== convIndex);
@@ -121,10 +126,22 @@ export function useChatSocket({ activeSessionId }: UseChatSocketProps) {
     };
 
     const handleConversationUpdated = (payload: { sessionId: string; message: Message }) => {
-      queryClient.invalidateQueries({ queryKey: ['user-conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['user-conversations', user?.id] });
       if (activeSessionId && payload.sessionId === activeSessionId) {
         handleNewMessage(payload.message);
       }
+    };
+
+    const handleMessagesRead = (payload: { conversationId: string; readByUserId: string }) => {
+      queryClient.setQueryData<ChatSession[]>(['user-conversations', user?.id], (oldConvs = []) => {
+        if (!Array.isArray(oldConvs)) return oldConvs;
+        return oldConvs.map((c) =>
+          c.id === payload.conversationId
+            ? { ...c, unreadCount: 0 }
+            : c
+        );
+      });
+      queryClient.invalidateQueries({ queryKey: ['user-conversations', user?.id] });
     };
 
     if (socket.connected) {
@@ -135,6 +152,8 @@ export function useChatSocket({ activeSessionId }: UseChatSocketProps) {
     socket.on('disconnect', handleDisconnect);
     socket.on('newMessage', handleNewMessage);
     socket.on('conversationUpdated', handleConversationUpdated);
+    socket.on('messagesRead', handleMessagesRead);
+    socket.on('conversationRead', handleMessagesRead);
     socket.on('userTyping', handleUserTyping);
     socket.on('userStoppedTyping', handleUserStoppedTyping);
 
@@ -143,6 +162,8 @@ export function useChatSocket({ activeSessionId }: UseChatSocketProps) {
       socket.off('disconnect', handleDisconnect);
       socket.off('newMessage', handleNewMessage);
       socket.off('conversationUpdated', handleConversationUpdated);
+      socket.off('messagesRead', handleMessagesRead);
+      socket.off('conversationRead', handleMessagesRead);
       socket.off('userTyping', handleUserTyping);
       socket.off('userStoppedTyping', handleUserStoppedTyping);
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);

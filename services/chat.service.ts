@@ -99,8 +99,17 @@ export const chatService = {
     return response.data;
   },
 
-  getUserConversations: async () => {
-    const response = await apiClient.get<ChatSession[]>('/chat/conversations');
+  getUserConversations: async (unreadOnly?: boolean) => {
+    const response = await apiClient.get<ChatSession[]>('/chat/conversations', {
+      params: unreadOnly ? { unreadOnly: 'true' } : undefined,
+    });
+    return response.data;
+  },
+
+  markConversationAsRead: async (conversationId: string) => {
+    const response = await apiClient.patch<{ success: boolean; count: number; conversationId: string }>(
+      `/chat/conversations/${conversationId}/read`
+    );
     return response.data;
   },
 
