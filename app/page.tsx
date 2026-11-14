@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback, useSyncExternalStore 
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
+import { logoutUser } from '@/lib/logout';
 import { RailTab } from '@/types/super-app.types';
 import { chatService } from '@/services/chat.service';
 import { ChatSession } from '@/types/chat.types';
@@ -29,7 +30,7 @@ const emptySubscribe = () => () => {};
 export default function SuperAppPage() {
   const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const queryClient = useQueryClient();
-  const { user, isAuthenticated, activeRole, logout, setRole, setUser } = useAuthStore();
+  const { user, isAuthenticated, activeRole, setRole, setUser } = useAuthStore();
 
   const isProvider = Boolean(isAuthenticated && (activeRole === 'PROVIDER' || user?.role === 'PROVIDER'));
   const isCounselor = Boolean(isAuthenticated && (activeRole === 'COUNSELOR' || user?.role === 'COUNSELOR'));
@@ -181,11 +182,12 @@ export default function SuperAppPage() {
   }, [currentMessages, scrollToBottom]);
 
   const handleLogout = useCallback(() => {
-    queryClient.clear();
+    // Revokes the server session, clears cookies, wipes caches and tells the
+    // other tabs; resetChatSession also drops the in-memory chat state.
     resetChatSession();
-    logout();
+    void logoutUser();
     toast.info('Logged out');
-  }, [queryClient, resetChatSession, logout]);
+  }, [resetChatSession]);
 
   const handleStartCall = useCallback(
     (type: 'voice' | 'video') => {

@@ -10,9 +10,12 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { authService } from '@/services/auth.service';
+import { authService, formatPhoneNumber } from '@/services/auth.service';
 import { useAuthStore } from '@/store/useAuthStore';
 import { UserRole } from '@/types/auth.types';
+import { useOtpCooldown } from '@/hooks/useOtpCooldown';
+import { parseOtpError } from '@/lib/otp-errors';
+import { OtpResendButton } from '@/components/modals/OtpResendButton';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -42,6 +45,7 @@ export function AuthModal({
   const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.CUSTOMER);
 
   const [loading, setLoading] = useState(false);
+  const otpCooldown = useOtpCooldown(formatPhoneNumber(phone));
 
   if (!isOpen) return null;
 
@@ -51,9 +55,10 @@ export function AuthModal({
     ? 'bg-[#111b21] border-[#2f3b43] text-[#e9edef]'
     : 'bg-[#f0f2f5] border-[#d1d7db] text-[#111b21]';
 
-  // 1. Request OTP via Backend
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // 1. Request OTP via Backend (also used by "Resend OTP")
+  const requestOtp = async () => {
+    // Guard against double clicks / Enter-key repeats while a request is open.
+    if (loading) return;
     if (!phone.trim()) {
       toast.error('Please enter a valid mobile number');
       return;
@@ -61,6 +66,7 @@ export function AuthModal({
     setLoading(true);
     try {
       const res = await authService.requestOtp({ phoneNumber: phone });
+      otpCooldown.startCooldown(res.retryAfterSeconds);
       if (res.code) {
         setServerCode(res.code);
         setOtp(res.code); // Auto-fill for convenience
@@ -68,13 +74,28 @@ export function AuthModal({
       toast.success(res.message || 'OTP sent successfully!');
       setStep('OTP');
     } catch (err: unknown) {
-      const errorMsg =
-        (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message ||
-        'Failed to request OTP';
-      toast.error(Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
+      const parsed = parseOtpError(err);
+      // Resync the countdown to the server's truth (e.g. after a page refresh).
+      if (parsed.kind === 'COOLDOWN' && parsed.retryAfterSeconds !== undefined) {
+        otpCooldown.startCooldown(parsed.retryAfterSeconds);
+        setStep('OTP');
+      }
+      toast.error(parsed.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSendOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    // A code was already sent to this number: go enter it instead of
+    // sending a request the server would refuse.
+    if (otpCooldown.isCoolingDown) {
+      setStep('OTP');
+      toast.info('A code was already sent to this number. Enter it below.');
+      return;
+    }
+    void requestOtp();
   };
 
   // 2. Verify OTP via Backend
@@ -87,7 +108,8 @@ export function AuthModal({
     setLoading(true);
     try {
       const res = await authService.verifyOtp({ phoneNumber: phone, code: otp });
-      setAuth(res.user, res.accessToken, res.refreshToken);
+      // Tokens arrive as httpOnly cookies; only the user object is kept in JS.
+      setAuth(res.user);
 
       // Strict single role constraint: A mobile number cannot have more than one role.
       if (res.user.name) {
@@ -100,10 +122,7 @@ export function AuthModal({
         toast.info('নতুন একাউন্ট সম্পন্ন করতে নাম ও আপনার একমাত্র রোলটি নির্বাচন করুন।');
       }
     } catch (err: unknown) {
-      const errorMsg =
-        (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message ||
-        'Verification failed. Invalid OTP.';
-      toast.error(Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
+      toast.error(parseOtpError(err).message);
     } finally {
       setLoading(false);
     }
@@ -338,6 +357,12 @@ export function AuthModal({
             >
               <span>{loading ? 'Verifying...' : 'Verify OTP'}</span>
             </button>
+
+            <OtpResendButton
+              secondsLeft={otpCooldown.secondsLeft}
+              isSending={loading}
+              onResend={() => void requestOtp()}
+            />
           </form>
         )}
 

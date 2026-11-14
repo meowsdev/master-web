@@ -32,7 +32,7 @@ export const useAuth = () => {
   const verifyOtpMutation = useMutation({
     mutationFn: (dto: VerifyOtpDto) => authService.verifyOtp(dto),
     onSuccess: (data) => {
-      setAuth(data.user, data.accessToken, data.refreshToken);
+      setAuth(data.user);
       toast.success('Login successful!');
     },
     onError: (err: any) => {

@@ -21,13 +21,14 @@ export function useChatSocket({ activeSessionId }: UseChatSocketProps) {
 
   // Initialize socket connection & global event listeners
   useEffect(() => {
-    if (!isAuthenticated || !accessToken) {
+    // Cookie sessions have no accessToken in JS; isAuthenticated is the signal.
+    if (!isAuthenticated) {
       disconnectChatSocket();
       setIsConnected(false);
       return;
     }
 
-    const socket = getChatSocket(accessToken);
+    const socket = getChatSocket(accessToken || undefined);
     if (!socket) return;
 
     const handleConnect = () => {

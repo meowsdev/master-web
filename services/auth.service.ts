@@ -3,6 +3,7 @@ import {
   AuthResponse,
   CompleteProfileDto,
   RequestOtpDto,
+  SessionResponse,
   TechnicianLoginDto,
   User,
   UserRole,
@@ -20,7 +21,13 @@ export function formatPhoneNumber(phone: string): string {
 export const authService = {
   requestOtp: async (dto: RequestOtpDto) => {
     const formattedPhone = formatPhoneNumber(dto.phoneNumber);
-    const response = await apiClient.post<{ message: string; code?: string }>(
+    const response = await apiClient.post<{
+      message: string;
+      /** Only present when the backend runs with OTP_EXPOSE_CODE=true (dev). */
+      code?: string;
+      retryAfterSeconds: number;
+      nextAllowedAt: string;
+    }>(
       '/auth/request-otp',
       { phoneNumber: formattedPhone }
     );
@@ -29,7 +36,7 @@ export const authService = {
 
   verifyOtp: async (dto: VerifyOtpDto) => {
     const formattedPhone = formatPhoneNumber(dto.phoneNumber);
-    const response = await apiClient.post<AuthResponse>('/auth/verify-otp', {
+    const response = await apiClient.post<SessionResponse>('/auth/verify-otp', {
       phoneNumber: formattedPhone,
       code: dto.code,
     });
@@ -69,10 +76,17 @@ export const authService = {
     return response.data;
   },
 
-  logout: async (refreshToken?: string) => {
-    const response = await apiClient.post<{ message: string }>('/auth/logout', {
-      refreshToken,
-    });
+  // Cookie sessions send no body; legacy sessions pass their stored token.
+  logout: async (legacyRefreshToken?: string) => {
+    const response = await apiClient.post<{ message: string }>(
+      '/auth/logout',
+      legacyRefreshToken ? { refreshToken: legacyRefreshToken } : {}
+    );
+    return response.data;
+  },
+
+  logoutAllDevices: async () => {
+    const response = await apiClient.post<{ message: string }>('/auth/logout-all');
     return response.data;
   },
 };

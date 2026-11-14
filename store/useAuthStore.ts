@@ -8,7 +8,10 @@ interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
   activeRole: UserRole | null;
-  setAuth: (user: User, accessToken: string, refreshToken?: string) => void;
+  /** OTP sessions pass no tokens: they live in httpOnly cookies, out of JS reach. */
+  setAuth: (user: User, accessToken?: string, refreshToken?: string) => void;
+  /** Legacy (technician) sessions still keep their tokens client-side. */
+  setLegacyTokens: (accessToken: string, refreshToken: string) => void;
   setUser: (user: User) => void;
   setRole: (role: UserRole) => void;
   logout: () => void;
@@ -26,11 +29,14 @@ export const useAuthStore = create<AuthState>()(
       setAuth: (user, accessToken, refreshToken) =>
         set({
           user,
-          accessToken,
-          refreshToken: refreshToken || null,
+          accessToken: accessToken ?? null,
+          refreshToken: refreshToken ?? null,
           isAuthenticated: true,
           activeRole: user.role,
         }),
+
+      setLegacyTokens: (accessToken, refreshToken) =>
+        set({ accessToken, refreshToken }),
 
       setUser: (user) => set({ user, activeRole: user.role }),
 
