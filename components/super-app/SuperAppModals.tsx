@@ -8,7 +8,7 @@ import { StatusViewerModal } from '@/components/modals/StatusViewerModal';
 import { SettingsDrawer } from '@/components/modals/SettingsDrawer';
 import { ProfileEditorModal } from '@/components/modals/ProfileEditorModal';
 import { CreateFilterModal } from '@/components/modals/CreateFilterModal';
-import { ServiceDetailsDrawer } from '@/components/super-app/ServiceDetailsDrawer';
+import { ServicePreviewPanel } from '@/components/modals/ServicePreviewPanel';
 import { OrdersDrawer } from '@/components/modals/OrdersDrawer';
 import { ProviderSkillsModal } from '@/components/modals/ProviderSkillsModal';
 import { TeamManagementDrawer } from '@/components/modals/TeamManagementDrawer';
@@ -44,7 +44,6 @@ interface SuperAppModalsProps {
   isCallingModalOpen: boolean;
   onCloseCalling: () => void;
   callType: 'voice' | 'video';
-  onStartCall: (type: 'voice' | 'video') => void;
   // Status Viewer
   isStatusViewerOpen: boolean;
   onCloseStatusViewer: () => void;
@@ -70,8 +69,6 @@ interface SuperAppModalsProps {
   // Service Details Drawer
   isServiceDetailsOpen: boolean;
   onCloseServiceDetails: () => void;
-  isServiceSaved: boolean;
-  onToggleSave: () => void;
   onOpenBooking: () => void;
   // Orders Drawer
   isOrdersDrawerOpen: boolean;
@@ -114,7 +111,6 @@ export function SuperAppModals({
   isCallingModalOpen,
   onCloseCalling,
   callType,
-  onStartCall,
   isStatusViewerOpen,
   onCloseStatusViewer,
   isSettingsDrawerOpen,
@@ -135,8 +131,6 @@ export function SuperAppModals({
   createCustomFilter,
   isServiceDetailsOpen,
   onCloseServiceDetails,
-  isServiceSaved,
-  onToggleSave,
   onOpenBooking,
   isOrdersDrawerOpen,
   onCloseOrdersDrawer,
@@ -227,15 +221,15 @@ export function SuperAppModals({
         isDarkMode={isDarkMode}
       />
 
-      <ServiceDetailsDrawer
-        isOpen={isServiceDetailsOpen}
+      {/* The same "Service info" panel guests get; here its button starts a booking. */}
+      <ServicePreviewPanel
+        service={isServiceDetailsOpen ? activeService : null}
         onClose={onCloseServiceDetails}
-        service={activeService}
-        isSaved={isServiceSaved}
-        onToggleSave={onToggleSave}
-        onOpenBooking={onOpenBooking}
-        onStartCall={onStartCall}
-        isDarkMode={isDarkMode}
+        primaryActionLabel="Book Service"
+        onPrimaryAction={() => {
+          onCloseServiceDetails();
+          onOpenBooking();
+        }}
       />
 
       <OrdersDrawer

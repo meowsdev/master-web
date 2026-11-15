@@ -5,13 +5,8 @@ import {
   ArrowLeft,
   Wrench,
   ChevronDown,
-  Video,
-  Phone,
-  Search,
   MoreVertical,
-  Bookmark,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { Service } from '@/types/service.types';
 import { OrderCardData } from '@/types/super-app.types';
 
@@ -21,8 +16,10 @@ interface ChatHeaderProps {
   onBackMobile: () => void;
   onBackToWelcome: () => void;
   onOpenBooking: () => void;
+  /** Not shown in the header any more (voice/video buttons are hidden); kept so callers don't change. */
   onStartCall: (type: 'voice' | 'video') => void;
   onClearChat: () => void;
+  /** Same: the Save button is hidden from the header. */
   isSaved?: boolean;
   onToggleSave?: () => void;
   onOpenDetails?: () => void;
@@ -35,10 +32,7 @@ export function ChatHeader({
   onBackMobile,
   onBackToWelcome,
   onOpenBooking,
-  onStartCall,
   onClearChat,
-  isSaved = false,
-  onToggleSave,
   onOpenDetails,
   isDarkMode,
 }: ChatHeaderProps) {
@@ -135,47 +129,6 @@ export function ChatHeader({
             <ChevronDown className="w-3.5 h-3.5 text-[#54656f] dark:text-[#8696a0]" />
           </button>
         )}
-
-        {/* Save to Save list button */}
-        {onToggleSave && (
-          <button
-            onClick={onToggleSave}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${isSaved
-                ? 'text-[#008069] dark:text-[#25D366] bg-[#d9fdd3] dark:bg-[#005c4b]/50'
-                : headerIconBtn
-              }`}
-            title={isSaved ? 'Saved (Click to remove from Save list)' : 'Save service to Save list'}
-          >
-            <Bookmark className={`w-4.5 h-4.5 ${isSaved ? 'fill-current' : ''}`} />
-          </button>
-        )}
-
-        {/* Video Call */}
-        <button
-          onClick={() => onStartCall('video')}
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${headerIconBtn}`}
-          title="Video call"
-        >
-          <Video className="w-5 h-5" />
-        </button>
-
-        {/* Voice Call */}
-        <button
-          onClick={() => onStartCall('voice')}
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${headerIconBtn}`}
-          title="Voice call"
-        >
-          <Phone className="w-5 h-5" />
-        </button>
-
-        {/* Search Inside Chat */}
-        <button
-          onClick={() => toast.info('Search inside service messages')}
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${headerIconBtn}`}
-          title="Search chat"
-        >
-          <Search className="w-5 h-5" />
-        </button>
 
         {/* Chat Menu */}
         <div className="relative">

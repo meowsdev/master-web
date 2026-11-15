@@ -9,8 +9,9 @@ import { AuthPrimaryButton } from '@/components/modals/auth/AuthDrawerShell';
 interface ServicePreviewPanelProps {
   service: Service | null;
   onClose: () => void;
-  /** "Contact Now": guests are asked to log in, then land in this service's chat. */
-  onContact: (service: Service) => void;
+  /** Guests: "Contact Now" (log in, then chat). Signed in: "Book Service". */
+  primaryActionLabel: string;
+  onPrimaryAction: (service: Service) => void;
 }
 
 /* Hero photo, or a soft green block with the category icon until the service has one. */
@@ -30,11 +31,11 @@ function ServiceHero({ service }: { service: Service }) {
 }
 
 /*
- * Public service page shown to visitors who are not logged in (Figma "AC Repair
- * & Service"). Everything here is plain presentation of the service record;
- * chatting and booking stay behind login.
+ * THE "Service info" panel (Figma "AC Repair & Service"), used by everyone: guests see it
+ * when they pick a service, signed-in users open it from the chat header. It only
+ * presents the service record; chatting and booking stay behind login.
  */
-export function ServicePreviewPanel({ service, onClose, onContact }: ServicePreviewPanelProps) {
+export function ServicePreviewPanel({ service, onClose, primaryActionLabel, onPrimaryAction }: ServicePreviewPanelProps) {
   if (!service) return null;
   const features = service.features ?? [];
 
@@ -64,8 +65,8 @@ export function ServicePreviewPanel({ service, onClose, onContact }: ServicePrev
         )}
 
         <div className="flex justify-center pt-[8px]">
-          <AuthPrimaryButton type="button" onClick={() => onContact(service)}>
-            Contact Now
+          <AuthPrimaryButton type="button" onClick={() => onPrimaryAction(service)}>
+            {primaryActionLabel}
           </AuthPrimaryButton>
         </div>
       </div>

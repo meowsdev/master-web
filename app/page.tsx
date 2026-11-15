@@ -422,7 +422,6 @@ export default function SuperAppPage() {
         isCallingModalOpen={modals.isCallingModalOpen}
         onCloseCalling={() => modals.setIsCallingModalOpen(false)}
         callType={modals.callType}
-        onStartCall={handleStartCall}
         isStatusViewerOpen={modals.isStatusViewerOpen}
         onCloseStatusViewer={() => modals.setIsStatusViewerOpen(false)}
         isSettingsDrawerOpen={modals.isSettingsDrawerOpen}
@@ -445,8 +444,6 @@ export default function SuperAppPage() {
         createCustomFilter={createCustomFilter}
         isServiceDetailsOpen={modals.isServiceDetailsOpen}
         onCloseServiceDetails={() => modals.setIsServiceDetailsOpen(false)}
-        isServiceSaved={activeService ? isServiceSaved(activeService.id) : false}
-        onToggleSave={handleToggleSave}
         onOpenBooking={handleOpenBooking}
         isOrdersDrawerOpen={modals.isOrdersDrawerOpen}
         onCloseOrdersDrawer={() => modals.setIsOrdersDrawerOpen(false)}
@@ -471,7 +468,7 @@ export default function SuperAppPage() {
       />
 
       {!isAuthenticated && (
-        <ServicePreviewPanel service={modals.isAnySidePanelOpen || pendingRegistrationUser ? null : previewService} onClose={closePreview} onContact={handleContactNow} />
+        <ServicePreviewPanel service={modals.isAnySidePanelOpen || pendingRegistrationUser ? null : previewService} onClose={closePreview} primaryActionLabel="Contact Now" onPrimaryAction={handleContactNow} />
       )}
 
       {activeCounselorChat && (
