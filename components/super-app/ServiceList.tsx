@@ -8,6 +8,7 @@ import { Service } from '@/types/service.types';
 import { ChatMessage } from '@/types/super-app.types';
 import { User } from '@/types/auth.types';
 import { Order } from '@/types/order.types';
+import { ChatSession } from '@/types/chat.types';
 import { ordersService } from '@/services/orders.service';
 import { ServiceListItem } from './ServiceListItem';
 
@@ -26,6 +27,7 @@ interface ServiceListProps {
   onOpenProfile?: () => void;
   runningServiceIds?: string[];
   serviceMessages?: Record<string, ChatMessage[]>;
+  conversationByServiceId?: Map<string, ChatSession>;
   activeFilterChip?: string;
   isDarkMode: boolean;
 }
@@ -45,6 +47,7 @@ export function ServiceList({
   onOpenProfile,
   runningServiceIds = [],
   serviceMessages = {},
+  conversationByServiceId,
   activeFilterChip,
   isDarkMode,
 }: ServiceListProps) {
@@ -111,14 +114,18 @@ export function ServiceList({
         ) : services.length === 0 ? (
           <div className="p-8 text-center space-y-3">
             <p className={`text-sm font-medium ${textPrimary}`}>
-              {activeFilterChip === 'Running'
+              {activeFilterChip === 'Unread'
+                ? 'No unread chats'
+                : activeFilterChip === 'Running'
                 ? 'No running orders right now'
                 : searchQuery
                 ? `No services found matching "${searchQuery}"`
                 : 'No services in this list yet'}
             </p>
             <p className={`text-xs ${textSecondary}`}>
-              {activeFilterChip === 'Running'
+              {activeFilterChip === 'Unread'
+                ? 'All incoming messages have been read. New unread messages will appear here.'
+                : activeFilterChip === 'Running'
                 ? 'When you start a service order, it will appear here in running status.'
                 : searchQuery
                 ? 'Try searching with different keywords'
@@ -185,6 +192,9 @@ export function ServiceList({
               inChatOrderCard?.orderId ||
               (activeDbRunningOrder?.id ? activeDbRunningOrder.id.slice(0, 8).toUpperCase() : null);
 
+            const conv = conversationByServiceId?.get(service.id);
+            const unreadCount = conv?.unreadCount ?? 0;
+
             return (
               <ServiceListItem
                 key={service.id}
@@ -195,6 +205,7 @@ export function ServiceList({
                 hasActiveRevision={hasActiveRevision}
                 revisionIssue={revisionIssue}
                 lastMessage={lastMsg}
+                unreadCount={unreadCount}
                 onSelect={onSelectService}
                 isDarkMode={isDarkMode}
               />
