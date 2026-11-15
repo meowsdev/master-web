@@ -4,8 +4,6 @@ import React from 'react';
 import Image from 'next/image';
 import {
   X,
-  Sun,
-  Moon,
   Volume2,
   VolumeX,
   ShieldCheck,
@@ -30,7 +28,6 @@ interface SettingsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   isDarkMode: boolean;
-  onToggleTheme: () => void;
   soundEnabled: boolean;
   onToggleSound: () => void;
   user: User | null;
@@ -47,7 +44,6 @@ export function SettingsDrawer({
   isOpen,
   onClose,
   isDarkMode,
-  onToggleTheme,
   soundEnabled,
   onToggleSound,
   user,
@@ -169,18 +165,6 @@ export function SettingsDrawer({
 
             {/* Quick Preferences */}
             <div className="space-y-2 pt-1">
-              {/* Dark/Light mode toggle */}
-              <div
-                onClick={onToggleTheme}
-                className="p-3 rounded-2xl flex items-center justify-between border cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-black/5 dark:border-white/10"
-              >
-                <div className="flex items-center gap-2.5 text-sm">
-                  {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
-                  <span className={textPrimary}>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-                </div>
-                <span className={`text-xs ${textSecondary}`}>{isDarkMode ? 'Dark' : 'Light'}</span>
-              </div>
-
               {/* Sound notifications */}
               <div
                 onClick={onToggleSound}

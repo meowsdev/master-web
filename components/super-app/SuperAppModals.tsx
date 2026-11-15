@@ -51,7 +51,6 @@ interface SuperAppModalsProps {
   // Settings Drawer
   isSettingsDrawerOpen: boolean;
   onCloseSettings: () => void;
-  onToggleTheme: () => void;
   soundEnabled: boolean;
   onToggleSound: () => void;
   onSwitchRole: (role: UserRole) => void;
@@ -120,7 +119,6 @@ export function SuperAppModals({
   onCloseStatusViewer,
   isSettingsDrawerOpen,
   onCloseSettings,
-  onToggleTheme,
   soundEnabled,
   onToggleSound,
   onSwitchRole,
@@ -200,7 +198,6 @@ export function SuperAppModals({
         isOpen={isSettingsDrawerOpen}
         onClose={onCloseSettings}
         isDarkMode={isDarkMode}
-        onToggleTheme={onToggleTheme}
         soundEnabled={soundEnabled}
         onToggleSound={onToggleSound}
         user={user}

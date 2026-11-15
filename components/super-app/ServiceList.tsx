@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
-import { LogIn } from 'lucide-react';
 import { Service } from '@/types/service.types';
 import { ChatMessage } from '@/types/super-app.types';
 import { User } from '@/types/auth.types';
@@ -29,6 +28,8 @@ interface ServiceListProps {
   serviceMessages?: Record<string, ChatMessage[]>;
   conversationByServiceId?: Map<string, ChatSession>;
   activeFilterChip?: string;
+  /** Fired while scrolling so the parent can collapse/restore the search area. */
+  onScrollIntent?: (intent: 'collapse' | 'expand') => void;
   isDarkMode: boolean;
 }
 
@@ -43,14 +44,27 @@ export function ServiceList({
   isAuthenticated,
   user,
   activeRole,
-  onOpenAuth,
   onOpenProfile,
   runningServiceIds = [],
   serviceMessages = {},
   conversationByServiceId,
   activeFilterChip,
+  onScrollIntent,
   isDarkMode,
 }: ServiceListProps) {
+  const lastScrollTopRef = useRef(0);
+
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    if (!onScrollIntent) return;
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    const delta = scrollTop - lastScrollTopRef.current;
+    lastScrollTopRef.current = scrollTop;
+
+    if (scrollTop <= 4 || delta < -6) return onScrollIntent('expand');
+    // Collapsing frees ~130px; skip short lists so the layout shift can't push the scroll back to the top and re-expand in a loop.
+    const hasRoomToCollapse = scrollHeight - clientHeight > 200;
+    if (delta > 6 && hasRoomToCollapse) onScrollIntent('collapse');
+  };
   const textPrimary = isDarkMode ? 'text-[#e9edef]' : 'text-[#111b21]';
   const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
 
@@ -100,7 +114,7 @@ export function ServiceList({
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* Scrollable List Container */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" onScroll={handleScroll}>
         {isLoading ? (
           <div className="p-6 text-center space-y-3">
             <div className="w-8 h-8 border-2 border-[#25D366] border-t-transparent rounded-full animate-spin mx-auto" />
@@ -214,19 +228,15 @@ export function ServiceList({
         )}
       </div>
 
-      {/* Sidebar Footer */}
-      <div
-        className={`p-3 border-t flex items-center justify-between shrink-0 ${
-          isDarkMode ? 'bg-[#182229] border-[#222e35]' : 'bg-[#f0f2f5] border-[#e9edef]'
-        }`}
-      >
-        {isAuthenticated ? (
+      {/* Signed-in profile footer; guests log in through the header's "Join Now" */}
+      {isAuthenticated && (
+        <div className="p-3 border-t flex items-center shrink-0 bg-[#f7f5f3] border-[#e5e5e5]">
           <div
             onClick={onOpenProfile}
             className="flex items-center gap-2.5 min-w-0 cursor-pointer group hover:opacity-90 transition-opacity"
             title="Click to view & edit Profile"
           >
-            <div className="w-8 h-8 rounded-full overflow-hidden bg-[#008069] text-white flex items-center justify-center text-xs font-bold shrink-0 border border-[#25D366]">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-[#1daa61] text-white flex items-center justify-center text-xs font-bold shrink-0">
               {user?.profilePhoto ? (
                 <Image src={user.profilePhoto} alt="User" width={32} height={32} unoptimized className="object-cover w-full h-full" />
               ) : (
@@ -234,25 +244,12 @@ export function ServiceList({
               )}
             </div>
             <div className="min-w-0">
-              <p className={`text-xs font-bold truncate ${textPrimary} group-hover:text-[#008069] dark:group-hover:text-[#25D366] transition-colors`}>
-                {user?.name}
-              </p>
-              <p className="text-[11px] text-[#25D366] font-bold">{activeRole || 'CUSTOMER'}</p>
+              <p className={`text-xs font-bold truncate ${textPrimary}`}>{user?.name}</p>
+              <p className="text-[11px] text-[#1daa61] font-bold">{activeRole || 'CUSTOMER'}</p>
             </div>
           </div>
-        ) : (
-          <div className="flex items-center justify-between w-full">
-            <span className={`text-xs ${textSecondary}`}>Guest Customer</span>
-            <button
-              onClick={onOpenAuth}
-              className="px-3.5 py-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold rounded-lg cursor-pointer transition-all flex items-center gap-1.5 shadow-sm shadow-[#25D366]/25"
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Login</span>
-            </button>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

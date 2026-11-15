@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SidebarHeader } from './SidebarHeader';
 import { ProviderOrderList, ProviderOrderFilter } from './ProviderOrderList';
 import { CounselorChatList } from './CounselorChatList';
-import { SearchAndFilters } from './SearchAndFilters';
 import { ServiceList } from './ServiceList';
+import { CustomerSidebarTop } from './CustomerSidebarTop';
 import { Order } from '@/types/order.types';
 import { User } from '@/types/auth.types';
 import { Service } from '@/types/service.types';
@@ -126,13 +126,9 @@ export function SuperAppSidebar({
   onOpenAddCustomer,
   searchQuery,
   setSearchQuery,
-  isSearchFocused,
   setIsSearchFocused,
   activeFilterChip,
   setActiveFilterChip,
-  customFilters,
-  onOpenCreateFilter,
-  onDeleteCustomFilter,
   runningServiceIds,
   filteredServices,
   allDbServicesCount,
@@ -142,6 +138,9 @@ export function SuperAppSidebar({
   serviceMessages,
   conversationByServiceId,
 }: SuperAppSidebarProps) {
+  // Guests and customers get the Figma sidebar; staff roles keep the WhatsApp-style header.
+  const [isSearchCollapsed, setIsSearchCollapsed] = useState(false);
+  const isStaffView = Boolean(activeRole && activeRole !== 'CUSTOMER');
   const bgSidebar = isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]';
 
   return (
@@ -149,7 +148,10 @@ export function SuperAppSidebar({
       className={`${
         mobileView === 'LIST' ? 'flex' : 'hidden md:flex'
       } flex-col w-full md:w-[380px] lg:w-[420px] border-r shrink-0 h-full relative z-10 ${bgSidebar}`}
+      // The Figma customer sidebar is set in Manrope; staff roles keep the system font.
+      style={isStaffView ? undefined : { fontFamily: 'var(--font-manrope), sans-serif' }}
     >
+      {isStaffView && (
       <SidebarHeader
         isDarkMode={isDarkMode}
         soundEnabled={soundEnabled}
@@ -163,6 +165,7 @@ export function SuperAppSidebar({
         userName={userName}
         onLogout={onLogout}
       />
+      )}
 
       {isProvider ? (
         /* Role: PROVIDER - Shows Assigned Job Orders & Dispatches */
@@ -207,20 +210,16 @@ export function SuperAppSidebar({
       ) : (
         /* Role: CUSTOMER / GUEST - Shows Services Catalog */
         <>
-          <SearchAndFilters
+          <CustomerSidebarTop
+            isAuthenticated={isAuthenticated}
+            onOpenAuth={() => onOpenAuth('LOGIN')}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            isSearchFocused={isSearchFocused}
             onSearchFocus={() => setIsSearchFocused(true)}
             onSearchBlur={() => setIsSearchFocused(false)}
             activeFilterChip={activeFilterChip}
             onSelectFilterChip={setActiveFilterChip}
-            customFilters={customFilters}
-            onOpenCreateFilter={onOpenCreateFilter}
-            onDeleteCustomFilter={onDeleteCustomFilter}
-            activeRole={activeRole}
-            runningCount={runningServiceIds.length}
-            isDarkMode={isDarkMode}
+            isSearchCollapsed={isSearchCollapsed}
           />
 
           <ServiceList
@@ -240,6 +239,7 @@ export function SuperAppSidebar({
             serviceMessages={serviceMessages}
             conversationByServiceId={conversationByServiceId}
             activeFilterChip={activeFilterChip}
+            onScrollIntent={(intent) => setIsSearchCollapsed(intent === 'collapse')}
             isDarkMode={isDarkMode}
           />
         </>

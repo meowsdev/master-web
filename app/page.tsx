@@ -34,25 +34,14 @@ export default function SuperAppPage() {
   const isProvider = Boolean(isAuthenticated && (activeRole === 'PROVIDER' || user?.role === 'PROVIDER'));
   const isCounselor = Boolean(isAuthenticated && (activeRole === 'COUNSELOR' || user?.role === 'COUNSELOR'));
 
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const t = localStorage.getItem('superapp_theme');
-    return t === 'dark' || (!t && Boolean(window.matchMedia?.('(prefers-color-scheme: dark)').matches));
-  });
+  // The app ships light-only for now; every component still receives the flag so a dark theme can return later.
+  const isDarkMode = false;
 
   const [soundEnabled, setSoundEnabled] = useState(() => {
     return typeof window !== 'undefined' ? localStorage.getItem('superapp_sound') !== 'false' : true;
   });
 
   const { playSound } = useSuperAppAudio(soundEnabled);
-
-  const toggleTheme = useCallback(() => {
-    setIsDarkMode((prev) => {
-      const next = !prev;
-      try { localStorage.setItem('superapp_theme', next ? 'dark' : 'light'); } catch {}
-      return next;
-    });
-  }, []);
 
   const toggleSound = useCallback(() => {
     setSoundEnabled((prev) => {
@@ -263,7 +252,6 @@ export default function SuperAppPage() {
         activeRailTab={activeRailTab}
         onSelectTab={setActiveRailTab}
         isDarkMode={isDarkMode}
-        onToggleTheme={toggleTheme}
         onOpenSettings={modals.openSettings}
         onOpenStatus={() => modals.setIsStatusViewerOpen(true)}
         onOpenOrders={modals.openOrders}
@@ -420,7 +408,6 @@ export default function SuperAppPage() {
         onCloseStatusViewer={() => modals.setIsStatusViewerOpen(false)}
         isSettingsDrawerOpen={modals.isSettingsDrawerOpen}
         onCloseSettings={() => modals.setIsSettingsDrawerOpen(false)}
-        onToggleTheme={toggleTheme}
         soundEnabled={soundEnabled}
         onToggleSound={toggleSound}
         onSwitchRole={setRole}

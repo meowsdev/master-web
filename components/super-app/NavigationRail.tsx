@@ -10,19 +10,17 @@ import {
   Sparkles,
   Star,
   Settings,
-  Sun,
-  Moon,
   Package,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { RailTab } from '@/types/super-app.types';
 import { User } from '@/types/auth.types';
+import { CustomerNavigationRail } from './CustomerNavigationRail';
 
 interface NavigationRailProps {
   activeRailTab: RailTab;
   onSelectTab: (tab: RailTab) => void;
   isDarkMode: boolean;
-  onToggleTheme: () => void;
   onOpenSettings: () => void;
   onOpenStatus: () => void;
   onOpenOrders?: () => void;
@@ -35,7 +33,6 @@ export function NavigationRail({
   activeRailTab,
   onSelectTab,
   isDarkMode,
-  onToggleTheme,
   onOpenSettings,
   onOpenStatus,
   onOpenOrders,
@@ -43,6 +40,20 @@ export function NavigationRail({
   activeRole,
   runningCount = 0,
 }: NavigationRailProps) {
+  // Guests and customers share the slim Figma rail; staff roles keep the full one.
+  const isCustomerView = !activeRole || activeRole === 'CUSTOMER';
+  if (isCustomerView) {
+    return (
+      <CustomerNavigationRail
+        onSelectTab={onSelectTab}
+        onOpenOrders={onOpenOrders}
+        onOpenSettings={onOpenSettings}
+        runningCount={runningCount}
+        accountTitle={user ? `${user.name} (${activeRole})` : 'Profile / Login'}
+      />
+    );
+  }
+
   const bgRail = isDarkMode ? 'bg-[#202c33] border-[#2f3b43]' : 'bg-[#f0f2f5] border-[#e9edef]';
   const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
 
@@ -153,15 +164,6 @@ export function NavigationRail({
 
       {/* Bottom Controls */}
       <div className="flex flex-col items-center gap-2.5 w-full">
-        {/* Theme Dark/Light Toggle */}
-        <button
-          onClick={onToggleTheme}
-          className={`w-10 h-10 rounded-full flex items-center justify-center ${textSecondary} hover:bg-black/5 dark:hover:bg-white/10 transition-all cursor-pointer`}
-          title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-        >
-          {isDarkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5" />}
-        </button>
-
         {/* My Orders / History Tab */}
         <button
           onClick={onOpenOrders}

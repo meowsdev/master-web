@@ -15,6 +15,15 @@ export interface ServiceCategory {
   updatedAt: string;
 }
 
+/** Provider preview computed by the backend for the customer chat list. */
+export interface ServiceProviderSummary {
+  providerCount: number;
+  /** Best-rated providers first, capped by the backend. */
+  providerNames: string[];
+  /** null while no assigned provider has been rated yet. */
+  averageRating: number | null;
+}
+
 export interface Service {
   id: string;
   categoryId: string;
@@ -28,6 +37,7 @@ export interface Service {
   durationMin?: number | null;
   isActive: boolean;
   category?: ServiceCategory;
+  providerSummary?: ServiceProviderSummary;
   createdAt: string;
   updatedAt: string;
 }
