@@ -1,21 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
-import {
-  X,
-  Phone,
-  Lock,
-  User as UserIcon,
-  Mail,
-  CheckCircle2,
-} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Lock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { authService, formatPhoneNumber } from '@/services/auth.service';
 import { useAuthStore } from '@/store/useAuthStore';
-import { UserRole } from '@/types/auth.types';
+import { User, UserRole } from '@/types/auth.types';
 import { useOtpCooldown } from '@/hooks/useOtpCooldown';
 import { parseOtpError } from '@/lib/otp-errors';
-import { OtpResendButton } from '@/components/modals/OtpResendButton';
+import { getPostAuthRedirectPath } from '@/lib/safe-redirect';
+import { AuthDrawerShell, AuthPrimaryButton, authLinkClass } from '@/components/modals/auth/AuthDrawerShell';
+import { AuthField } from '@/components/modals/auth/AuthField';
+import { PhoneNumberField } from '@/components/modals/auth/PhoneNumberField';
+import { CreateAccountForm, ProfileDraft, ProfileInitialValues } from '@/components/modals/auth/CreateAccountForm';
+import { AvatarPicker } from '@/components/modals/auth/AvatarPicker';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -24,46 +23,82 @@ interface AuthModalProps {
   isDarkMode: boolean;
 }
 
-export function AuthModal({
-  isOpen,
-  onClose,
-  isDarkMode,
-}: AuthModalProps) {
-  const { setAuth, setRole } = useAuthStore();
-  const [isTechLogin, setIsTechLogin] = useState(false);
-  const [step, setStep] = useState<'PHONE' | 'OTP' | 'PROFILE'>('PHONE');
+const getApiErrorMessage = (err: unknown, fallback: string): string => {
+  const message = (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
+  if (!message) return fallback;
+  return Array.isArray(message) ? message[0] : message;
+};
 
-  // Form Inputs
-  const [phone, setPhone] = useState('01711223344');
+/*
+ * The drawer lives in its own component so every open starts from a clean
+ * slate: no phone number, OTP state or profile left behind by whoever used the
+ * panel before (a previous user must never be visible to the next one).
+ */
+export function AuthModal({ isOpen, onClose }: AuthModalProps) {
+  if (!isOpen) return null;
+  return <AuthDrawer onClose={onClose} />;
+}
+
+function AuthDrawer({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const { setAuth, setRole, setUser, setPendingRegistration, pendingRegistrationUser } = useAuthStore();
+  // A number that already passed OTP but never finished sign-up (e.g. the page was reloaded).
+  const isSignUpPending = pendingRegistrationUser !== null;
+  const [isTechLogin, setIsTechLogin] = useState(false);
+  // Set once an already-registered number is verified: their details fill this same form in place.
+  const [returningUser, setReturningUser] = useState<User | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+
+  const [phone, setPhone] = useState(pendingRegistrationUser?.mobileNumber ?? '');
   const [otp, setOtp] = useState('');
   const [serverCode, setServerCode] = useState<string | null>(null);
   const [techPassword, setTechPassword] = useState('123456');
 
-  // Profile Setup Inputs
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.CUSTOMER);
+  // OTP progress: Save stays disabled until the code has been verified.
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(isSignUpPending);
 
-  const [loading, setLoading] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isTechLoggingIn, setIsTechLoggingIn] = useState(false);
   const otpCooldown = useOtpCooldown(formatPhoneNumber(phone));
 
-  if (!isOpen) return null;
+  const prefill = useMemo<ProfileInitialValues | null>(
+    () =>
+      returningUser && {
+        fullName: returningUser.name ?? '',
+        username: returningUser.username ?? '',
+        districtId: returningUser.districtId ?? null,
+        upazilaId: returningUser.upazilaId ?? null,
+      },
+    [returningUser],
+  );
 
-  const textPrimary = isDarkMode ? 'text-[#e9edef]' : 'text-[#111b21]';
-  const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
-  const inputBg = isDarkMode
-    ? 'bg-[#111b21] border-[#2f3b43] text-[#e9edef]'
-    : 'bg-[#f0f2f5] border-[#d1d7db] text-[#111b21]';
+  // After a finished sign-up/login: close the panel and go back to the page the
+  // visitor came from (`?next=`), or home.
+  const finishAndRedirect = () => {
+    onClose();
+    router.replace(getPostAuthRedirectPath());
+  };
 
-  // 1. Request OTP via Backend (also used by "Resend OTP")
+  // Changing the number invalidates any code sent to the previous one.
+  const handlePhoneChange = (value: string) => {
+    setPhone(value);
+    setOtp('');
+    setServerCode(null);
+    setIsOtpSent(false);
+  };
+
+  // 1. Request OTP via Backend
   const requestOtp = async () => {
-    // Guard against double clicks / Enter-key repeats while a request is open.
-    if (loading) return;
+    // Guard against double clicks while a request is open.
+    if (isSendingOtp) return;
     if (!phone.trim()) {
       toast.error('Please enter a valid mobile number');
       return;
     }
-    setLoading(true);
+    setIsSendingOtp(true);
     try {
       const res = await authService.requestOtp({ phoneNumber: phone });
       otpCooldown.startCooldown(res.retryAfterSeconds);
@@ -72,96 +107,82 @@ export function AuthModal({
         setOtp(res.code); // Auto-fill for convenience
       }
       toast.success(res.message || 'OTP sent successfully!');
-      setStep('OTP');
+      setIsOtpSent(true);
     } catch (err: unknown) {
       const parsed = parseOtpError(err);
       // Resync the countdown to the server's truth (e.g. after a page refresh).
       if (parsed.kind === 'COOLDOWN' && parsed.retryAfterSeconds !== undefined) {
         otpCooldown.startCooldown(parsed.retryAfterSeconds);
-        setStep('OTP');
+        setIsOtpSent(true);
       }
       toast.error(parsed.message);
     } finally {
-      setLoading(false);
+      setIsSendingOtp(false);
     }
   };
 
-  const handleSendOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    // A code was already sent to this number: go enter it instead of
-    // sending a request the server would refuse.
-    if (otpCooldown.isCoolingDown) {
-      setStep('OTP');
-      toast.info('A code was already sent to this number. Enter it below.');
-      return;
-    }
-    void requestOtp();
-  };
-
-  // 2. Verify OTP via Backend
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otp.trim()) {
-      toast.error('Please enter the verification code');
-      return;
-    }
-    setLoading(true);
+  // 2. Verify OTP via Backend (only when the user presses Verify, never on typing)
+  const verifyOtpCode = async (code: string) => {
+    if (isVerifyingOtp || isOtpVerified) return;
+    setIsVerifyingOtp(true);
     try {
-      const res = await authService.verifyOtp({ phoneNumber: phone, code: otp });
+      const res = await authService.verifyOtp({ phoneNumber: phone, code });
       // Tokens arrive as httpOnly cookies; only the user object is kept in JS.
-      setAuth(res.user);
+
+      setIsOtpVerified(true); // phone is now a locked, verified identity in both branches below
 
       // Strict single role constraint: A mobile number cannot have more than one role.
       if (res.user.name) {
+        setAuth(res.user);
         setRole(res.user.role);
         toast.success(`স্বাগতম, ${res.user.name}! (${res.user.role})`);
-        onClose();
+        // Already registered: their saved details fill this same panel in place.
+        setPhotoUrl(res.user.profilePhoto ?? null);
+        setReturningUser(res.user);
       } else {
-        // Brand new number: Proceed to complete profile and choose its single permanent role
-        setStep('PROFILE');
-        toast.info('নতুন একাউন্ট সম্পন্ন করতে নাম ও আপনার একমাত্র রোলটি নির্বাচন করুন।');
+        // Brand new number: NOT logged in yet. The app stays in guest mode and this
+        // panel can't be closed until the profile is saved.
+        setPendingRegistration(res.user);
+        toast.info('নম্বর যাচাই হয়েছে। বাকি তথ্য পূরণ করে Save করুন।');
       }
     } catch (err: unknown) {
       toast.error(parseOtpError(err).message);
     } finally {
-      setLoading(false);
+      setIsVerifyingOtp(false);
     }
   };
 
-  // 3. Complete Profile & Assign Single Permanent Role
-  const handleCompleteProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fullName.trim()) {
-      toast.error('Please enter your full name');
-      return;
-    }
-    setLoading(true);
+  // 3. Complete Profile (validated by the backend: unique username, real district/upazila pair)
+  const handleSave = async (profile: ProfileDraft) => {
+    setIsSaving(true);
     try {
       const updatedUser = await authService.completeProfile({
-        fullName: fullName.trim(),
-        email: email.trim() || undefined,
-        role: selectedRole,
+        ...profile,
+        profilePhoto: photoUrl ?? undefined,
+        // A role is only chosen when the account is first created.
+        ...(returningUser ? {} : { role: UserRole.CUSTOMER }),
       });
 
-      setRole(updatedUser.role);
-      toast.success(
-        `${updatedUser.role} হিসেবে সফলভাবে নিবন্ধিত হয়েছেন! এই নাম্বারের জন্য রোলটি স্থায়ীভাবে নির্ধারিত হয়েছে।`,
-      );
-      onClose();
+      if (returningUser) {
+        setUser(updatedUser);
+        toast.success('Profile updated successfully! ✨');
+      } else {
+        setAuth(updatedUser);
+        setRole(updatedUser.role);
+        toast.success('অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!');
+      }
+      finishAndRedirect();
     } catch (err: unknown) {
-      const errorMsg =
-        (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message ||
-        'Failed to complete profile';
-      toast.error(Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
+      toast.error(getApiErrorMessage(err, 'Failed to complete profile'));
     } finally {
-      setLoading(false);
+      setIsSaving(false);
     }
   };
 
   // Direct Technician Login with Password
   const handleTechnicianLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsTechLoggingIn(true);
     try {
       const res = await authService.technicianLogin({
         phoneNumber: phone,
@@ -170,294 +191,68 @@ export function AuthModal({
       setAuth(res.user, res.accessToken, res.refreshToken);
       setRole(UserRole.TECHNICIAN);
       toast.success(`Technician logged in: ${res.user.name || res.user.mobileNumber}`);
-      onClose();
+      finishAndRedirect();
     } catch (err: unknown) {
-      const errorMsg =
-        (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message ||
-        'Invalid technician credentials';
-      toast.error(Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
+      toast.error(getApiErrorMessage(err, 'Invalid technician credentials'));
     } finally {
-      setLoading(false);
+      setIsTechLoggingIn(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div
-        className={`w-full max-w-md rounded-3xl p-6 shadow-2xl border space-y-4 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto ${
-          isDarkMode ? 'bg-[#182229] border-[#2f3b43]' : 'bg-white border-[#e9edef]'
-        }`}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-black/5 dark:border-white/10">
-          <div>
-            <h3 className={`text-lg font-bold ${textPrimary}`}>
-              {step === 'PROFILE'
-                ? 'Complete Profile & Select Role'
-                : isTechLogin
-                ? 'Technician Login'
-                : 'Login with Phone Number'}
-            </h3>
-            <p className={`text-xs ${textSecondary}`}>
-              {step === 'PROFILE'
-                ? 'Choose your active role in the Super app ecosystem'
-                : isTechLogin
-                ? 'Enter technician mobile and credentials'
-                : 'Enter your phone number to login or register instantly'}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className={`p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 ${textSecondary} cursor-pointer`}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* STEP 1: Single Phone Entry (Unified for Customer/Provider/Counselor) */}
-        {step === 'PHONE' && !isTechLogin && (
-          <form onSubmit={handleSendOtp} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className={`text-xs font-bold ${textPrimary}`}>Mobile Number</label>
-              <div className="relative">
-                <Phone className="w-4 h-4 absolute left-3 top-3 text-[#54656f] dark:text-[#8696a0]" />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="017XXXXXXXX or +88017XXXXXXXX"
-                  required
-                  className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-sm outline-none ${inputBg} focus:ring-2 focus:ring-[#25D366]`}
-                />
-              </div>
-              <p className={`text-[11px] ${textSecondary}`}>
-                Enter any Bangladeshi mobile number (e.g. 01711223344)
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>{loading ? 'Sending OTP...' : 'Continue with OTP'}</span>
-            </button>
-
-            <div className="text-center pt-1">
-              <button
-                type="button"
-                onClick={() => setIsTechLogin(true)}
-                className="text-xs text-[#008069] dark:text-[#25D366] hover:underline font-semibold cursor-pointer"
-              >
-                Technician with password? Click here →
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* STEP 1 (TECH): Technician Password Login */}
-        {step === 'PHONE' && isTechLogin && (
-          <form onSubmit={handleTechnicianLogin} className="space-y-3.5">
-            <div className="space-y-1.5">
-              <label className={`text-xs font-bold ${textPrimary}`}>Technician Phone</label>
-              <div className="relative">
-                <Phone className="w-4 h-4 absolute left-3 top-3 text-[#54656f] dark:text-[#8696a0]" />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="017XXXXXXXX"
-                  required
-                  className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-sm outline-none ${inputBg} focus:ring-2 focus:ring-[#25D366]`}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className={`text-xs font-bold ${textPrimary}`}>Password</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3 top-3 text-[#54656f] dark:text-[#8696a0]" />
-                <input
-                  type="password"
-                  value={techPassword}
-                  onChange={(e) => setTechPassword(e.target.value)}
-                  placeholder="Password (default: 123456)"
-                  required
-                  className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-sm outline-none ${inputBg} focus:ring-2 focus:ring-[#25D366]`}
-                />
-              </div>
-              <p className={`text-[11px] ${textSecondary}`}>Default technician password: 123456</p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>{loading ? 'Logging in...' : 'Login as Technician'}</span>
-            </button>
-
-            <div className="text-center pt-1">
-              <button
-                type="button"
-                onClick={() => setIsTechLogin(false)}
-                className="text-xs text-[#008069] dark:text-[#25D366] hover:underline font-semibold cursor-pointer"
-              >
-                ← Back to Phone OTP Login
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* STEP 2: OTP Verification */}
-        {step === 'OTP' && (
-          <form onSubmit={handleVerifyOtp} className="space-y-4">
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className={`text-xs font-bold ${textPrimary}`}>Enter Verification Code</label>
-                <button
-                  type="button"
-                  onClick={() => setStep('PHONE')}
-                  className="text-xs text-[#008069] dark:text-[#25D366] hover:underline cursor-pointer"
-                >
-                  Change Phone
-                </button>
-              </div>
-
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3 top-3 text-[#54656f] dark:text-[#8696a0]" />
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="Enter 6-digit code"
-                  required
-                  autoFocus
-                  className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-sm outline-none tracking-widest font-mono ${inputBg} focus:ring-2 focus:ring-[#25D366]`}
-                />
-              </div>
-
-              {serverCode && (
-                <div
-                  onClick={() => setOtp(serverCode)}
-                  className="p-2 rounded-lg bg-[#d9fdd3] dark:bg-[#005c4b]/40 text-[#008069] dark:text-[#25D366] text-xs font-medium flex items-center justify-between cursor-pointer border border-[#25D366]/30"
-                  title="Click to auto-fill"
-                >
-                  <span>Backend Code: <strong>{serverCode}</strong></span>
-                  <span className="text-[11px] underline">Auto-fill</span>
-                </div>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>{loading ? 'Verifying...' : 'Verify OTP'}</span>
-            </button>
-
-            <OtpResendButton
-              secondsLeft={otpCooldown.secondsLeft}
-              isSending={loading}
-              onResend={() => void requestOtp()}
+    // No close button while a verified number is still unregistered: Save is the only way out.
+    <AuthDrawerShell
+      title={isTechLogin ? 'Technician Login' : returningUser ? 'Edit Profile' : 'Create Account'}
+      onClose={isSignUpPending ? undefined : returningUser ? finishAndRedirect : onClose}
+      blockOutside={isSignUpPending}
+      avatar={isTechLogin ? undefined : <AvatarPicker photoUrl={photoUrl} onChange={setPhotoUrl} />}
+    >
+      {isTechLogin ? (
+        <form onSubmit={handleTechnicianLogin} className="flex w-full flex-col items-center gap-[48px]">
+          <PhoneNumberField value={phone} onChange={setPhone} />
+          <div className="w-full space-y-[8px]">
+            <AuthField
+              icon={Lock}
+              type="password"
+              value={techPassword}
+              onChange={(e) => setTechPassword(e.target.value)}
+              placeholder="Password (default: 123456)"
+              required
             />
-          </form>
-        )}
-
-        {/* STEP 3: Profile Setup & Role Selection */}
-        {step === 'PROFILE' && (
-          <form onSubmit={handleCompleteProfile} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className={`text-xs font-bold ${textPrimary}`}>Full Name *</label>
-              <div className="relative">
-                <UserIcon className="w-4 h-4 absolute left-3 top-3 text-[#54656f] dark:text-[#8696a0]" />
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Alif Khan"
-                  required
-                  className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-sm outline-none ${inputBg} focus:ring-2 focus:ring-[#25D366]`}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className={`text-xs font-bold ${textPrimary}`}>Email Address</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-3 text-[#54656f] dark:text-[#8696a0]" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. alif@example.com"
-                  className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-sm outline-none ${inputBg} focus:ring-2 focus:ring-[#25D366]`}
-                />
-              </div>
-            </div>
-
-            {/* Single Role Policy Notice */}
-            <div
-              className={`p-2.5 rounded-xl border text-[11px] leading-relaxed space-y-1 ${
-                isDarkMode ? 'bg-[#202c33]/70 border-[#2f3b43] text-[#8696a0]' : 'bg-[#f0f2f5] border-[#e9edef] text-[#667781]'
-              }`}
-            >
-              <div className="flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-400">
-                <Lock className="w-3.5 h-3.5" />
-                <span>এক নাম্বারে একটি মাত্র রোল নির্ধারিত নীতি</span>
-              </div>
-              <p className="text-[10px]">
-                নির্বাচিত রোলটি এই ফোন নাম্বারের জন্য স্থায়ী হবে। পরবর্তীতে এই নাম্বারে অন্য কোনো রোল পরিবর্তন করা যাবে না।
-              </p>
-            </div>
-
-            {/* Role Selection */}
-            <div className="space-y-2">
-              <label className={`text-xs font-bold ${textPrimary}`}>Select Primary Role *</label>
-              <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto pr-1">
-                {[
-                  { role: UserRole.CUSTOMER, label: 'Customer', desc: 'Book on-demand services' },
-                  { role: UserRole.PROVIDER, label: 'Provider', desc: 'Accept job dispatches' },
-                  { role: UserRole.COUNSELOR, label: 'Counselor', desc: 'Advise customer inquiries' },
-                  { role: UserRole.TECHNICIAN, label: 'Technician', desc: 'Repair & maintenance' },
-                  { role: UserRole.ADMIN, label: 'Admin', desc: 'Platform governance' },
-                  { role: UserRole.MANAGER, label: 'Manager', desc: 'Operations oversight' },
-                  { role: UserRole.SUPPORT, label: 'Support', desc: 'Customer help desk' },
-                ].map(({ role, label, desc }) => {
-                  const isSelected = selectedRole === role;
-                  return (
-                    <div
-                      key={role}
-                      onClick={() => setSelectedRole(role)}
-                      className={`p-2.5 rounded-xl border cursor-pointer transition-all ${
-                        isSelected
-                          ? 'border-[#25D366] bg-[#d9fdd3] dark:bg-[#005c4b]/50 text-[#008069] dark:text-[#25D366]'
-                          : `border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 ${textSecondary}`
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-inherit">{label}</span>
-                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
-                      </div>
-                      <p className="text-[10px] opacity-75 mt-0.5 leading-tight">{desc}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || !fullName.trim()}
-              className="w-full py-3 bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>{loading ? 'Creating Profile...' : 'Complete & Enter Super app'}</span>
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
+            <p className="pl-[36px] text-[12px] font-medium text-[#697586]">Default technician password: 123456</p>
+          </div>
+          <AuthPrimaryButton disabled={isTechLoggingIn}>
+            {isTechLoggingIn ? 'Logging in...' : 'Login as Technician'}
+          </AuthPrimaryButton>
+          <button type="button" onClick={() => setIsTechLogin(false)} className={authLinkClass}>
+            ← Back to Phone OTP Login
+          </button>
+        </form>
+      ) : (
+        <CreateAccountForm
+          mode="create"
+          phone={phone}
+          onPhoneChange={handlePhoneChange}
+          prefill={prefill}
+          hasExtraChanges={photoUrl !== (returningUser?.profilePhoto ?? null)}
+          otp={{
+            value: otp,
+            onChange: setOtp,
+            canEnter: isOtpSent || otpCooldown.isCoolingDown,
+            isVerified: isOtpVerified,
+            isSending: isSendingOtp,
+            isVerifying: isVerifyingOtp,
+            secondsLeft: otpCooldown.secondsLeft,
+            onSend: () => void requestOtp(),
+            onVerify: () => void verifyOtpCode(otp),
+            serverCode,
+            onUseServerCode: () => serverCode && setOtp(serverCode),
+          }}
+          isSaving={isSaving}
+          onSave={(profile) => void handleSave(profile)}
+          onTechnicianLogin={isSignUpPending || returningUser ? undefined : () => setIsTechLogin(true)}
+        />
+      )}
+    </AuthDrawerShell>
   );
 }

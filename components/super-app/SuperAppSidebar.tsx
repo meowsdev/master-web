@@ -214,6 +214,8 @@ export function SuperAppSidebar({
           <CustomerSidebarTop
             isAuthenticated={isAuthenticated}
             onOpenAuth={() => onOpenAuth('LOGIN')}
+            onOpenOrders={onOpenOrders}
+            onOpenAccount={onOpenProfile}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onSearchFocus={() => setIsSearchFocused(true)}

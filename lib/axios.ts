@@ -54,7 +54,7 @@ apiClient.interceptors.response.use(
       !request._hasRetried &&
       !isExemptFromRefresh(request.url) &&
       // Guests have nothing to refresh; their 401s are just "please log in".
-      useAuthStore.getState().isAuthenticated;
+      (useAuthStore.getState().isAuthenticated || Boolean(useAuthStore.getState().pendingRegistrationUser));
 
     if (!shouldTryRefresh) return Promise.reject(error);
 

@@ -16,6 +16,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { Service } from '@/types/service.types';
+import { SIDE_PANEL_CLASS, SIDE_PANEL_OVERLAY_CLASS } from '@/components/modals/side-panel';
 
 interface ServiceDetailsDrawerProps {
   isOpen: boolean;
@@ -50,13 +51,10 @@ export function ServiceDetailsDrawer({
     : 'text-[#54656f] hover:text-[#111b21] hover:bg-black/5';
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-      {/* Click outside to close backdrop */}
-      <div className="absolute inset-0" onClick={onClose} aria-label="Close Service Details" />
-
+    <div className={SIDE_PANEL_OVERLAY_CLASS}>
       {/* Slide-in Drawer Container */}
       <aside
-        className={`relative z-10 w-full sm:w-[420px] h-full shadow-2xl border-l flex flex-col justify-between overflow-hidden animate-in slide-in-from-right duration-300 ease-out ${bgBody}`}
+        className={`relative z-10 ${SIDE_PANEL_CLASS} h-full shadow-2xl border-l flex flex-col justify-between overflow-hidden animate-in slide-in-from-right duration-300 ease-out ${bgBody}`}
       >
         {/* Top Header */}
         <div className={`h-[60px] border-b px-4 flex items-center justify-between shrink-0 ${bgHeader}`}>

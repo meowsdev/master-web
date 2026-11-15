@@ -42,7 +42,8 @@ function NewOrderContent() {
   const handleBooking = () => {
     if (!isAuthenticated) {
       toast.info('Please log in first to confirm your booking.');
-      router.push('/auth/login');
+      // Come back to this booking form once the visitor has signed in.
+      router.push(`/?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
       return;
     }
 

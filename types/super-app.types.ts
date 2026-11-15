@@ -53,6 +53,9 @@ export interface StatusStory {
 // Navigation Rail tab identifiers
 export type RailTab = 'CHATS' | 'PROVIDERS' | 'STATUS' | 'CHANNELS' | 'COMMUNITIES' | 'SETTINGS';
 
+/** What the rail marks as selected: a tab, or the right-hand panel that is currently open. */
+export type RailSelection = RailTab | 'ORDERS' | 'ACCOUNT';
+
 // Custom filter list structure for WhatsApp Web user-created lists
 export interface CustomFilterList {
   id: string;

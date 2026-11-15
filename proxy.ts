@@ -19,7 +19,9 @@ export function proxy(request: NextRequest) {
   if (hasSession) return NextResponse.next();
 
   // The login surface of this app is the main screen (AuthModal on `/`).
-  return NextResponse.redirect(new URL('/', request.url));
+  const loginUrl = new URL('/', request.url);
+  loginUrl.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search);
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {

@@ -8,6 +8,13 @@ interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
   activeRole: UserRole | null;
+  /**
+   * A number that passed OTP but has not finished sign-up (no name/username yet).
+   * The app still treats the visitor as a guest until they Save; this also lets
+   * the sign-up panel come back after a page reload.
+   */
+  pendingRegistrationUser: User | null;
+  setPendingRegistration: (user: User | null) => void;
   /** OTP sessions pass no tokens: they live in httpOnly cookies, out of JS reach. */
   setAuth: (user: User, accessToken?: string, refreshToken?: string) => void;
   /** Legacy (technician) sessions still keep their tokens client-side. */
@@ -25,9 +32,13 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       isAuthenticated: false,
       activeRole: null,
+      pendingRegistrationUser: null,
+
+      setPendingRegistration: (pendingRegistrationUser) => set({ pendingRegistrationUser }),
 
       setAuth: (user, accessToken, refreshToken) =>
         set({
+          pendingRegistrationUser: null,
           user,
           accessToken: accessToken ?? null,
           refreshToken: refreshToken ?? null,
@@ -49,6 +60,7 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: null,
           isAuthenticated: false,
           activeRole: null,
+          pendingRegistrationUser: null,
         }),
     }),
     {

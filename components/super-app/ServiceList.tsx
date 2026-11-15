@@ -229,7 +229,7 @@ export function ServiceList({
       </div>
 
       {/* Signed-in profile footer; guests log in through the header's "Join Now" */}
-      {isAuthenticated && (
+      {/* {isAuthenticated && (
         <div className="p-3 border-t flex items-center shrink-0 bg-[#f7f5f3] border-[#e5e5e5]">
           <div
             onClick={onOpenProfile}
@@ -249,7 +249,7 @@ export function ServiceList({
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

@@ -25,6 +25,9 @@ export interface User {
   id: string;
   mobileNumber: string;
   name?: string | null;
+  username?: string | null;
+  districtId?: number | null;
+  upazilaId?: number | null;
   email?: string | null;
   dateOfBirth?: string | null;
   profilePhoto?: string | null;
@@ -80,6 +83,9 @@ export interface TechnicianLoginDto {
 
 export interface CompleteProfileDto {
   fullName?: string;
+  username?: string;
+  districtId?: number | null;
+  upazilaId?: number | null;
   email?: string;
   profilePhoto?: string;
   role?: UserRole;

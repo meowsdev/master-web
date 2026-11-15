@@ -13,6 +13,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { SIDE_PANEL_CLASS, SIDE_PANEL_OVERLAY_CLASS } from '@/components/modals/side-panel';
 
 interface ProviderLevelingDrawerProps {
   isOpen: boolean;
@@ -65,8 +66,8 @@ export function ProviderLevelingDrawer({
     : 100;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-end animate-in fade-in duration-150">
-      <div className={`w-full max-w-md h-full flex flex-col shadow-2xl border-l select-none ${bgDrawer}`}>
+    <div className={SIDE_PANEL_OVERLAY_CLASS}>
+      <div className={`${SIDE_PANEL_CLASS} h-full flex flex-col shadow-2xl border-l select-none ${bgDrawer}`}>
         {/* Top Header */}
         <div className="h-[60px] px-4 flex items-center justify-between border-b border-black/5 dark:border-white/10 shrink-0">
           <div className="flex items-center gap-2.5">

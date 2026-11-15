@@ -216,6 +216,7 @@ export function SuperAppModals({
         user={user}
         onUserUpdated={onUserUpdated}
         isDarkMode={isDarkMode}
+        onLogout={onLogout}
       />
 
       <CreateFilterModal

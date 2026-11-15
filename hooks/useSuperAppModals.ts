@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { DHAKA_AREAS, PaymentMode } from '@/types/super-app.types';
 
 export function useSuperAppModals() {
@@ -36,18 +36,62 @@ export function useSuperAppModals() {
   const [isCreateCustomOrderModalOpen, setIsCreateCustomOrderModalOpen] = useState(false);
   const [isModifyPriceModalOpen, setIsModifyPriceModalOpen] = useState(false);
 
-  const openSettings = useCallback(() => setIsSettingsDrawerOpen(true), []);
-  const openOrders = useCallback(() => setIsOrdersDrawerOpen(true), []);
+  // AGENTS.md §9: only one right-hand panel is open at a time. Opening any of them
+  // closes the others, otherwise two panels would pile up on the same spot.
+  const closeSidePanels = useCallback(() => {
+    setIsAuthModalOpen(false);
+    setIsSettingsDrawerOpen(false);
+    setIsOrdersDrawerOpen(false);
+    setIsProfileEditorOpen(false);
+    setIsServiceDetailsOpen(false);
+    setIsTeamManagementOpen(false);
+    setIsLevelingDrawerOpen(false);
+  }, []);
+
+  const exclusive = useCallback(
+    (setPanelOpen: (isOpen: boolean) => void) => (isOpen: boolean) => {
+      if (isOpen) closeSidePanels();
+      setPanelOpen(isOpen);
+    },
+    [closeSidePanels],
+  );
+
+  const panelSetters = useMemo(
+    () => ({
+      setIsAuthModalOpen: exclusive(setIsAuthModalOpen),
+      setIsSettingsDrawerOpen: exclusive(setIsSettingsDrawerOpen),
+      setIsOrdersDrawerOpen: exclusive(setIsOrdersDrawerOpen),
+      setIsProfileEditorOpen: exclusive(setIsProfileEditorOpen),
+      setIsServiceDetailsOpen: exclusive(setIsServiceDetailsOpen),
+      setIsTeamManagementOpen: exclusive(setIsTeamManagementOpen),
+      setIsLevelingDrawerOpen: exclusive(setIsLevelingDrawerOpen),
+    }),
+    [exclusive],
+  );
+
+  const openSettings = useCallback(() => panelSetters.setIsSettingsDrawerOpen(true), [panelSetters]);
+  const openOrders = useCallback(() => panelSetters.setIsOrdersDrawerOpen(true), [panelSetters]);
   const openSkillsModal = useCallback(() => setIsSkillsModalOpen(true), []);
 
   const handleOpenAuth = useCallback((mode: 'LOGIN' | 'REGISTER' = 'LOGIN') => {
     setAuthInitialMode(mode);
-    setIsAuthModalOpen(true);
-  }, []);
+    panelSetters.setIsAuthModalOpen(true);
+  }, [panelSetters]);
+
+  const isAnySidePanelOpen =
+    isAuthModalOpen ||
+    isSettingsDrawerOpen ||
+    isOrdersDrawerOpen ||
+    isProfileEditorOpen ||
+    isServiceDetailsOpen ||
+    isTeamManagementOpen ||
+    isLevelingDrawerOpen;
 
   return {
+    closeSidePanels,
+    isAnySidePanelOpen,
     isAuthModalOpen,
-    setIsAuthModalOpen,
+    setIsAuthModalOpen: panelSetters.setIsAuthModalOpen,
     authInitialMode,
     handleOpenAuth,
     isBookingModalOpen,
@@ -65,22 +109,22 @@ export function useSuperAppModals() {
     isStatusViewerOpen,
     setIsStatusViewerOpen,
     isSettingsDrawerOpen,
-    setIsSettingsDrawerOpen,
+    setIsSettingsDrawerOpen: panelSetters.setIsSettingsDrawerOpen,
     openSettings,
     isOrdersDrawerOpen,
-    setIsOrdersDrawerOpen,
+    setIsOrdersDrawerOpen: panelSetters.setIsOrdersDrawerOpen,
     openOrders,
     isProfileEditorOpen,
-    setIsProfileEditorOpen,
+    setIsProfileEditorOpen: panelSetters.setIsProfileEditorOpen,
     isServiceDetailsOpen,
-    setIsServiceDetailsOpen,
+    setIsServiceDetailsOpen: panelSetters.setIsServiceDetailsOpen,
     isSkillsModalOpen,
     setIsSkillsModalOpen,
     openSkillsModal,
     isTeamManagementOpen,
-    setIsTeamManagementOpen,
+    setIsTeamManagementOpen: panelSetters.setIsTeamManagementOpen,
     isLevelingDrawerOpen,
-    setIsLevelingDrawerOpen,
+    setIsLevelingDrawerOpen: panelSetters.setIsLevelingDrawerOpen,
     isStartChatOpen,
     setIsStartChatOpen,
     isAddCustomerModalOpen,

@@ -28,6 +28,11 @@ export interface Service {
   id: string;
   categoryId: string;
   name: string;
+  /** Bengali title shown on the public service page. */
+  nameBn?: string | null;
+  imageUrl?: string | null;
+  /** Bullet list on the public service page ("Basic servicing", ...). */
+  features?: string[];
   description?: string | null;
   isFixedPrice: boolean;
   isPopular?: boolean;

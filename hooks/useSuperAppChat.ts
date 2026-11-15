@@ -30,6 +30,18 @@ export function useSuperAppChat({ playSound, userId }: UseSuperAppChatProps) {
     resetChatSession,
   } = useChatStorage({ userId });
 
+  // Whoever was signed in is gone (logout, expired session, other tab): drop the open
+  // chat so the welcome screen shows instead of the previous user's conversation.
+  // Adjusted during render so every logout path is covered, not just the Log out button.
+  const [lastSeenUserId, setLastSeenUserId] = useState(userId);
+  if (userId !== lastSeenUserId) {
+    setLastSeenUserId(userId);
+    if (!userId) {
+      setActiveServiceId(null);
+      setMobileView('LIST');
+    }
+  }
+
   // Auto-scroll chat to latest message
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

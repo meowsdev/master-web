@@ -88,3 +88,16 @@ body {
   border-bottom: 10px solid transparent;
   border-left: 10px solid #d9fdd3;
 }
+
+/* Sign-in panel entrance (components/modals/auth/AuthDrawerShell.tsx) */
+@keyframes auth-drawer-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.auth-drawer-slide-in {
+  animation: auth-drawer-slide-in 250ms ease-out;
+}

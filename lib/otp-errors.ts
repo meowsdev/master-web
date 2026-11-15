@@ -24,6 +24,9 @@ interface ErrorBody {
   attemptsLeft?: number;
 }
 
+/** Digits in the code the backend sends (OTP_LENGTH in master-backend's otp.util.ts). */
+export const OTP_LENGTH = 6;
+
 export function formatCountdown(totalSeconds: number): string {
   const safe = Math.max(0, Math.floor(totalSeconds));
   const minutes = String(Math.floor(safe / 60)).padStart(2, '0');

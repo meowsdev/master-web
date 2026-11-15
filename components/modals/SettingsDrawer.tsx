@@ -23,6 +23,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { UserRole, User } from '@/types/auth.types';
+import { SIDE_PANEL_CLASS, SIDE_PANEL_OVERLAY_CLASS } from '@/components/modals/side-panel';
 
 interface SettingsDrawerProps {
   isOpen: boolean;
@@ -103,13 +104,10 @@ export function SettingsDrawer({
   const RoleIcon = currentRoleInfo.icon;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      {/* Click outside backdrop */}
-      <div className="absolute inset-0" onClick={onClose} aria-label="Close Settings" />
-
+    <div className={SIDE_PANEL_OVERLAY_CLASS}>
       {/* Slide-in Drawer Container */}
       <div
-        className={`relative z-10 w-full max-w-sm h-full shadow-2xl border-l flex flex-col overflow-hidden animate-in slide-in-from-right duration-200 ${
+        className={`relative z-10 ${SIDE_PANEL_CLASS} h-full shadow-2xl border-l flex flex-col overflow-hidden animate-in slide-in-from-right duration-200 ${
           isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]'
         }`}
       >

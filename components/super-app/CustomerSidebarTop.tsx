@@ -1,12 +1,17 @@
 'use client';
 
 import Image from 'next/image';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useHorizontalScroll } from '@/hooks/useHorizontalScroll';
 import { FilterChip } from '@/types/super-app.types';
 
 
 interface CustomerSidebarTopProps {
   isAuthenticated: boolean;
   onOpenAuth: () => void;
+  /** Phones have no navigation rail, so signed-in customers reach these from the header. */
+  onOpenOrders?: () => void;
+  onOpenAccount?: () => void;
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onSearchFocus: () => void;
@@ -24,6 +29,8 @@ interface CustomerSidebarTopProps {
 export function CustomerSidebarTop({
   isAuthenticated,
   onOpenAuth,
+  onOpenOrders,
+  onOpenAccount,
   searchQuery,
   onSearchChange,
   onSearchFocus,
@@ -35,6 +42,11 @@ export function CustomerSidebarTop({
   isSearchCollapsed,
 }: CustomerSidebarTopProps) {
   const filterChips: FilterChip[] = ['All', ...categoryNames];
+  const { ref: chipRowRef, canScrollLeft, canScrollRight, scrollByAmount, wasDragged } =
+    useHorizontalScroll<HTMLDivElement>();
+
+  const arrowClass =
+    'absolute top-1/2 z-10 flex size-[28px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[#e5e5e5] bg-white text-[#202939] shadow-md transition-transform hover:scale-110';
   return (
     <div className={`flex shrink-0 flex-col px-[8px] pb-0 ${showBrandRow ? 'pt-[8px]' : 'pt-0'}`}>
       {showBrandRow && (
@@ -51,6 +63,16 @@ export function CustomerSidebarTop({
             >
               Join Now
             </button>
+          )}
+          {isAuthenticated && (
+            <div className="flex items-center gap-[8px] md:hidden">
+              <button type="button" onClick={onOpenOrders} title="My Orders & History" className="size-[36px] cursor-pointer">
+                <Image src="/rail/orders-inactive.svg" alt="My orders" width={36} height={36} />
+              </button>
+              <button type="button" onClick={onOpenAccount} title="Edit profile" className="size-[36px] cursor-pointer">
+                <Image src="/rail/account-inactive.svg" alt="Profile" width={36} height={36} />
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -78,24 +100,42 @@ export function CustomerSidebarTop({
         />
       </label>
 
-      <div className="no-scrollbar flex items-center gap-[8px] overflow-x-auto px-[16px] py-[12px]">
-        {filterChips.map((chip) => {
-          const isActive = activeFilterChip === chip;
-          return (
-            <button
-              key={chip}
-              type="button"
-              onClick={() => onSelectFilterChip(chip)}
-              className={`h-[36px] shrink-0 cursor-pointer rounded-[20px] border px-[12px] text-[16px] font-semibold ${
-                isActive
-                  ? 'border-[#bccdba] bg-[#d7fdd2] text-[#205737]'
-                  : 'border-[#cecece] text-[#697586]'
-              }`}
-            >
-              {chip}
-            </button>
-          );
-        })}
+      {/* Many categories overflow the row: wheel, drag and the arrows all scroll it sideways. */}
+      <div className="relative">
+        {canScrollLeft && (
+          <button type="button" aria-label="Scroll categories left" onClick={() => scrollByAmount(-160)} className={`${arrowClass} left-0`}>
+            <ChevronLeft className="size-[16px]" />
+          </button>
+        )}
+        <div
+          ref={chipRowRef}
+          className="no-scrollbar flex cursor-grab select-none items-center gap-[8px] overflow-x-auto px-[16px] py-[12px] active:cursor-grabbing"
+        >
+          {filterChips.map((chip) => {
+            const isActive = activeFilterChip === chip;
+            return (
+              <button
+                key={chip}
+                type="button"
+                onClick={() => {
+                  if (!wasDragged()) onSelectFilterChip(chip);
+                }}
+                className={`h-[36px] shrink-0 cursor-pointer rounded-[20px] border px-[12px] text-[16px] font-semibold ${
+                  isActive
+                    ? 'border-[#bccdba] bg-[#d7fdd2] text-[#205737]'
+                    : 'border-[#cecece] text-[#697586]'
+                }`}
+              >
+                {chip}
+              </button>
+            );
+          })}
+        </div>
+        {canScrollRight && (
+          <button type="button" aria-label="Scroll categories right" onClick={() => scrollByAmount(160)} className={`${arrowClass} right-0`}>
+            <ChevronRight className="size-[16px]" />
+          </button>
+        )}
       </div>
         </div>
         </div>

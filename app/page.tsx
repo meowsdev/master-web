@@ -17,11 +17,13 @@ import { useProviderOrders } from '@/hooks/useProviderOrders';
 import { useOrderNegotiation } from '@/hooks/useOrderNegotiation';
 import { useCounselorWorkspace } from '@/hooks/useCounselorWorkspace';
 import { useSuperAppModals } from '@/hooks/useSuperAppModals';
+import { useGuestServicePreview } from '@/hooks/useGuestServicePreview';
 
 // Super App UI Components
 import { NavigationRail } from '@/components/super-app/NavigationRail';
 import { SuperAppSidebar } from '@/components/super-app/SuperAppSidebar';
 import { MainCanvasArea } from '@/components/super-app/MainCanvasArea';
+import { ServicePreviewPanel } from '@/components/modals/ServicePreviewPanel';
 import { SuperAppModals } from '@/components/super-app/SuperAppModals';
 import { AddCustomerModal, CreateCustomOrderModal, ModifyPriceModal } from '@/components/modals/CounselorActionModals';
 
@@ -30,7 +32,7 @@ const emptySubscribe = () => () => {};
 export default function SuperAppPage() {
   const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const queryClient = useQueryClient();
-  const { user, isAuthenticated, activeRole, setRole, setUser } = useAuthStore();
+  const { user, isAuthenticated, activeRole, setRole, setUser, pendingRegistrationUser } = useAuthStore();
 
   const isProvider = Boolean(isAuthenticated && (activeRole === 'PROVIDER' || user?.role === 'PROVIDER'));
   const isCounselor = Boolean(isAuthenticated && (activeRole === 'COUNSELOR' || user?.role === 'COUNSELOR'));
@@ -224,6 +226,17 @@ export default function SuperAppPage() {
     [handleSelectService, conversationByServiceId, queryClient, user?.id]
   );
 
+  // Logged-out visitors see a service's public page; Contact Now leads through login to its chat.
+  const { previewService, openPreview, closePreview, handleContactNow, cancelContact } = useGuestServicePreview({
+    isAuthenticated,
+    onOpenAuth: () => modals.handleOpenAuth('LOGIN'),
+    onOpenChat: (service) => {
+      // They came to contact this service: skip the profile panel and land in its chat.
+      modals.setIsAuthModalOpen(false);
+      handleSelectServiceWithReadSync(service);
+    },
+  });
+
   const handleOpenBooking = () => {
     if (!isAuthenticated) {
       toast.info('Please log in with your phone number to book services.');
@@ -252,10 +265,12 @@ export default function SuperAppPage() {
     <div className={`flex h-screen w-screen overflow-hidden font-sans ${bgMain}`}>
       {/* 1. Far-Left Navigation Rail (60px) */}
       <NavigationRail
-        activeRailTab={activeRailTab}
-        onSelectTab={setActiveRailTab}
+        activeRailTab={modals.isOrdersDrawerOpen ? 'ORDERS' : modals.isProfileEditorOpen || modals.isAuthModalOpen || pendingRegistrationUser ? 'ACCOUNT' : activeRailTab}
+        onSelectTab={(tab) => { setActiveRailTab(tab); if (tab === 'CHATS') modals.closeSidePanels(); }}
         isDarkMode={isDarkMode}
         onOpenSettings={modals.openSettings}
+        onOpenProfile={() => modals.setIsProfileEditorOpen(true)}
+        onOpenAuth={() => modals.handleOpenAuth('LOGIN')}
         onOpenStatus={() => modals.setIsStatusViewerOpen(true)}
         onOpenOrders={modals.openOrders}
         user={user}
@@ -326,7 +341,7 @@ export default function SuperAppPage() {
         allDbServicesCount={dbServices.length}
         isServicesLoading={isServicesLoading}
         activeServiceId={activeServiceId}
-        onSelectService={handleSelectServiceWithReadSync}
+        onSelectService={(service) => { if (isAuthenticated) return handleSelectServiceWithReadSync(service); modals.closeSidePanels(); openPreview(service); }}
         serviceMessages={serviceMessages}
         conversationByServiceId={conversationByServiceId}
       />
@@ -400,8 +415,8 @@ export default function SuperAppPage() {
         bookingPaymentMode={modals.bookingPaymentMode}
         onPaymentModeChange={modals.setBookingPaymentMode}
         onConfirmBooking={() => handleConfirmBooking(activeService, modals.bookingAddress, modals.bookingTime, modals.bookingPaymentMode, isAuthenticated, modals.handleOpenAuth, () => modals.setIsBookingModalOpen(false))}
-        isAuthModalOpen={modals.isAuthModalOpen}
-        onCloseAuth={() => modals.setIsAuthModalOpen(false)}
+        isAuthModalOpen={modals.isAuthModalOpen || Boolean(pendingRegistrationUser)}
+        onCloseAuth={() => { modals.setIsAuthModalOpen(false); cancelContact(); }}
         authInitialMode={modals.authInitialMode}
         onOpenAuth={modals.handleOpenAuth}
         isCallingModalOpen={modals.isCallingModalOpen}
@@ -454,6 +469,10 @@ export default function SuperAppPage() {
         onSubmit={handleCreateManualLead}
         isDarkMode={isDarkMode}
       />
+
+      {!isAuthenticated && (
+        <ServicePreviewPanel service={modals.isAnySidePanelOpen || pendingRegistrationUser ? null : previewService} onClose={closePreview} onContact={handleContactNow} />
+      )}
 
       {activeCounselorChat && (
         <>

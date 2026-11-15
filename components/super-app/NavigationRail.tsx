@@ -13,15 +13,18 @@ import {
   Package,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { RailTab } from '@/types/super-app.types';
+import { RailSelection, RailTab } from '@/types/super-app.types';
 import { User } from '@/types/auth.types';
 import { CustomerNavigationRail } from './CustomerNavigationRail';
 
 interface NavigationRailProps {
-  activeRailTab: RailTab;
+  /** The selected tab, or ORDERS / ACCOUNT while that right-hand panel is open. */
+  activeRailTab: RailSelection;
   onSelectTab: (tab: RailTab) => void;
   isDarkMode: boolean;
   onOpenSettings: () => void;
+  onOpenProfile: () => void;
+  onOpenAuth: () => void;
   onOpenStatus: () => void;
   onOpenOrders?: () => void;
   user: User | null;
@@ -34,6 +37,8 @@ export function NavigationRail({
   onSelectTab,
   isDarkMode,
   onOpenSettings,
+  onOpenProfile,
+  onOpenAuth,
   onOpenStatus,
   onOpenOrders,
   user,
@@ -46,9 +51,10 @@ export function NavigationRail({
     return (
       <CustomerNavigationRail
         isAuthenticated={Boolean(user)}
+        selection={activeRailTab}
         onSelectTab={onSelectTab}
         onOpenOrders={onOpenOrders}
-        onOpenSettings={onOpenSettings}
+        onOpenAccount={user ? onOpenProfile : onOpenAuth}
         runningCount={runningCount}
         accountTitle={user ? `${user.name} (${activeRole})` : 'Profile / Login'}
       />
@@ -133,7 +139,7 @@ export function NavigationRail({
 
       {/* Bottom Controls */}
       <div className="flex flex-col items-center gap-[8px]">
-        <button onClick={onOpenOrders} className={railButtonClass(false)} title="My Orders & History">
+        <button onClick={onOpenOrders} className={railButtonClass(activeRailTab === 'ORDERS')} title="My Orders & History">
           <Package className="w-5 h-5" />
           {runningCount > 0 && <span className={statusDotClass} />}
         </button>
@@ -153,8 +159,10 @@ export function NavigationRail({
 
         {/* Profile Avatar */}
         <button
-          onClick={onOpenSettings}
-          className="relative flex size-[36px] cursor-pointer items-center justify-center overflow-hidden rounded-full bg-white transition-all hover:ring-2 hover:ring-[#1daa61]"
+          onClick={user ? onOpenProfile : onOpenAuth}
+          className={`relative flex size-[36px] cursor-pointer items-center justify-center overflow-hidden rounded-full transition-all hover:ring-2 hover:ring-[#1daa61] ${
+            activeRailTab === 'ACCOUNT' ? 'bg-[#d7fdd2]' : 'bg-white'
+          }`}
           title={user ? `${user.name} (${activeRole})` : 'Profile / Login'}
         >
           {user?.profilePhoto ? (

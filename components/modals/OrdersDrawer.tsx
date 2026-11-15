@@ -18,6 +18,7 @@ import { revisionService } from '@/services/revision.service';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Order, OrderStatus } from '@/types/order.types';
 import { OrderRevisionModal } from './OrderRevisionModal';
+import { SIDE_PANEL_CLASS, SIDE_PANEL_OVERLAY_CLASS } from '@/components/modals/side-panel';
 
 interface OrdersDrawerProps {
   isOpen: boolean;
@@ -157,13 +158,10 @@ export function OrdersDrawer({
   ).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      {/* Click outside to close backdrop */}
-      <div className="absolute inset-0" onClick={onClose} aria-label="Close Orders Drawer" />
-
+    <div className={SIDE_PANEL_OVERLAY_CLASS}>
       {/* Slide-in WhatsApp Drawer Container */}
       <div
-        className={`relative z-10 w-full max-w-md h-full shadow-2xl border-l flex flex-col overflow-hidden animate-in slide-in-from-right duration-200 ${
+        className={`relative z-10 ${SIDE_PANEL_CLASS} h-full shadow-2xl border-l flex flex-col overflow-hidden animate-in slide-in-from-right duration-200 ${
           isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]'
         }`}
       >
