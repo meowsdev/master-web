@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Package } from 'lucide-react';
 import { GuestWelcome } from './GuestWelcome';
 import { User } from '@/types/auth.types';
@@ -16,6 +17,39 @@ interface WelcomeScreenProps {
   isDarkMode: boolean;
 }
 
+const ADMIN_DESCRIPTION =
+  'You are active with Administrative privileges for platform governance, audits and monitoring.';
+
+const ROLE_DESCRIPTIONS: Record<string, string> = {
+  PROVIDER: 'You are active as a Service Provider. Ready to manage service dispatches and job orders.',
+  COUNSELOR: 'You are active as a Dedicated Counselor. Ready to consult incoming customer inquiries.',
+  TECHNICIAN: 'You are active as a Field Technician. Ready for assigned repair tasks and customer location routing.',
+  ADMIN: ADMIN_DESCRIPTION,
+  MANAGER: ADMIN_DESCRIPTION,
+  SUPPORT: 'You are active as Support Staff. Ready to resolve customer disputes and service questions.',
+};
+const CUSTOMER_DESCRIPTION =
+  'You are logged in as a Customer and ready to consult counselors and book on-demand services.';
+
+const QUICK_STEPS = [
+  { icon: '💬', title: '1. Choose Service', text: 'Pick any service from the left list to open its chat window.' },
+  {
+    icon: '🛠️',
+    title: '2. Direct In-Chat Booking',
+    text: 'Click [Book Service] to select Dhaka address and schedule dispatch.',
+  },
+  {
+    icon: '📞',
+    title: '3. Live Consultation',
+    text: 'Talk directly with technician counselors via audio or video call.',
+  },
+];
+
+/*
+ * Signed-in landing canvas. Uses the same Figma surface as the guest view
+ * (#f7f5f3 canvas, white bordered 12px cards, #1daa61 actions); guests get GuestWelcome.
+ * Only the look changed: copy, role descriptions and button handlers are as before.
+ */
 export function WelcomeScreen({
   isAuthenticated,
   user,
@@ -24,138 +58,72 @@ export function WelcomeScreen({
   onOpenSettings,
   onOpenOrders,
   onLogout,
-  isDarkMode,
 }: WelcomeScreenProps) {
   if (!isAuthenticated) return <GuestWelcome onOpenAuth={onOpenAuth} />;
 
-  const textPrimary = isDarkMode ? 'text-[#e9edef]' : 'text-[#111b21]';
-  const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
+  const roleDescription = (activeRole && ROLE_DESCRIPTIONS[activeRole]) || CUSTOMER_DESCRIPTION;
+  const cardClass = 'rounded-[12px] border border-[#e5e5e5] bg-white';
 
   return (
-    <div
-      className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 overflow-y-auto relative whatsapp-wallpaper"
-      style={{
-        backgroundColor: isDarkMode ? '#0b141a' : '#efeae2',
-      }}
-    >
-      {/* WhatsApp Web Signature Bottom Green Accent Bar */}
-      <div className="h-2 w-full bg-[#25D366] absolute bottom-0 left-0" />
-
-      <div className="max-w-xl w-full text-center space-y-7 animate-in fade-in duration-300 relative z-10 py-6">
-        {/* App Brand Header */}
-        <div className="space-y-3">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#075E54] via-[#008069] to-[#25D366] text-white flex items-center justify-center font-black text-3xl mx-auto shadow-2xl shadow-[#25D366]/40 ring-4 ring-[#25D366]/20">
-            S
-          </div>
-          <h2 className={`text-3xl md:text-4xl font-extrabold tracking-tight ${textPrimary}`}>
-            Welcome to <span className="text-[#008069] dark:text-[#25D366]">Super app</span>
+    <div className="flex min-w-0 flex-1 flex-col overflow-auto bg-[#f7f5f3]">
+      <div className="m-auto flex w-full max-w-[640px] flex-col items-center gap-[24px] px-[24px] py-[48px] text-center">
+        <div className="space-y-[12px]">
+          <Image src="/chat-list/brand-logo.svg" alt="" width={64} height={64} className="mx-auto" />
+          <h2 className="text-[32px] font-semibold tracking-[-0.64px] text-[#202939]">
+            Welcome to <span className="text-[#1daa61]">Super app</span>
           </h2>
-          <p className={`text-sm md:text-base leading-relaxed max-w-md mx-auto ${textSecondary}`}>
+          <p className="mx-auto max-w-[480px] text-[16px] font-medium leading-relaxed text-[#697586]">
             Your instant technician messaging and on-demand home service platform. Select any service from the left list to start live chatting with verified counselors.
           </p>
         </div>
 
-        {/* Login & Registration Card */}
-        <div
-          className={`p-6 rounded-3xl border shadow-xl backdrop-blur-xs ${
-            isDarkMode ? 'bg-[#182229]/95 border-[#2f3b43]' : 'bg-white/95 border-[#e9edef]'
-          }`}
-        >
-          <div className="space-y-4">
-            <div className="flex items-center justify-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#008069] text-white flex items-center justify-center text-lg font-bold shadow-md shadow-[#008069]/30">
-                {user?.name ? user.name[0].toUpperCase() : 'U'}
-              </div>
-              <div className="text-left">
-                <h4 className={`text-base font-bold ${textPrimary}`}>{user?.name}</h4>
-                <p className={`text-xs ${textSecondary}`}>{user?.mobileNumber}</p>
-                <span
-                  className={`inline-block mt-0.5 text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
-                    isDarkMode
-                      ? 'bg-[#005c4b] text-white'
-                      : 'bg-[#e7fce3] text-[#075E54] border border-[#25D366]/30'
-                  }`}
-                >
-                  Role: {activeRole || 'CUSTOMER'}
-                </span>
-              </div>
+        <div className={`${cardClass} w-full space-y-[16px] p-[24px]`}>
+          <div className="flex items-center justify-center gap-[12px]">
+            <div className="flex size-[48px] items-center justify-center rounded-full bg-[#1daa61] text-[18px] font-bold text-white">
+              {user?.name ? user.name[0].toUpperCase() : 'U'}
             </div>
-
-            <p className={`text-xs ${textSecondary}`}>
-              {activeRole === 'PROVIDER'
-                ? 'You are active as a Service Provider. Ready to manage service dispatches and job orders.'
-                : activeRole === 'COUNSELOR'
-                ? 'You are active as a Dedicated Counselor. Ready to consult incoming customer inquiries.'
-                : activeRole === 'TECHNICIAN'
-                ? 'You are active as a Field Technician. Ready for assigned repair tasks and customer location routing.'
-                : activeRole === 'ADMIN' || activeRole === 'MANAGER'
-                ? 'You are active with Administrative privileges for platform governance, audits and monitoring.'
-                : activeRole === 'SUPPORT'
-                ? 'You are active as Support Staff. Ready to resolve customer disputes and service questions.'
-                : 'You are logged in as a Customer and ready to consult counselors and book on-demand services.'}
-            </p>
-
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <button
-                onClick={onOpenOrders}
-                className="px-4 py-2 bg-[#008069] dark:bg-[#005c4b] hover:bg-[#00705c] text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
-              >
-                <Package className="w-3.5 h-3.5" />
-                <span>My Orders</span>
-              </button>
-              <button
-                onClick={onOpenSettings}
-                className="px-4 py-2 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-[#25D366]/20"
-              >
-                Switch Role / Settings
-              </button>
-              <button
-                onClick={onLogout}
-                className="px-4 py-2 bg-rose-500/10 text-rose-500 text-xs font-bold rounded-xl transition-all hover:bg-rose-500/20 cursor-pointer"
-              >
-                Log out
-              </button>
+            <div className="text-left">
+              <h4 className="text-[18px] font-semibold tracking-[-0.36px] text-[#202939]">{user?.name}</h4>
+              <p className="text-[14px] font-medium text-[#697586]">{user?.mobileNumber}</p>
+              <span className="mt-[2px] inline-block rounded-[6px] border border-[#bccdba] bg-[#d7fdd2] px-[8px] py-[2px] text-[10px] font-bold uppercase text-[#205737]">
+                Role: {activeRole || 'CUSTOMER'}
+              </span>
             </div>
+          </div>
+
+          <p className="text-[14px] font-medium text-[#697586]">{roleDescription}</p>
+
+          <div className="flex flex-wrap items-center justify-center gap-[12px] pt-[4px]">
+            <button
+              onClick={onOpenOrders}
+              className="flex cursor-pointer items-center gap-[6px] rounded-[12px] bg-[#1daa61] px-[16px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452]"
+            >
+              <Package className="h-4 w-4" />
+              <span>My Orders</span>
+            </button>
+            <button
+              onClick={onOpenSettings}
+              className="cursor-pointer rounded-[12px] border border-[#1daa61] bg-white px-[16px] py-[8px] text-[14px] font-semibold text-[#1daa61] transition-colors hover:bg-[#f0fbf4]"
+            >
+              Switch Role / Settings
+            </button>
+            <button
+              onClick={onLogout}
+              className="cursor-pointer rounded-[12px] border border-[#f1c8c8] bg-[#fff3f3] px-[16px] py-[8px] text-[14px] font-semibold text-[#d64545] transition-colors hover:bg-[#ffe6e6]"
+            >
+              Log out
+            </button>
           </div>
         </div>
 
-        {/* Quick Instructions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-left">
-          <div
-            className={`p-4 rounded-2xl border transition-all ${
-              isDarkMode ? 'bg-[#182229]/60 border-[#2f3b43]' : 'bg-white/80 border-[#e9edef]'
-            }`}
-          >
-            <div className="text-xl mb-1.5">💬</div>
-            <h4 className={`text-xs font-bold ${textPrimary}`}>1. Choose Service</h4>
-            <p className={`text-[11px] mt-1 ${textSecondary}`}>
-              Pick any service from the left list to open its chat window.
-            </p>
-          </div>
-
-          <div
-            className={`p-4 rounded-2xl border transition-all ${
-              isDarkMode ? 'bg-[#182229]/60 border-[#2f3b43]' : 'bg-white/80 border-[#e9edef]'
-            }`}
-          >
-            <div className="text-xl mb-1.5">🛠️</div>
-            <h4 className={`text-xs font-bold ${textPrimary}`}>2. Direct In-Chat Booking</h4>
-            <p className={`text-[11px] mt-1 ${textSecondary}`}>
-              Click [Book Service] to select Dhaka address and schedule dispatch.
-            </p>
-          </div>
-
-          <div
-            className={`p-4 rounded-2xl border transition-all ${
-              isDarkMode ? 'bg-[#182229]/60 border-[#2f3b43]' : 'bg-white/80 border-[#e9edef]'
-            }`}
-          >
-            <div className="text-xl mb-1.5">📞</div>
-            <h4 className={`text-xs font-bold ${textPrimary}`}>3. Live Consultation</h4>
-            <p className={`text-[11px] mt-1 ${textSecondary}`}>
-              Talk directly with technician counselors via audio or video call.
-            </p>
-          </div>
+        <div className="grid w-full grid-cols-1 gap-[12px] text-left md:grid-cols-3">
+          {QUICK_STEPS.map((step) => (
+            <div key={step.title} className={`${cardClass} p-[16px]`}>
+              <div className="mb-[6px] text-[20px]">{step.icon}</div>
+              <h4 className="text-[14px] font-semibold tracking-[-0.28px] text-[#202939]">{step.title}</h4>
+              <p className="mt-[4px] text-[12px] font-medium text-[#697586]">{step.text}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

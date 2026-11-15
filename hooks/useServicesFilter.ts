@@ -200,6 +200,9 @@ export function useServicesFilter({
       );
       if (custom) {
         list = list.filter((s) => custom.serviceIds.includes(s.id));
+      } else {
+        // Customer category chips (Appliances, Digital, ...) filter by category name
+        list = list.filter((s) => s.category?.name === activeFilterChip);
       }
     }
 
@@ -240,8 +243,18 @@ export function useServicesFilter({
     conversationByServiceId,
   ]);
 
+  // Distinct category names in first-seen order (the backend already sorts popular services first)
+  const categoryNames = useMemo(() => {
+    const names = new Set<string>();
+    dbServices.forEach((service) => {
+      if (service.category?.name) names.add(service.category.name);
+    });
+    return [...names];
+  }, [dbServices]);
+
   return {
     dbServices,
+    categoryNames,
     isServicesLoading,
     searchQuery,
     setSearchQuery,

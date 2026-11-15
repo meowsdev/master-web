@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { RailTab } from '@/types/super-app.types';
 
 interface CustomerNavigationRailProps {
+  isAuthenticated: boolean;
   onSelectTab: (tab: RailTab) => void;
   onOpenOrders?: () => void;
   onOpenSettings: () => void;
@@ -18,6 +19,7 @@ interface CustomerNavigationRailProps {
  * background styling is applied here.
  */
 export function CustomerNavigationRail({
+  isAuthenticated,
   onSelectTab,
   onOpenOrders,
   onOpenSettings,
@@ -39,11 +41,13 @@ export function CustomerNavigationRail({
         <button
           type="button"
           onClick={onOpenOrders}
-          title="My Orders & History"
-          className="relative size-[36px] cursor-pointer"
+          disabled={!isAuthenticated}
+          title={isAuthenticated ? 'My Orders & History' : 'Log in to view your orders'}
+          // UI hint only; the orders API itself rejects unauthenticated requests.
+          className="relative size-[36px] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Image src="/rail/orders.svg" alt="My orders" width={36} height={36} />
-          {runningCount > 0 && (
+          {isAuthenticated && runningCount > 0 && (
             <span className="absolute right-0 top-0 size-[10px] rounded-full bg-[#1daa61] ring-2 ring-[#f7f5f3]" />
           )}
         </button>

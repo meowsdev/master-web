@@ -72,6 +72,7 @@ interface SuperAppSidebarProps {
   onDeleteCustomFilter: (f: string) => void;
   runningServiceIds: string[];
   filteredServices: Service[];
+  categoryNames: string[];
   allDbServicesCount: number;
   isServicesLoading: boolean;
   activeServiceId: string | null;
@@ -131,6 +132,7 @@ export function SuperAppSidebar({
   setActiveFilterChip,
   runningServiceIds,
   filteredServices,
+  categoryNames,
   allDbServicesCount,
   isServicesLoading,
   activeServiceId,
@@ -138,7 +140,7 @@ export function SuperAppSidebar({
   serviceMessages,
   conversationByServiceId,
 }: SuperAppSidebarProps) {
-  // Guests and customers get the Figma sidebar; staff roles keep the WhatsApp-style header.
+  // Staff roles keep the options-menu header (restyled to Figma); guests/customers get the Join Now header.
   const [isSearchCollapsed, setIsSearchCollapsed] = useState(false);
   const isStaffView = Boolean(activeRole && activeRole !== 'CUSTOMER');
   const bgSidebar = isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]';
@@ -148,8 +150,7 @@ export function SuperAppSidebar({
       className={`${
         mobileView === 'LIST' ? 'flex' : 'hidden md:flex'
       } flex-col w-full md:w-[380px] lg:w-[420px] border-r shrink-0 h-full relative z-10 ${bgSidebar}`}
-      // The Figma customer sidebar is set in Manrope; staff roles keep the system font.
-      style={isStaffView ? undefined : { fontFamily: 'var(--font-manrope), sans-serif' }}
+      style={{ fontFamily: 'var(--font-manrope), sans-serif' }}
     >
       {isStaffView && (
       <SidebarHeader
@@ -219,6 +220,8 @@ export function SuperAppSidebar({
             onSearchBlur={() => setIsSearchFocused(false)}
             activeFilterChip={activeFilterChip}
             onSelectFilterChip={setActiveFilterChip}
+            categoryNames={categoryNames}
+            showBrandRow={!isStaffView}
             isSearchCollapsed={isSearchCollapsed}
           />
 

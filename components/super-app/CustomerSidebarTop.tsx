@@ -3,8 +3,6 @@
 import Image from 'next/image';
 import { FilterChip } from '@/types/super-app.types';
 
-// Customers only get the chips that map to real, backend-backed lists.
-const CUSTOMER_FILTER_CHIPS: FilterChip[] = ['All', 'Running', 'Unread', 'Save'];
 
 interface CustomerSidebarTopProps {
   isAuthenticated: boolean;
@@ -15,6 +13,10 @@ interface CustomerSidebarTopProps {
   onSearchBlur: () => void;
   activeFilterChip: FilterChip;
   onSelectFilterChip: (chip: FilterChip) => void;
+  /** Service categories from the backend, shown as chips after "All" like the Figma design. */
+  categoryNames: string[];
+  /** False when the options-menu header (staff roles) already renders the brand row. */
+  showBrandRow?: boolean;
   isSearchCollapsed: boolean;
 }
 
@@ -28,25 +30,30 @@ export function CustomerSidebarTop({
   onSearchBlur,
   activeFilterChip,
   onSelectFilterChip,
+  categoryNames,
+  showBrandRow = true,
   isSearchCollapsed,
 }: CustomerSidebarTopProps) {
+  const filterChips: FilterChip[] = ['All', ...categoryNames];
   return (
-    <div className="flex shrink-0 flex-col p-[8px] pb-0">
-      <div className="flex h-[50px] items-center justify-between">
-        <div className="flex items-center gap-[8px]">
-          <Image src="/chat-list/brand-logo.svg" alt="" width={36} height={36} />
-          <span className="text-[18px] font-semibold tracking-[-0.36px] text-[#202939]">SupeerApp</span>
+    <div className={`flex shrink-0 flex-col px-[8px] pb-0 ${showBrandRow ? 'pt-[8px]' : 'pt-0'}`}>
+      {showBrandRow && (
+        <div className="flex h-[50px] items-center justify-between">
+          <div className="flex items-center gap-[8px]">
+            <Image src="/chat-list/brand-logo.svg" alt="" width={36} height={36} />
+            <span className="text-[18px] font-semibold tracking-[-0.36px] text-[#202939]">SupeerApp</span>
+          </div>
+          {!isAuthenticated && (
+            <button
+              type="button"
+              onClick={onOpenAuth}
+              className="cursor-pointer rounded-[10px] bg-[#1daa61] px-[14px] py-[5px] text-[15px] font-semibold tracking-[-0.3px] text-white"
+            >
+              Join Now
+            </button>
+          )}
         </div>
-        {!isAuthenticated && (
-          <button
-            type="button"
-            onClick={onOpenAuth}
-            className="cursor-pointer rounded-[10px] bg-[#1daa61] px-[14px] py-[5px] text-[15px] font-semibold tracking-[-0.3px] text-white"
-          >
-            Join Now
-          </button>
-        )}
-      </div>
+      )}
 
       {/* Animating grid rows from 1fr to 0fr collapses to the content's natural height without measuring it */}
       <div
@@ -72,7 +79,7 @@ export function CustomerSidebarTop({
       </label>
 
       <div className="no-scrollbar flex items-center gap-[8px] overflow-x-auto px-[16px] py-[12px]">
-        {CUSTOMER_FILTER_CHIPS.map((chip) => {
+        {filterChips.map((chip) => {
           const isActive = activeFilterChip === chip;
           return (
             <button

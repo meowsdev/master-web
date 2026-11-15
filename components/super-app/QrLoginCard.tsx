@@ -21,7 +21,7 @@ export function QrLoginCard({ onOtpLogin }: QrLoginCardProps) {
         />
 
         <div className="flex w-full flex-col items-center gap-[12px] text-center text-[18px]">
-          <p className="w-full font-semibold tracking-[-0.36px] text-[#202939]">
+          <p className="w-full whitespace-nowrap font-semibold tracking-[-0.36px] text-[#202939]">
             Login with QR from <span className="text-[#1daa61]">Mobile App</span>
           </p>
           <p className="w-full font-medium text-[#697586]">or</p>

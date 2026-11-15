@@ -45,6 +45,7 @@ export function NavigationRail({
   if (isCustomerView) {
     return (
       <CustomerNavigationRail
+        isAuthenticated={Boolean(user)}
         onSelectTab={onSelectTab}
         onOpenOrders={onOpenOrders}
         onOpenSettings={onOpenSettings}
@@ -54,108 +55,76 @@ export function NavigationRail({
     );
   }
 
-  const bgRail = isDarkMode ? 'bg-[#202c33] border-[#2f3b43]' : 'bg-[#f0f2f5] border-[#e9edef]';
-  const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
+  // Figma rail: every icon sits in a 36px circle (white idle, mint when active).
+  const railButtonClass = (isActive: boolean) =>
+    `relative flex size-[36px] shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${
+      isActive ? 'bg-[#d7fdd2] text-[#1daa61]' : 'bg-white text-[#202939] hover:bg-[#ebe8e4]'
+    }`;
+  const statusDotClass = 'absolute right-0 top-0 size-[10px] rounded-full bg-[#1daa61] ring-2 ring-[#f7f5f3]';
 
   return (
-    <aside className={`hidden md:flex flex-col items-center justify-between w-[60px] border-r py-3 z-20 shrink-0 select-none ${bgRail}`}>
+    <aside className="z-20 hidden h-full w-[64px] shrink-0 select-none flex-col items-center justify-between overflow-clip bg-[#f7f5f3] px-[8px] pb-[27px] pt-[16px] md:flex">
       {/* Top Navigation Tabs */}
-      <div className="flex flex-col items-center gap-2.5 w-full">
-        {/* Chats Tab with active indicator */}
+      <div className="flex flex-col items-center gap-[8px]">
         <button
           onClick={() => onSelectTab('CHATS')}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer relative ${
-            activeRailTab === 'CHATS'
-              ? isDarkMode
-                ? 'bg-[#374248] text-[#00a884]'
-                : 'bg-[#d9fdd3] text-[#008069]'
-              : `${textSecondary} hover:bg-black/5 dark:hover:bg-white/10`
-          }`}
+          className={railButtonClass(activeRailTab === 'CHATS')}
           title="Chats & Services"
         >
           <MessageSquare className="w-5 h-5" />
           {runningCount > 0 ? (
-            <span className="absolute -top-1 -right-1 px-1 min-w-[18px] h-[18px] bg-amber-500 text-black text-[10px] font-black rounded-full flex items-center justify-center ring-2 ring-white dark:ring-[#202c33] animate-pulse">
+            <span className="absolute -top-1 -right-1 px-1 min-w-[18px] h-[18px] bg-amber-500 text-black text-[10px] font-black rounded-full flex items-center justify-center ring-2 ring-[#f7f5f3] animate-pulse">
               {runningCount}
             </span>
           ) : (
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#25D366] rounded-full ring-2 ring-white dark:ring-[#202c33]" />
+            <span className={statusDotClass} />
           )}
         </button>
 
-        {/* Providers Directory Tab */}
         <button
           onClick={() => onSelectTab('PROVIDERS')}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer relative ${
-            activeRailTab === 'PROVIDERS'
-              ? isDarkMode
-                ? 'bg-[#374248] text-[#00a884]'
-                : 'bg-[#d9fdd3] text-[#008069]'
-              : `${textSecondary} hover:bg-black/5 dark:hover:bg-white/10`
-          }`}
+          className={railButtonClass(activeRailTab === 'PROVIDERS')}
           title="Verified Providers Directory"
         >
           <Award className="w-5 h-5" />
         </button>
 
-        {/* Status Updates Tab */}
         <button
           onClick={() => {
             onSelectTab('STATUS');
             onOpenStatus();
           }}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer relative ${
-            activeRailTab === 'STATUS'
-              ? isDarkMode
-                ? 'bg-[#374248] text-[#00a884]'
-                : 'bg-[#d9fdd3] text-[#008069]'
-              : `${textSecondary} hover:bg-black/5 dark:hover:bg-white/10`
-          }`}
+          className={railButtonClass(activeRailTab === 'STATUS')}
           title="Status updates"
         >
           <Radio className="w-5 h-5" />
         </button>
 
-        {/* Channels Tab */}
         <button
           onClick={() => {
             onSelectTab('CHANNELS');
             toast.info('Channels: Super app Service Broadcasts');
           }}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            activeRailTab === 'CHANNELS'
-              ? isDarkMode
-                ? 'bg-[#374248] text-[#00a884]'
-                : 'bg-[#d9fdd3] text-[#008069]'
-              : `${textSecondary} hover:bg-black/5 dark:hover:bg-white/10`
-          }`}
+          className={railButtonClass(activeRailTab === 'CHANNELS')}
           title="Channels"
         >
           <Users className="w-5 h-5" />
         </button>
 
-        {/* Communities Tab */}
         <button
           onClick={() => {
             onSelectTab('COMMUNITIES');
             toast.info('Communities: Dhaka Neighborhood Services');
           }}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            activeRailTab === 'COMMUNITIES'
-              ? isDarkMode
-                ? 'bg-[#374248] text-[#00a884]'
-                : 'bg-[#d9fdd3] text-[#008069]'
-              : `${textSecondary} hover:bg-black/5 dark:hover:bg-white/10`
-          }`}
+          className={railButtonClass(activeRailTab === 'COMMUNITIES')}
           title="Communities"
         >
           <Users className="w-5 h-5" />
         </button>
 
-        {/* Meta AI / Assistant Tab */}
         <button
           onClick={() => toast.info('Super app AI Counselor active')}
-          className="w-10 h-10 rounded-full flex items-center justify-center text-[#25D366] hover:bg-black/5 dark:hover:bg-white/10 transition-all cursor-pointer"
+          className={`${railButtonClass(false)} text-[#1daa61]`}
           title="AI Support Counselor"
         >
           <Sparkles className="w-5 h-5" />
@@ -163,52 +132,38 @@ export function NavigationRail({
       </div>
 
       {/* Bottom Controls */}
-      <div className="flex flex-col items-center gap-2.5 w-full">
-        {/* My Orders / History Tab */}
-        <button
-          onClick={onOpenOrders}
-          className={`w-10 h-10 rounded-full flex items-center justify-center ${textSecondary} hover:bg-black/5 dark:hover:bg-white/10 transition-all cursor-pointer relative`}
-          title="My Orders & History"
-        >
+      <div className="flex flex-col items-center gap-[8px]">
+        <button onClick={onOpenOrders} className={railButtonClass(false)} title="My Orders & History">
           <Package className="w-5 h-5" />
-          {runningCount > 0 && (
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[#25D366] rounded-full ring-2 ring-[#f0f2f5] dark:ring-[#202c33]" />
-          )}
+          {runningCount > 0 && <span className={statusDotClass} />}
         </button>
 
-        {/* Starred Messages */}
         <button
           onClick={() => toast.info('No starred messages')}
-          className={`w-10 h-10 rounded-full flex items-center justify-center ${textSecondary} hover:bg-black/5 dark:hover:bg-white/10 transition-all cursor-pointer relative`}
+          className={railButtonClass(false)}
           title="Starred"
         >
           <Star className="w-5 h-5" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-[#25D366] rounded-full ring-2 ring-[#f0f2f5] dark:ring-[#202c33]" />
+          <span className={statusDotClass} />
         </button>
 
-        {/* Settings Button */}
-        <button
-          onClick={onOpenSettings}
-          className={`w-10 h-10 rounded-full flex items-center justify-center ${textSecondary} hover:bg-black/5 dark:hover:bg-white/10 transition-all cursor-pointer`}
-          title="Settings & Role"
-        >
+        <button onClick={onOpenSettings} className={railButtonClass(false)} title="Settings & Role">
           <Settings className="w-5 h-5" />
         </button>
 
         {/* Profile Avatar */}
         <button
           onClick={onOpenSettings}
-          className="w-9 h-9 rounded-full overflow-hidden border border-[#d1d7db] dark:border-[#374248] bg-white flex items-center justify-center hover:ring-2 hover:ring-[#25D366] transition-all cursor-pointer relative"
+          className="relative flex size-[36px] cursor-pointer items-center justify-center overflow-hidden rounded-full bg-white transition-all hover:ring-2 hover:ring-[#1daa61]"
           title={user ? `${user.name} (${activeRole})` : 'Profile / Login'}
         >
           {user?.profilePhoto ? (
             <Image src={user.profilePhoto} alt="User" width={36} height={36} unoptimized className="object-cover" />
           ) : (
-            <span className="text-xs font-bold text-[#54656f]">
+            <span className="text-xs font-bold text-[#202939]">
               {user?.name ? user.name[0].toUpperCase() : 'U'}
             </span>
           )}
-          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#25D366] rounded-full border border-white dark:border-[#202c33]" />
         </button>
       </div>
     </aside>

@@ -107,7 +107,10 @@ export function ServiceListItem({
           ) : (
             completedCount > 0 && (
               <div className="flex shrink-0 items-center gap-[4px]">
-                <Image src="/chat-list/completed-check.svg" alt="" width={20} height={20} />
+                {/* The exported check glyph is white; Figma seats it in a black badge */}
+                <span className="flex size-[20px] items-center justify-center rounded-full border-2 border-white bg-black p-[2px]">
+                  <Image src="/chat-list/completed-check.svg" alt="" width={11} height={10.5} />
+                </span>
                 <span className="text-[12px] font-medium leading-[16px] tracking-[0.5px] text-[#707a6c]">
                   {completedCount}+ Completed
                 </span>

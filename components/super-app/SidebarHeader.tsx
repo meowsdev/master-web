@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import {
   MoreVertical,
   Sparkles,
@@ -41,20 +42,14 @@ export function SidebarHeader({
 }: SidebarHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const bgHeader = isDarkMode ? 'bg-[#202c33] border-[#222e35] text-[#e9edef]' : 'bg-white border-[#e9edef] text-[#111b21]';
-  const headerIconBtn = isDarkMode
-    ? 'text-[#aebac1] hover:text-white hover:bg-white/10'
-    : 'text-[#54656f] hover:text-[#111b21] hover:bg-black/5';
-
   return (
-    <div className={`h-[60px] px-4 flex items-center justify-between border-b shrink-0 z-10 ${bgHeader}`}>
-      {/* Super app Brand Heading */}
-      <div className="flex items-center gap-2.5">
-        <h1 className="text-[20px] font-bold tracking-tight text-[#111b21] dark:text-[#e9edef]">
-          Super app
-        </h1>
+    <div className="flex h-[50px] shrink-0 items-center justify-between px-[8px] pt-[8px] z-10">
+      {/* Brand: same mark and wordmark as the customer sidebar */}
+      <div className="flex items-center gap-[8px]">
+        <Image src="/chat-list/brand-logo.svg" alt="" width={36} height={36} />
+        <span className="text-[18px] font-semibold tracking-[-0.36px] text-[#202939]">SupeerApp</span>
         {runningCount > 0 && (
-          <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1 animate-pulse">
+          <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-amber-500/20 text-amber-600 border border-amber-500/30 flex items-center gap-1 animate-pulse">
             ⚡ {runningCount} Active
           </span>
         )}
@@ -66,7 +61,7 @@ export function SidebarHeader({
         <div className="relative">
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${headerIconBtn}`}
+            className="size-[36px] rounded-full flex items-center justify-center transition-all cursor-pointer text-[#697586] hover:bg-[#f7f5f3]"
             title="Options"
           >
             <MoreVertical className="w-5 h-5" />
@@ -74,9 +69,7 @@ export function SidebarHeader({
 
           {isMenuOpen && (
             <div
-              className={`absolute right-0 top-11 w-52 rounded-xl shadow-2xl py-2 border z-50 text-sm ${
-                isDarkMode ? 'bg-[#233138] border-[#2f3b43] text-[#e9edef]' : 'bg-white border-[#e9edef] text-[#111b21]'
-              }`}
+              className="absolute right-0 top-11 w-52 rounded-[12px] shadow-xl py-2 border z-50 text-sm bg-white border-[#e5e5e5] text-[#202939]"
             >
               <button
                 onClick={() => {

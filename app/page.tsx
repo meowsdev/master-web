@@ -112,6 +112,7 @@ export default function SuperAppPage() {
     isFilterModalOpen,
     setIsFilterModalOpen,
     filteredServices,
+    categoryNames,
     conversationByServiceId,
   } = useServicesFilter({ runningServiceIds, serviceLastActivity });
 
@@ -321,6 +322,7 @@ export default function SuperAppPage() {
         onDeleteCustomFilter={deleteCustomFilter}
         runningServiceIds={runningServiceIds}
         filteredServices={filteredServices}
+        categoryNames={categoryNames}
         allDbServicesCount={dbServices.length}
         isServicesLoading={isServicesLoading}
         activeServiceId={activeServiceId}
