@@ -53,8 +53,13 @@ export interface AuthTokens {
   refreshToken?: string;
 }
 
-export interface AuthResponse {
+/** Cookie-session login (OTP): tokens are httpOnly cookies, never in the body. */
+export interface SessionResponse {
   user: User;
+}
+
+/** Legacy login (technician): tokens still come back in the body. */
+export interface AuthResponse extends SessionResponse {
   accessToken: string;
   refreshToken?: string;
 }
