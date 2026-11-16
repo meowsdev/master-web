@@ -8,6 +8,7 @@ import { SentIcon } from '@hugeicons/core-free-icons';
 import { chatService } from '@/services/chat.service';
 import { ordersService } from '@/services/orders.service';
 import { Order, OrderStatus } from '@/types/order.types';
+import { AssignmentCard } from './AssignmentCard';
 import { OrderDetailCard } from './OrderDetailCard';
 
 interface OrderChatPanelProps {
@@ -73,6 +74,8 @@ export function OrderChatPanel({ order, userId, onOpenOrders }: OrderChatPanelPr
           onCancel={() => cancelOrder.mutate()}
           isCancelling={cancelOrder.isPending}
         />
+        {/* Appears after the provider accepts: who was assigned to the job. */}
+        <AssignmentCard order={order} />
         {/* The API returns newest first; a chat reads oldest first. */}
         {[...messages].reverse().map((message) => {
           const isMine = message.senderId === userId;

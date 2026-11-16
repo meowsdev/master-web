@@ -78,6 +78,15 @@ export interface OrderAssignee {
   primary: string | null;
 }
 
+/** Who is coming for an accepted order; null while it is still pending. */
+export interface OrderAssignmentCard {
+  role: 'TECHNICIAN' | 'PROVIDER';
+  name: string | null;
+  photoUrl: string | null;
+  workshopAddress: string | null;
+  shopName: string | null;
+}
+
 export interface OrderPriceLine {
   label: string;
   unitPrice: number;
@@ -102,6 +111,7 @@ export interface Order {
   referenceCode: string;
   completedAt?: string | null;
   assignee?: OrderAssignee;
+  assignmentCard?: OrderAssignmentCard | null;
   /** Backend rule: running orders, or a completed one reopened by a revision. */
   isChatOpen?: boolean;
   bookingDetail?: OrderBookingDetail | null;
