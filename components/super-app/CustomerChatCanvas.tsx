@@ -124,7 +124,7 @@ export function CustomerChatCanvas({
       )}
 
       {/* Fallback Banner for Active Revisions if no Order Card is present in chat */}
-      {!activeOrder && activeService && (
+      {/* {!activeOrder && activeService && (
         <div className="bg-amber-100 dark:bg-amber-950/60 border-b border-amber-300 dark:border-amber-700 px-4 py-2 flex items-center justify-between text-xs z-10 shrink-0">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
@@ -142,7 +142,7 @@ export function CustomerChatCanvas({
             Manage Orders & Revision
           </button>
         </div>
-      )}
+      )} */}
 
       <ChatMessages
         activeService={activeService}

@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ChatMessage, OrderCardData } from '@/types/super-app.types';
 import { Service } from '@/types/service.types';
-import { OrderStatus } from '@/types/order.types';
+import { Order, OrderStatus } from '@/types/order.types';
 import { ordersService } from '@/services/orders.service';
 import { useChatStorage } from './useChatStorage';
 
@@ -224,78 +224,34 @@ export function useSuperAppChat({ playSound, userId }: UseSuperAppChatProps) {
     return ids;
   }, [serviceMessages]);
 
-  // Confirm in-chat booking with auth check and dispatch Order Card
-  const handleConfirmBooking = async (
-    activeService: Service | null,
-    address: string,
-    time: string,
-    paymentMode: string,
-    isAuthenticated: boolean,
-    onRequireAuth: () => void,
-    onSuccess: () => void
-  ) => {
-    if (!isAuthenticated) {
-      toast.info('Please log in with your phone number to book services.');
-      onRequireAuth();
-      return;
-    }
-    if (!activeService || !activeServiceId) return;
+  // The Place Order panel already created the order on the backend; show it as a card in that service's chat.
+  const handleOrderPlaced = (service: Service, order: Order, address: string, scheduleText: string) => {
+    const orderShortId = order.id.slice(0, 8).toUpperCase();
+    const orderCardMsg: ChatMessage = {
+      id: 'order-' + Date.now(),
+      sender: 'them',
+      type: 'order_card',
+      text: `🎉 Order #${orderShortId} Placed Successfully!`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      orderCard: {
+        id: order.id, // Store the REAL UUID here
+        orderId: orderShortId,
+        serviceId: service.id,
+        serviceName: service.name,
+        serviceIcon: service.category?.iconUrl || '🛠️',
+        address,
+        scheduleTime: scheduleText,
+        paymentMode: 'CASH',
+        basePrice: order.totalPrice,
+        status: 'PENDING',
+      },
+    };
 
-    // Rule: Same service cannot have 2 concurrent running orders
-    if (activeServiceRunningOrder) {
-      toast.error(
-        `Active Order #${activeServiceRunningOrder.orderId} for "${activeService.name}" is already in progress! Please complete it before booking this service again.`
-      );
-      return;
-    }
-
-    try {
-      // Create real order in backend: automatically matches provider by skill!
-      const createdOrder = await ordersService.createOrder({
-        serviceId: activeService.id,
-        originalPrice: Number(activeService.basePrice || 500),
-      });
-
-      const orderShortId = createdOrder.id.slice(0, 8).toUpperCase();
-      const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      const orderCardMsg: ChatMessage = {
-        id: 'order-' + Date.now(),
-        sender: 'them',
-        type: 'order_card',
-        text: `🎉 Order #${orderShortId} Placed Successfully!`,
-        time: currentTime,
-        orderCard: {
-          id: createdOrder.id, // Store the REAL UUID here
-          orderId: orderShortId,
-          serviceId: activeService.id,
-          serviceName: activeService.name,
-          serviceIcon: activeService.category?.iconUrl || '🛠️',
-          address,
-          scheduleTime: time,
-          paymentMode,
-          basePrice: activeService.basePrice,
-          status: 'IN_PROGRESS',
-        },
-      };
-
-      setServiceMessages((prev) => ({
-        ...prev,
-        [activeServiceId]: [...(prev[activeServiceId] || []), orderCardMsg],
-      }));
-      setServiceLastActivity((prev) => ({ ...prev, [activeServiceId]: Date.now() }));
-
-      playSound('receive');
-      toast.success(
-        `Booked ${activeService.name} successfully! Dispatched to skill-matched provider. Order #${orderShortId}`
-      );
-      onSuccess();
-    } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        'Failed to confirm booking order';
-      toast.error(msg);
-    }
+    setServiceMessages((prev) => ({ ...prev, [service.id]: [...(prev[service.id] || []), orderCardMsg] }));
+    setServiceLastActivity((prev) => ({ ...prev, [service.id]: Date.now() }));
+    queryClient.invalidateQueries({ queryKey: ['my-orders-drawer'] });
+    playSound('receive');
+    toast.success(`Order #${orderShortId} placed for ${service.name}`);
   };
 
   // Mark an active order as completed directly from the chat card
@@ -471,7 +427,7 @@ export function useSuperAppChat({ playSound, userId }: UseSuperAppChatProps) {
     handleSendMessage,
     handleSendVoiceNote,
     handleReactToMessage,
-    handleConfirmBooking,
+    handleOrderPlaced,
     handleCompleteOrder,
     handleReopenOrderRevision,
     handleClearChat,

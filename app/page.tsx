@@ -17,6 +17,7 @@ import { useSuperAppModals } from '@/hooks/useSuperAppModals';
 import { useGuestServicePreview } from '@/hooks/useGuestServicePreview';
 
 // Super App UI Components
+import { Order } from '@/types/order.types';
 import { useServiceSelectionReadSync } from '@/hooks/useServiceSelectionReadSync';
 import { NavigationRail } from '@/components/super-app/NavigationRail';
 import { SuperAppSidebar } from '@/components/super-app/SuperAppSidebar';
@@ -70,13 +71,12 @@ export default function SuperAppPage() {
     handleSendMessage,
     handleSendVoiceNote,
     handleReactToMessage,
-    handleConfirmBooking,
+    handleOrderPlaced,
     handleCompleteOrder,
     handleReopenOrderRevision,
     handleClearChat,
     activeOrder,
     activeOrderMessageId,
-    activeServiceRunningOrder,
     runningServiceIds,
     serviceLastActivity,
     resetChatSession,
@@ -218,17 +218,23 @@ export default function SuperAppPage() {
     },
   });
 
+  // Both the header "Book Service" button and the + buttons open the Place Order panel.
+  // Whether an order is allowed (e.g. one active order per service) is the backend's call.
   const handleOpenBooking = () => {
     if (!isAuthenticated) {
       toast.info('Please log in with your phone number to book services.');
       modals.handleOpenAuth();
       return;
     }
-    if (activeServiceRunningOrder) {
-      toast.warning(`Active Order #${activeServiceRunningOrder.orderId} for "${activeService?.name}" is already running!`);
-      return;
-    }
-    modals.setIsBookingModalOpen(true);
+    modals.openPlaceOrder(activeService?.id ?? null);
+  };
+
+  const handleOrderPlacedFromPanel = (order: Order, scheduleText: string, addressText: string) => {
+    const orderedService = dbServices.find((service) => service.id === order.serviceId);
+    modals.setIsPlaceOrderOpen(false);
+    if (!orderedService) return;
+    handleSelectServiceWithReadSync(orderedService);
+    handleOrderPlaced(orderedService, order, addressText, scheduleText);
   };
 
   if (!isMounted) {
@@ -240,14 +246,11 @@ export default function SuperAppPage() {
   }
 
   const bgMain = isDarkMode ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#f0f2f5] text-[#111b21]';
-  // A new order always starts from a service: show the full catalog and drop the cursor in search.
+  // The + buttons open the Place Order panel; the customer picks the service inside it.
   const handleStartNewOrder = () => {
-    modals.closeSidePanels();
     setActiveRailTab('CHATS');
-    setMobileView('LIST');
-    setSearchQuery('');
-    setActiveFilterChip('All');
-    document.getElementById('service-search-input')?.focus();
+    if (isAuthenticated) modals.openPlaceOrder(null);
+    else modals.handleOpenAuth('LOGIN');
   };
   const runningBadgeCount = isProvider ? providerOrders.length : isCounselor ? counselorTabCounts.ongoing : runningServiceIds.length;
 
@@ -397,17 +400,11 @@ export default function SuperAppPage() {
         user={user}
         activeRole={activeRole}
         isAuthenticated={isAuthenticated}
-        isBookingModalOpen={modals.isBookingModalOpen}
-        onCloseBooking={() => modals.setIsBookingModalOpen(false)}
+        isPlaceOrderOpen={modals.isPlaceOrderOpen}
+        onClosePlaceOrder={() => modals.setIsPlaceOrderOpen(false)}
+        placeOrderServiceId={modals.placeOrderServiceId}
+        onOrderPlaced={handleOrderPlacedFromPanel}
         activeService={activeService}
-        activeServiceRunningOrder={activeServiceRunningOrder}
-        bookingAddress={modals.bookingAddress}
-        onAddressChange={modals.setBookingAddress}
-        bookingTime={modals.bookingTime}
-        onTimeChange={modals.setBookingTime}
-        bookingPaymentMode={modals.bookingPaymentMode}
-        onPaymentModeChange={modals.setBookingPaymentMode}
-        onConfirmBooking={() => handleConfirmBooking(activeService, modals.bookingAddress, modals.bookingTime, modals.bookingPaymentMode, isAuthenticated, modals.handleOpenAuth, () => modals.setIsBookingModalOpen(false))}
         isAuthModalOpen={modals.isAuthModalOpen || Boolean(pendingRegistrationUser)}
         onCloseAuth={() => { modals.setIsAuthModalOpen(false); cancelContact(); }}
         authInitialMode={modals.authInitialMode}

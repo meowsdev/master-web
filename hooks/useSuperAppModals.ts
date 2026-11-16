@@ -1,18 +1,15 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { DHAKA_AREAS, PaymentMode } from '@/types/super-app.types';
 
 export function useSuperAppModals() {
   // Auth Modal
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authInitialMode, setAuthInitialMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
 
-  // Booking Modal
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [bookingAddress, setBookingAddress] = useState(DHAKA_AREAS[0]);
-  const [bookingTime, setBookingTime] = useState('Today, Within 2 Hours');
-  const [bookingPaymentMode, setBookingPaymentMode] = useState<PaymentMode>('CASH');
+  // Place Order panel: the service it opens on (null = customer picks one inside the panel)
+  const [isPlaceOrderOpen, setIsPlaceOrderOpen] = useState(false);
+  const [placeOrderServiceId, setPlaceOrderServiceId] = useState<string | null>(null);
 
   // Calling, Status & Settings
   const [callType, setCallType] = useState<'voice' | 'video'>('voice');
@@ -46,6 +43,7 @@ export function useSuperAppModals() {
     setIsServiceDetailsOpen(false);
     setIsTeamManagementOpen(false);
     setIsLevelingDrawerOpen(false);
+    setIsPlaceOrderOpen(false);
   }, []);
 
   const exclusive = useCallback(
@@ -65,12 +63,20 @@ export function useSuperAppModals() {
       setIsServiceDetailsOpen: exclusive(setIsServiceDetailsOpen),
       setIsTeamManagementOpen: exclusive(setIsTeamManagementOpen),
       setIsLevelingDrawerOpen: exclusive(setIsLevelingDrawerOpen),
+      setIsPlaceOrderOpen: exclusive(setIsPlaceOrderOpen),
     }),
     [exclusive],
   );
 
   const openSettings = useCallback(() => panelSetters.setIsSettingsDrawerOpen(true), [panelSetters]);
   const openOrders = useCallback(() => panelSetters.setIsOrdersDrawerOpen(true), [panelSetters]);
+  const openPlaceOrder = useCallback(
+    (serviceId: string | null = null) => {
+      setPlaceOrderServiceId(serviceId);
+      panelSetters.setIsPlaceOrderOpen(true);
+    },
+    [panelSetters],
+  );
   const openSkillsModal = useCallback(() => setIsSkillsModalOpen(true), []);
 
   const handleOpenAuth = useCallback((mode: 'LOGIN' | 'REGISTER' = 'LOGIN') => {
@@ -85,7 +91,8 @@ export function useSuperAppModals() {
     isProfileEditorOpen ||
     isServiceDetailsOpen ||
     isTeamManagementOpen ||
-    isLevelingDrawerOpen;
+    isLevelingDrawerOpen ||
+    isPlaceOrderOpen;
 
   return {
     closeSidePanels,
@@ -94,14 +101,10 @@ export function useSuperAppModals() {
     setIsAuthModalOpen: panelSetters.setIsAuthModalOpen,
     authInitialMode,
     handleOpenAuth,
-    isBookingModalOpen,
-    setIsBookingModalOpen,
-    bookingAddress,
-    setBookingAddress,
-    bookingTime,
-    setBookingTime,
-    bookingPaymentMode,
-    setBookingPaymentMode,
+    isPlaceOrderOpen,
+    setIsPlaceOrderOpen: panelSetters.setIsPlaceOrderOpen,
+    placeOrderServiceId,
+    openPlaceOrder,
     callType,
     setCallType,
     isCallingModalOpen,

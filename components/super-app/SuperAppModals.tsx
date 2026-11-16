@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { BookingModal } from '@/components/modals/BookingModal';
+import { PlaceOrderPanel } from '@/components/modals/place-order/PlaceOrderPanel';
 import { AuthModal } from '@/components/modals/AuthModal';
 import { CallingModal } from '@/components/modals/CallingModal';
 import { StatusViewerModal } from '@/components/modals/StatusViewerModal';
@@ -15,26 +15,21 @@ import { TeamManagementDrawer } from '@/components/modals/TeamManagementDrawer';
 import { ProviderLevelingDrawer } from '@/components/modals/ProviderLevelingDrawer';
 import { ProviderStartChatModal } from '@/components/modals/ProviderStartChatModal';
 import { Service } from '@/types/service.types';
+import { Order } from '@/types/order.types';
 import { User, UserRole } from '@/types/auth.types';
-import { PaymentMode, STATUS_STORIES } from '@/types/super-app.types';
+import { STATUS_STORIES } from '@/types/super-app.types';
 
 interface SuperAppModalsProps {
   isDarkMode: boolean;
   user: User | null;
   activeRole: string | null;
   isAuthenticated: boolean;
-  // Booking Modal
-  isBookingModalOpen: boolean;
-  onCloseBooking: () => void;
   activeService: Service | null;
-  activeServiceRunningOrder: any;
-  bookingAddress: string;
-  onAddressChange: (addr: string) => void;
-  bookingTime: string;
-  onTimeChange: (time: string) => void;
-  bookingPaymentMode: PaymentMode;
-  onPaymentModeChange: (mode: PaymentMode) => void;
-  onConfirmBooking: () => void;
+  // Place Order panel
+  isPlaceOrderOpen: boolean;
+  onClosePlaceOrder: () => void;
+  placeOrderServiceId: string | null;
+  onOrderPlaced: (order: Order, scheduleText: string, addressText: string) => void;
   // Auth Modal
   isAuthModalOpen: boolean;
   onCloseAuth: () => void;
@@ -93,17 +88,11 @@ export function SuperAppModals({
   user,
   activeRole,
   isAuthenticated,
-  isBookingModalOpen,
-  onCloseBooking,
   activeService,
-  activeServiceRunningOrder,
-  bookingAddress,
-  onAddressChange,
-  bookingTime,
-  onTimeChange,
-  bookingPaymentMode,
-  onPaymentModeChange,
-  onConfirmBooking,
+  isPlaceOrderOpen,
+  onClosePlaceOrder,
+  placeOrderServiceId,
+  onOrderPlaced,
   isAuthModalOpen,
   onCloseAuth,
   authInitialMode,
@@ -148,20 +137,11 @@ export function SuperAppModals({
 }: SuperAppModalsProps) {
   return (
     <>
-      {activeService && (
-        <BookingModal
-          isOpen={isBookingModalOpen}
-          onClose={onCloseBooking}
-          service={activeService}
-          runningOrder={activeServiceRunningOrder}
-          bookingAddress={bookingAddress}
-          onAddressChange={onAddressChange}
-          bookingTime={bookingTime}
-          onTimeChange={onTimeChange}
-          bookingPaymentMode={bookingPaymentMode}
-          onPaymentModeChange={onPaymentModeChange}
-          onConfirmBooking={onConfirmBooking}
-          isDarkMode={isDarkMode}
+      {isPlaceOrderOpen && (
+        <PlaceOrderPanel
+          initialServiceId={placeOrderServiceId}
+          onClose={onClosePlaceOrder}
+          onPlaced={onOrderPlaced}
         />
       )}
 
