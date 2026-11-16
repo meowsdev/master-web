@@ -4,10 +4,15 @@ import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useHorizontalScroll } from '@/hooks/useHorizontalScroll';
 import { FilterChip } from '@/types/super-app.types';
+import { User } from '@/types/auth.types';
+import { CustomerProfileHeader } from './CustomerProfileHeader';
 
 
 interface CustomerSidebarTopProps {
   isAuthenticated: boolean;
+  /** Signed-in customer shown in the header instead of the brand row. */
+  user?: User | null;
+  onStartNewOrder?: () => void;
   onOpenAuth: () => void;
   /** Phones have no navigation rail, so signed-in customers reach these from the header. */
   onOpenOrders?: () => void;
@@ -28,6 +33,8 @@ interface CustomerSidebarTopProps {
 /* Brand header, search pill and filter chips of the Figma customer sidebar. */
 export function CustomerSidebarTop({
   isAuthenticated,
+  user,
+  onStartNewOrder,
   onOpenAuth,
   onOpenOrders,
   onOpenAccount,
@@ -49,7 +56,10 @@ export function CustomerSidebarTop({
     'absolute top-1/2 z-10 flex size-[28px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[#e5e5e5] bg-white text-[#202939] shadow-md transition-transform hover:scale-110';
   return (
     <div className={`flex shrink-0 flex-col px-[8px] pb-0 ${showBrandRow ? 'pt-[8px]' : 'pt-0'}`}>
-      {showBrandRow && (
+      {showBrandRow && isAuthenticated && user && onStartNewOrder && (
+        <CustomerProfileHeader user={user} onStartNewOrder={onStartNewOrder} />
+      )}
+      {showBrandRow && !(isAuthenticated && user && onStartNewOrder) && (
         <div className="flex h-[50px] items-center justify-between">
           <div className="flex items-center gap-[8px]">
             <Image src="/chat-list/brand-logo.svg" alt="" width={36} height={36} />
@@ -95,6 +105,7 @@ export function CustomerSidebarTop({
           onChange={(event) => onSearchChange(event.target.value)}
           onFocus={onSearchFocus}
           onBlur={onSearchBlur}
+          id="service-search-input"
           placeholder="Search services..."
           className="w-full bg-transparent text-[14px] font-medium text-[#202939] outline-none placeholder:text-[#697586]"
         />

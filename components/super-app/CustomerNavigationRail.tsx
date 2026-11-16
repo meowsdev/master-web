@@ -1,6 +1,8 @@
 'use client';
 
 import Image from 'next/image';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import { RailSelection, RailTab } from '@/types/super-app.types';
 
 interface CustomerNavigationRailProps {
@@ -9,6 +11,9 @@ interface CustomerNavigationRailProps {
   selection: RailSelection;
   onSelectTab: (tab: RailTab) => void;
   onOpenOrders?: () => void;
+  /** Signed-in only: the + above the profile picture starts a new order. */
+  onStartNewOrder?: () => void;
+  profilePhoto?: string | null;
   /** Guest: the join / log-in panel. Signed in: the Edit Profile panel. */
   onOpenAccount: () => void;
   runningCount?: number;
@@ -26,6 +31,8 @@ export function CustomerNavigationRail({
   selection,
   onSelectTab,
   onOpenOrders,
+  onStartNewOrder,
+  profilePhoto,
   onOpenAccount,
   runningCount = 0,
   accountTitle,
@@ -61,15 +68,35 @@ export function CustomerNavigationRail({
         </button>
       </div>
 
-      <button
-        type="button"
-        onClick={onOpenAccount}
-        title={accountTitle}
-        aria-current={selection === 'ACCOUNT' ? 'page' : undefined}
-        className="size-[36px] cursor-pointer"
-      >
-        <Image src={`/rail/account-${iconState(selection === 'ACCOUNT')}.svg`} alt="Account" width={36} height={36} />
-      </button>
+      <div className="flex flex-col items-center gap-[12px]">
+        {isAuthenticated && onStartNewOrder && (
+          <button
+            type="button"
+            onClick={onStartNewOrder}
+            title="Start a new order"
+            aria-label="Start a new order"
+            className="flex size-[36px] cursor-pointer items-center justify-center rounded-full border-2 border-[#1daa61] text-[#1daa61] transition-colors hover:bg-[#d7fdd2]"
+          >
+            <HugeiconsIcon icon={PlusSignIcon} size={20} strokeWidth={2.5} />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onOpenAccount}
+          title={accountTitle}
+          aria-current={selection === 'ACCOUNT' ? 'page' : undefined}
+          className={`size-[36px] cursor-pointer overflow-hidden rounded-full ${
+            selection === 'ACCOUNT' && profilePhoto ? 'ring-2 ring-[#1daa61]' : ''
+          }`}
+        >
+          {isAuthenticated && profilePhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary upload hosts
+            <img src={profilePhoto} alt="Account" className="size-full object-cover" />
+          ) : (
+            <Image src={`/rail/account-${iconState(selection === 'ACCOUNT')}.svg`} alt="Account" width={36} height={36} />
+          )}
+        </button>
+      </div>
     </aside>
   );
 }

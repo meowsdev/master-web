@@ -43,6 +43,7 @@ interface SuperAppSidebarProps {
   providerActiveFilter: ProviderOrderFilter;
   setProviderActiveFilter: (f: ProviderOrderFilter) => void;
   onOpenProfile: () => void;
+  onStartNewOrder: () => void;
   onOpenSkillsModal: () => void;
   onOpenTeamManagement: () => void;
   onOpenLeveling: () => void;
@@ -109,6 +110,7 @@ export function SuperAppSidebar({
   providerActiveFilter,
   setProviderActiveFilter,
   onOpenProfile,
+  onStartNewOrder,
   onOpenSkillsModal,
   onOpenTeamManagement,
   onOpenLeveling,
@@ -213,6 +215,8 @@ export function SuperAppSidebar({
         <>
           <CustomerSidebarTop
             isAuthenticated={isAuthenticated}
+            user={user}
+            onStartNewOrder={onStartNewOrder}
             onOpenAuth={() => onOpenAuth('LOGIN')}
             onOpenOrders={onOpenOrders}
             onOpenAccount={onOpenProfile}

@@ -1,13 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/useAuthStore';
 import { logoutUser } from '@/lib/logout';
 import { RailTab } from '@/types/super-app.types';
-import { chatService } from '@/services/chat.service';
-import { ChatSession } from '@/types/chat.types';
 
 // Custom Hooks
 import { useServicesFilter } from '@/hooks/useServicesFilter';
@@ -20,6 +17,7 @@ import { useSuperAppModals } from '@/hooks/useSuperAppModals';
 import { useGuestServicePreview } from '@/hooks/useGuestServicePreview';
 
 // Super App UI Components
+import { useServiceSelectionReadSync } from '@/hooks/useServiceSelectionReadSync';
 import { NavigationRail } from '@/components/super-app/NavigationRail';
 import { SuperAppSidebar } from '@/components/super-app/SuperAppSidebar';
 import { MainCanvasArea } from '@/components/super-app/MainCanvasArea';
@@ -31,7 +29,6 @@ const emptySubscribe = () => () => {};
 
 export default function SuperAppPage() {
   const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
-  const queryClient = useQueryClient();
   const { user, isAuthenticated, activeRole, setRole, setUser, pendingRegistrationUser } = useAuthStore();
 
   const isProvider = Boolean(isAuthenticated && (activeRole === 'PROVIDER' || user?.role === 'PROVIDER'));
@@ -204,27 +201,11 @@ export default function SuperAppPage() {
     toggleSaveService(activeService.id);
   }, [activeService, isAuthenticated, modals, toggleSaveService]);
 
-  const handleSelectServiceWithReadSync = useCallback(
-    (service: any) => {
-      handleSelectService(service);
-      const conv = conversationByServiceId.get(service.id);
-      if (conv && (conv.unreadCount ?? 0) > 0) {
-        queryClient.setQueryData<ChatSession[]>(['user-conversations', user?.id], (old = []) => {
-          if (!Array.isArray(old)) return old;
-          return old.map((c) => (c.id === conv.id ? { ...c, unreadCount: 0 } : c));
-        });
-        chatService
-          .markConversationAsRead(conv.id)
-          .then(() => {
-            queryClient.invalidateQueries({ queryKey: ['user-conversations', user?.id] });
-          })
-          .catch((err) => {
-            console.error('Failed to mark conversation as read', err);
-          });
-      }
-    },
-    [handleSelectService, conversationByServiceId, queryClient, user?.id]
-  );
+  const handleSelectServiceWithReadSync = useServiceSelectionReadSync({
+    userId: user?.id,
+    conversationByServiceId,
+    selectService: handleSelectService,
+  });
 
   // Logged-out visitors see a service's public page; Contact Now leads through login to its chat.
   const { previewService, openPreview, closePreview, handleContactNow, cancelContact } = useGuestServicePreview({
@@ -259,6 +240,15 @@ export default function SuperAppPage() {
   }
 
   const bgMain = isDarkMode ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#f0f2f5] text-[#111b21]';
+  // A new order always starts from a service: show the full catalog and drop the cursor in search.
+  const handleStartNewOrder = () => {
+    modals.closeSidePanels();
+    setActiveRailTab('CHATS');
+    setMobileView('LIST');
+    setSearchQuery('');
+    setActiveFilterChip('All');
+    document.getElementById('service-search-input')?.focus();
+  };
   const runningBadgeCount = isProvider ? providerOrders.length : isCounselor ? counselorTabCounts.ongoing : runningServiceIds.length;
 
   return (
@@ -273,6 +263,7 @@ export default function SuperAppPage() {
         onOpenAuth={() => modals.handleOpenAuth('LOGIN')}
         onOpenStatus={() => modals.setIsStatusViewerOpen(true)}
         onOpenOrders={modals.openOrders}
+        onStartNewOrder={handleStartNewOrder}
         user={user}
         activeRole={activeRole}
         runningCount={runningBadgeCount}
@@ -289,6 +280,7 @@ export default function SuperAppPage() {
         onSelectWelcome={() => { setActiveServiceId(null); setActiveOrderId(null); setCounselorSelectedChatId(null); }}
         onOpenSettings={modals.openSettings}
         onOpenOrders={modals.openOrders}
+        onStartNewOrder={handleStartNewOrder}
         onOpenAuth={modals.handleOpenAuth}
         isAuthenticated={isAuthenticated}
         userName={user?.name}
@@ -382,6 +374,7 @@ export default function SuperAppPage() {
         isAuthenticated={isAuthenticated}
         handleOpenAuth={modals.handleOpenAuth}
         openOrders={modals.openOrders}
+        onStartNewOrder={handleStartNewOrder}
         openSettings={modals.openSettings}
         handleLogout={handleLogout}
         messagesEndRef={messagesEndRef}

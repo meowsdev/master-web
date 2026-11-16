@@ -27,6 +27,7 @@ interface NavigationRailProps {
   onOpenAuth: () => void;
   onOpenStatus: () => void;
   onOpenOrders?: () => void;
+  onStartNewOrder?: () => void;
   user: User | null;
   activeRole: string | null;
   runningCount?: number;
@@ -41,6 +42,7 @@ export function NavigationRail({
   onOpenAuth,
   onOpenStatus,
   onOpenOrders,
+  onStartNewOrder,
   user,
   activeRole,
   runningCount = 0,
@@ -54,6 +56,8 @@ export function NavigationRail({
         selection={activeRailTab}
         onSelectTab={onSelectTab}
         onOpenOrders={onOpenOrders}
+        onStartNewOrder={onStartNewOrder}
+        profilePhoto={user?.profilePhoto}
         onOpenAccount={user ? onOpenProfile : onOpenAuth}
         runningCount={runningCount}
         accountTitle={user ? `${user.name} (${activeRole})` : 'Profile / Login'}

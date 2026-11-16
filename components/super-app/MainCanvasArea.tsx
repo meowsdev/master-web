@@ -51,6 +51,7 @@ interface MainCanvasAreaProps {
   isAuthenticated: boolean;
   handleOpenAuth: (mode?: 'LOGIN' | 'REGISTER') => void;
   openOrders: () => void;
+  onStartNewOrder: () => void;
   openSettings: () => void;
   handleLogout: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -103,6 +104,7 @@ export function MainCanvasArea({
   isAuthenticated,
   handleOpenAuth,
   openOrders,
+  onStartNewOrder,
   openSettings,
   handleLogout,
   messagesEndRef,
@@ -210,6 +212,7 @@ export function MainCanvasArea({
           onOpenAuth={handleOpenAuth}
           onOpenSettings={openSettings}
           onOpenOrders={openOrders}
+          onStartNewOrder={onStartNewOrder}
           onLogout={handleLogout}
           isDarkMode={isDarkMode}
         />

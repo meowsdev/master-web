@@ -4,6 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Package } from 'lucide-react';
 import { GuestWelcome } from './GuestWelcome';
+import { PlaceOrderEmptyState } from './PlaceOrderEmptyState';
 import { User } from '@/types/auth.types';
 
 interface WelcomeScreenProps {
@@ -14,6 +15,8 @@ interface WelcomeScreenProps {
   onOpenSettings: () => void;
   onOpenOrders?: () => void;
   onLogout: () => void;
+  /** Customers get a clean canvas whose only action is placing an order. */
+  onStartNewOrder?: () => void;
   isDarkMode: boolean;
 }
 
@@ -58,8 +61,11 @@ export function WelcomeScreen({
   onOpenSettings,
   onOpenOrders,
   onLogout,
+  onStartNewOrder,
 }: WelcomeScreenProps) {
   if (!isAuthenticated) return <GuestWelcome onOpenAuth={onOpenAuth} />;
+  const isCustomer = !activeRole || activeRole === 'CUSTOMER';
+  if (isCustomer && onStartNewOrder) return <PlaceOrderEmptyState onPlaceOrder={onStartNewOrder} />;
 
   const roleDescription = (activeRole && ROLE_DESCRIPTIONS[activeRole]) || CUSTOMER_DESCRIPTION;
   const cardClass = 'rounded-[12px] border border-[#e5e5e5] bg-white';
