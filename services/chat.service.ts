@@ -7,6 +7,8 @@ export interface SendMessageDto {
   text?: string;
   fileUrl?: string;
   type?: MessageType;
+  /** The order tab the message belongs to; omit for General Chat. */
+  orderId?: string;
 }
 
 export interface CreateConversationDto {
@@ -49,9 +51,11 @@ export const chatService = {
     return response.data;
   },
 
-  getMessages: async (conversationId: string) => {
+  /** `orderId` omitted: General Chat plus every order tab; pass 'general' for General Chat only. */
+  getMessages: async (conversationId: string, orderId?: string) => {
     const response = await apiClient.get<Message[]>(
-      `/chat/conversations/${conversationId}/messages`
+      `/chat/conversations/${conversationId}/messages`,
+      { params: orderId ? { orderId } : undefined }
     );
     return response.data;
   },
@@ -67,6 +71,9 @@ export const chatService = {
     }
     if (dto.fileUrl?.trim()) {
       payload.fileUrl = dto.fileUrl.trim();
+    }
+    if (dto.orderId) {
+      payload.orderId = dto.orderId;
     }
     const response = await apiClient.post<Message>('/chat/messages', payload);
     return response.data;

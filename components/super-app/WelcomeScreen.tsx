@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Package } from 'lucide-react';
 import { GuestWelcome } from './GuestWelcome';
 import { PlaceOrderEmptyState } from './PlaceOrderEmptyState';
+import { ChatEmptyHeader } from './ChatEmptyHeader';
 import { User } from '@/types/auth.types';
 
 interface WelcomeScreenProps {
@@ -65,7 +66,21 @@ export function WelcomeScreen({
 }: WelcomeScreenProps) {
   if (!isAuthenticated) return <GuestWelcome onOpenAuth={onOpenAuth} />;
   const isCustomer = !activeRole || activeRole === 'CUSTOMER';
-  if (isCustomer && onStartNewOrder) return <PlaceOrderEmptyState onPlaceOrder={onStartNewOrder} />;
+  if (isCustomer && onStartNewOrder) {
+    return (
+      <div className="flex min-w-0 flex-1 flex-col">
+        <ChatEmptyHeader
+          onSwitchAccount={onOpenSettings}
+          menuItems={[
+            { label: 'My Orders', onSelect: () => onOpenOrders?.() },
+            { label: 'Settings', onSelect: onOpenSettings },
+            { label: 'Log out', onSelect: onLogout, isDanger: true },
+          ]}
+        />
+        <PlaceOrderEmptyState onPlaceOrder={onStartNewOrder} />
+      </div>
+    );
+  }
 
   const roleDescription = (activeRole && ROLE_DESCRIPTIONS[activeRole]) || CUSTOMER_DESCRIPTION;
   const cardClass = 'rounded-[12px] border border-[#e5e5e5] bg-white';

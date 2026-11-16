@@ -68,8 +68,43 @@ export interface ServiceRevision {
   updatedAt: string;
 }
 
+/** Who is handling an order, as the backend words it for the customer. */
+export interface OrderAssignee {
+  /** "@hamid115", or null while no technician is assigned. */
+  technician: string | null;
+  /** Company name (priority) or "@username" of the provider. */
+  provider: string | null;
+  /** Technician first, else the provider. */
+  primary: string | null;
+}
+
+export interface OrderPriceLine {
+  label: string;
+  unitPrice: number;
+  count: number;
+  amount: number;
+}
+
+export interface OrderBookingDetail {
+  subServiceName: string;
+  quantity: number;
+  description?: string | null;
+  addressDetail: string;
+  /** YYYY-MM-DD (ISO date from the backend). */
+  scheduledDate: string;
+  timeSlot: string;
+  priceBreakdown: OrderPriceLine[];
+}
+
 export interface Order {
   id: string;
+  /** Random 6-character code (A-Z, 0-9) the customer quotes, e.g. A94K2B. */
+  referenceCode: string;
+  completedAt?: string | null;
+  assignee?: OrderAssignee;
+  /** Backend rule: running orders, or a completed one reopened by a revision. */
+  isChatOpen?: boolean;
+  bookingDetail?: OrderBookingDetail | null;
   providerId: string;
   customerId: string;
   technicianId?: string | null;

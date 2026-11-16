@@ -7,6 +7,10 @@ import { ChatMessage, OrderCardData } from '@/types/super-app.types';
 import { ChatHeader } from './ChatHeader';
 import { ChatMessages } from './ChatMessages';
 import { ChatComposer } from './ChatComposer';
+import { PlaceOrderEmptyState } from './PlaceOrderEmptyState';
+import { OrderTabsBar } from './order-chat/OrderTabsBar';
+import { OrderChatPanel } from './order-chat/OrderChatPanel';
+import { useCustomerOrderTabs } from '@/hooks/useCustomerOrderTabs';
 
 interface CustomerChatCanvasProps {
   activeService: Service;
@@ -19,10 +23,7 @@ interface CustomerChatCanvasProps {
   onBackMobile: () => void;
   onBackToWelcome: () => void;
   onOpenBooking: () => void;
-  onStartCall: (type: 'voice' | 'video') => void;
   onClearChat: (serviceId: string) => void;
-  isSaved: boolean;
-  onToggleSave?: () => void;
   onOpenDetails: () => void;
   onCompleteOrder: (messageId: string, orderId: string) => Promise<void> | void;
   onReactToMessage: (messageId: string, emoji: string) => void;
@@ -37,6 +38,10 @@ interface CustomerChatCanvasProps {
   onSatisfactionResponse?: (messageId: string, orderId: string, continueWith: boolean) => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   isDarkMode: boolean;
+  userId?: string;
+  /** null = General Chat tab */
+  selectedOrderId: string | null;
+  onSelectOrderTab: (orderId: string | null) => void;
 }
 
 export function CustomerChatCanvas({
@@ -50,10 +55,7 @@ export function CustomerChatCanvas({
   onBackMobile,
   onBackToWelcome,
   onOpenBooking,
-  onStartCall,
   onClearChat,
-  isSaved,
-  onToggleSave,
   onOpenDetails,
   onCompleteOrder,
   onReactToMessage,
@@ -68,23 +70,28 @@ export function CustomerChatCanvas({
   onSatisfactionResponse,
   messagesEndRef,
   isDarkMode,
+  userId,
+  selectedOrderId,
+  onSelectOrderTab,
 }: CustomerChatCanvasProps) {
   const [isCompletingBanner, setIsCompletingBanner] = useState(false);
+  const orderTabs = useCustomerOrderTabs(userId, activeService.categoryId);
+  const selectedOrder = orderTabs.find((order) => order.id === selectedOrderId);
+  // Orders live in their own tabs now, so General Chat only shows plain conversation.
+  const generalMessages = currentMessages.filter((message) => message.type !== 'order_card');
   return (
     <>
       <ChatHeader
         activeService={activeService}
-        activeOrder={activeOrder}
         onBackMobile={onBackMobile}
         onBackToWelcome={onBackToWelcome}
         onOpenBooking={onOpenBooking}
-        onStartCall={onStartCall}
         onClearChat={() => onClearChat(activeServiceId)}
-        isSaved={isSaved}
-        onToggleSave={onToggleSave}
         onOpenDetails={onOpenDetails}
         isDarkMode={isDarkMode}
       />
+
+      {isAuthenticated && <OrderTabsBar orders={orderTabs} selectedOrderId={selectedOrder?.id ?? null} onSelect={onSelectOrderTab} />}
 
       {/* Active Order Banner: Shows live status & quick completion action */}
       {activeOrder && (activeOrder.status === 'IN_PROGRESS' || activeOrder.status === 'PENDING' || activeOrder.status === 'ACCEPTED') && activeOrderMessageId && (
@@ -144,9 +151,16 @@ export function CustomerChatCanvas({
         </div>
       )} */}
 
+      {selectedOrder && userId ? (
+        <OrderChatPanel order={selectedOrder} userId={userId} onOpenOrders={onOpenOrders} />
+      ) : (
+        <>
+          {generalMessages.length === 0 && isAuthenticated ? (
+            <PlaceOrderEmptyState onPlaceOrder={onOpenBooking} />
+          ) : (
       <ChatMessages
         activeService={activeService}
-        messages={currentMessages}
+        messages={generalMessages}
         onOpenBooking={onOpenBooking}
         onReact={onReactToMessage}
         onCompleteOrder={onCompleteOrder}
@@ -159,6 +173,8 @@ export function CustomerChatCanvas({
         isDarkMode={isDarkMode}
       />
 
+          )}
+
       <ChatComposer
         inputText={inputText}
         onInputChange={onInputChange}
@@ -169,6 +185,8 @@ export function CustomerChatCanvas({
         onOpenAuth={onOpenAuth}
         isDarkMode={isDarkMode}
       />
+        </>
+      )}
     </>
   );
 }

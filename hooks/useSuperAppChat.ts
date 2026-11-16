@@ -224,36 +224,6 @@ export function useSuperAppChat({ playSound, userId }: UseSuperAppChatProps) {
     return ids;
   }, [serviceMessages]);
 
-  // The Place Order panel already created the order on the backend; show it as a card in that service's chat.
-  const handleOrderPlaced = (service: Service, order: Order, address: string, scheduleText: string) => {
-    const orderShortId = order.id.slice(0, 8).toUpperCase();
-    const orderCardMsg: ChatMessage = {
-      id: 'order-' + Date.now(),
-      sender: 'them',
-      type: 'order_card',
-      text: `🎉 Order #${orderShortId} Placed Successfully!`,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      orderCard: {
-        id: order.id, // Store the REAL UUID here
-        orderId: orderShortId,
-        serviceId: service.id,
-        serviceName: service.name,
-        serviceIcon: service.category?.iconUrl || '🛠️',
-        address,
-        scheduleTime: scheduleText,
-        paymentMode: 'CASH',
-        basePrice: order.totalPrice,
-        status: 'PENDING',
-      },
-    };
-
-    setServiceMessages((prev) => ({ ...prev, [service.id]: [...(prev[service.id] || []), orderCardMsg] }));
-    setServiceLastActivity((prev) => ({ ...prev, [service.id]: Date.now() }));
-    queryClient.invalidateQueries({ queryKey: ['my-orders-drawer'] });
-    playSound('receive');
-    toast.success(`Order #${orderShortId} placed for ${service.name}`);
-  };
-
   // Mark an active order as completed directly from the chat card
   const handleCompleteOrder = async (messageId: string, orderId: string, realId?: string) => {
     if (!activeServiceId) return;
@@ -427,7 +397,6 @@ export function useSuperAppChat({ playSound, userId }: UseSuperAppChatProps) {
     handleSendMessage,
     handleSendVoiceNote,
     handleReactToMessage,
-    handleOrderPlaced,
     handleCompleteOrder,
     handleReopenOrderRevision,
     handleClearChat,

@@ -12,7 +12,7 @@ interface PlaceOrderPanelProps {
   /** The sub-service whose chat is open, if any; otherwise the customer picks from the start. */
   initialServiceId: string | null;
   onClose: () => void;
-  onPlaced: (order: Order, scheduleText: string, addressText: string) => void;
+  onPlaced: (order: Order) => void;
 }
 
 /* Right-hand "Place Order" panel (replaces the old booking popup). Mounted only while open, so it always starts fresh. */

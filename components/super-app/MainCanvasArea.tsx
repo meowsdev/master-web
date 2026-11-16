@@ -52,6 +52,9 @@ interface MainCanvasAreaProps {
   handleOpenAuth: (mode?: 'LOGIN' | 'REGISTER') => void;
   openOrders: () => void;
   onStartNewOrder: () => void;
+  /** The open order tab (null = General Chat) and how to change it. */
+  selectedOrderId: string | null;
+  onSelectOrderTab: (orderId: string | null) => void;
   openSettings: () => void;
   handleLogout: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -105,6 +108,8 @@ export function MainCanvasArea({
   handleOpenAuth,
   openOrders,
   onStartNewOrder,
+  selectedOrderId,
+  onSelectOrderTab,
   openSettings,
   handleLogout,
   messagesEndRef,
@@ -178,10 +183,7 @@ export function MainCanvasArea({
           onBackMobile={() => setMobileView('LIST')}
           onBackToWelcome={() => setActiveServiceId(null)}
           onOpenBooking={handleOpenBooking}
-          onStartCall={handleStartCall}
           onClearChat={handleClearChat}
-          isSaved={isServiceSaved(activeService.id)}
-          onToggleSave={handleToggleSave}
           onOpenDetails={() => setIsServiceDetailsOpen(true)}
           onCompleteOrder={async (msgId, oId) => {
             // Find the real UUID if available in the messages
@@ -202,6 +204,9 @@ export function MainCanvasArea({
           onSatisfactionResponse={handleSatisfactionResponse}
           messagesEndRef={messagesEndRef}
           isDarkMode={isDarkMode}
+          userId={user?.id}
+          selectedOrderId={selectedOrderId}
+          onSelectOrderTab={onSelectOrderTab}
         />
       ) : (
         /* 4. WhatsApp Web Default Welcome Screen */

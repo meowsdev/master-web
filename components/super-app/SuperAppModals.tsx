@@ -29,7 +29,7 @@ interface SuperAppModalsProps {
   isPlaceOrderOpen: boolean;
   onClosePlaceOrder: () => void;
   placeOrderServiceId: string | null;
-  onOrderPlaced: (order: Order, scheduleText: string, addressText: string) => void;
+  onOrderPlaced: (order: Order) => void;
   // Auth Modal
   isAuthModalOpen: boolean;
   onCloseAuth: () => void;

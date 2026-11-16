@@ -10,7 +10,7 @@ import { useLocationOptions } from '@/hooks/useLocationOptions';
 
 interface UsePlaceOrderFormArgs {
   initialServiceId: string | null;
-  onPlaced: (order: Order, scheduleText: string, addressText: string) => void;
+  onPlaced: (order: Order) => void;
 }
 
 /** Form state for the Place Order panel. Prices come from the backend; nothing is calculated here. */
@@ -104,8 +104,7 @@ export function usePlaceOrderForm({ initialServiceId, onPlaced }: UsePlaceOrderF
         timeSlot,
       };
       const { order } = await orderPlacementService.placeOrder(request);
-      const upazilaName = locations.upazilas.find((item) => item.id === upazilaId)?.name ?? '';
-      onPlaced(order, `${scheduledDate}, ${timeSlot}`, [addressDetail.trim(), upazilaName].filter(Boolean).join(', '));
+      onPlaced(order);
     } catch (error) {
       const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
       toast.error(Array.isArray(message) ? message[0] : message || 'Could not place the order');
