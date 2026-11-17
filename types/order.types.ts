@@ -54,6 +54,9 @@ export interface OrderCustomer {
 export interface OrderProvider {
   id: string;
   userId: string;
+  /** Provider's average rating; 0 until the first review. */
+  rating?: string | number;
+  companyName?: string | null;
   user?: OrderUserProfile;
 }
 

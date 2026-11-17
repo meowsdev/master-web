@@ -3,7 +3,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 import { Alert02Icon, Calendar03Icon, Home01Icon, Note01Icon, ScaleIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
-import { Order, OrderStatus } from '@/types/order.types';
+import { Order, OrderStatus, PaymentStatus } from '@/types/order.types';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { buildOrderTabLabel, formatScheduleDate } from './order-labels';
 
@@ -45,6 +45,9 @@ export function OrderDetailCard({ order, onPayNow, onCancel, isCancelling }: Ord
   const detail = order.bookingDetail;
   const isWaiting = order.orderStatus === OrderStatus.PENDING;
   const isCancelled = order.orderStatus === OrderStatus.CANCELLED;
+  // Payment state is the backend's call (paymentStatus / dueAmount), never guessed on screen.
+  const isPaid = order.paymentStatus === PaymentStatus.PAID || Number(order.dueAmount) <= 0;
+  const statusLabel = order.orderStatus === OrderStatus.COMPLETED ? 'Completed' : 'Accepted';
   const waitingTime = useWaitingTime(order.createdAt, isWaiting ? null : order.acceptedAt ?? order.updatedAt);
   const [problemLine, ...surchargeLines] = detail?.priceBreakdown ?? [];
 
@@ -53,11 +56,21 @@ export function OrderDetailCard({ order, onPayNow, onCancel, isCancelling }: Ord
       <header className="flex items-center justify-between gap-[8px]">
         <span className="min-w-0 truncate text-[12px] font-medium">{buildOrderTabLabel(order)}</span>
         <div className="flex shrink-0 items-center gap-[6px]">
-          <span className="rounded-[8px] bg-white px-[8px] py-[4px] text-[12px] font-semibold">
-            {formatTaka(order.dueAmount)} <span className="rounded-full border border-[#202939]/40 px-[5px] text-[10px]">Due</span>
-          </span>
-          <button type="button" onClick={onPayNow} className="cursor-pointer rounded-[8px] bg-[#202939] px-[12px] py-[6px] text-[13px] font-semibold text-white">
-            Pay Now
+          {isPaid ? (
+            <span className="rounded-[8px] bg-white px-[8px] py-[4px] text-[12px] font-semibold text-[#1daa61]">Paid</span>
+          ) : (
+            <span className="rounded-[8px] bg-white px-[8px] py-[4px] text-[12px] font-semibold">
+              {formatTaka(order.dueAmount)} <span className="rounded-full border border-[#202939]/40 px-[5px] text-[10px]">Due</span>
+            </span>
+          )}
+          {/* Nothing left to pay (or the order is cancelled): the button stays but cannot be pressed. */}
+          <button
+            type="button"
+            onClick={onPayNow}
+            disabled={isPaid || isCancelled}
+            className="cursor-pointer rounded-[8px] bg-[#202939] px-[12px] py-[6px] text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#202939]/30"
+          >
+            {isPaid ? 'Paid' : 'Pay Now'}
           </button>
         </div>
       </header>
@@ -96,7 +109,7 @@ export function OrderDetailCard({ order, onPayNow, onCancel, isCancelling }: Ord
             disabled={!isWaiting || isCancelling}
             className="cursor-pointer rounded-[10px] bg-white px-[14px] py-[8px] text-[14px] font-semibold disabled:cursor-not-allowed disabled:text-[#9aa4b2] disabled:opacity-80"
           >
-            {isWaiting ? 'Cancel Order' : 'Accepted'}
+            {isWaiting ? 'Cancel Order' : statusLabel}
           </button>
         </footer>
       )}

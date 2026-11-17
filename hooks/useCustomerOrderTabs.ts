@@ -1,8 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { ordersService } from '@/services/orders.service';
-import { Order } from '@/types/order.types';
+import { useMyOrders } from '@/hooks/useMyOrders';
 
 /**
  * The order tabs of one main service: every order of that service whose chat the backend
@@ -11,14 +9,7 @@ import { Order } from '@/types/order.types';
  * Shares the user-scoped cache with the orders drawer, so a placed order shows up at once.
  */
 export function useCustomerOrderTabs(userId: string | undefined, categoryId: string | undefined) {
-  const { data: orders = [] } = useQuery<Order[]>({
-    queryKey: ['my-orders-drawer', userId],
-    queryFn: () => ordersService.getOrders(),
-    enabled: Boolean(userId),
-    staleTime: 10000,
-    // The provider accepts, completes and asks for payment on their side; poll so those cards appear.
-    refetchInterval: 5000,
-  });
+  const { data: orders = [] } = useMyOrders(userId);
 
   return orders
     .filter((order) => order.service?.categoryId === categoryId && (order.isChatOpen || order.isReviewPending))

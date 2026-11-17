@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
-import { CreditCardIcon, Invoice01Icon, Tick02Icon, UserIcon } from '@hugeicons/core-free-icons';
+import { CreditCardIcon, Invoice01Icon, UserIcon } from '@hugeicons/core-free-icons';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { useOrderPayment } from '@/hooks/useOrderPayment';
 import { OnlinePaymentMethod } from '@/services/order-completion.service';
@@ -46,7 +46,12 @@ export function CompletionCard({ order, userId }: { order: Order; userId: string
   const payableAmount = Number(order.dueAmount) + tipAmount;
 
   return (
-    <article className="w-full max-w-[460px] self-center rounded-[16px] bg-gradient-to-b from-white to-[#eefaf5] p-[16px] text-[#202939] shadow-sm">
+    // Unpaid: a card asking the customer to act. Settled: the customer's own mint bubble on the right.
+    <article
+      className={`w-full max-w-[460px] rounded-[16px] p-[16px] text-[#202939] ${
+        isAwaitingPayment ? 'self-center bg-gradient-to-b from-white to-[#eefaf5] shadow-sm' : 'ml-auto bg-[#ade2cf]'
+      }`}
+    >
       <h3 className="text-[14px] font-semibold">সার্ভিস সফলভাবে সম্পন্ন হয়েছে!</h3>
 
       <ul className="mt-[14px] flex flex-col gap-[12px]">
@@ -99,25 +104,23 @@ export function CompletionCard({ order, userId }: { order: Order; userId: string
       )}
 
       <footer className="mt-[16px] flex items-center justify-end gap-[10px]">
-        {!isAwaitingPayment && (
-          <span className="flex items-center gap-[6px] text-[13px] font-semibold text-[#1daa61]">
-            <HugeiconsIcon icon={Tick02Icon} size={16} />
-            {isCash ? 'ক্যাশে সম্পন্ন' : 'পেমেন্ট সফল হয়েছে'}
+        {isAwaitingPayment ? (
+          <button
+            type="button"
+            disabled={pay.isPending || (isChoosingMethod && !method)}
+            onClick={() => {
+              if (!isChoosingMethod) return setIsChoosingMethod(true);
+              if (method) pay.mutate({ method, tipAmount });
+            }}
+            className="cursor-pointer rounded-[10px] bg-black px-[18px] py-[10px] text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#202939]/30"
+          >
+            {isChoosingMethod ? (pay.isPending ? 'Processing...' : `Pay- ${formatTaka(payableAmount)}`) : `Accept & Pay- ${formatTaka(payableAmount)}`}
+          </button>
+        ) : (
+          <span className="rounded-[10px] bg-white px-[16px] py-[8px] text-[15px] font-semibold text-[#9aa4b2] shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+            {isCash ? 'Accepted & Completed' : `Paid- ${formatTaka(Number(payment.serviceAmountPaid) + Number(payment.tipAmount))}`}
           </span>
         )}
-        <button
-          type="button"
-          disabled={!isAwaitingPayment || pay.isPending || (isChoosingMethod && !method)}
-          onClick={() => {
-            if (!isChoosingMethod) return setIsChoosingMethod(true);
-            if (method) pay.mutate({ method, tipAmount });
-          }}
-          className="cursor-pointer rounded-[10px] bg-black px-[18px] py-[10px] text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#202939]/30"
-        >
-          {isCash && 'Accepted & Completed'}
-          {!isCash && !isAwaitingPayment && `Paid- ${formatTaka(Number(payment.serviceAmountPaid) + Number(payment.tipAmount))}`}
-          {isAwaitingPayment && (isChoosingMethod ? (pay.isPending ? 'Processing...' : `Pay- ${formatTaka(payableAmount)}`) : `Accept & Pay- ${formatTaka(payableAmount)}`)}
-        </button>
       </footer>
     </article>
   );

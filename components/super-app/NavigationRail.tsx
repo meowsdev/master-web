@@ -55,7 +55,6 @@ export function NavigationRail({
         isAuthenticated={Boolean(user)}
         selection={activeRailTab}
         onSelectTab={onSelectTab}
-        onOpenOrders={onOpenOrders}
         onStartNewOrder={onStartNewOrder}
         profilePhoto={user?.profilePhoto}
         onOpenAccount={user ? onOpenProfile : onOpenAuth}

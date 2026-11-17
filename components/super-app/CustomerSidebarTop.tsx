@@ -28,6 +28,8 @@ interface CustomerSidebarTopProps {
   /** False when the options-menu header (staff roles) already renders the brand row. */
   showBrandRow?: boolean;
   isSearchCollapsed: boolean;
+  /** The Orders list reuses this top section with its own placeholder. */
+  searchPlaceholder?: string;
 }
 
 /* Brand header, search pill and filter chips of the Figma customer sidebar. */
@@ -47,6 +49,7 @@ export function CustomerSidebarTop({
   categoryNames,
   showBrandRow = true,
   isSearchCollapsed,
+  searchPlaceholder = 'Search services...',
 }: CustomerSidebarTopProps) {
   const filterChips: FilterChip[] = ['All', ...categoryNames];
   const { ref: chipRowRef, canScrollLeft, canScrollRight, scrollByAmount, wasDragged } =
@@ -106,7 +109,7 @@ export function CustomerSidebarTop({
           onFocus={onSearchFocus}
           onBlur={onSearchBlur}
           id="service-search-input"
-          placeholder="Search services..."
+          placeholder={searchPlaceholder}
           className="w-full bg-transparent text-[14px] font-medium text-[#202939] outline-none placeholder:text-[#697586]"
         />
       </label>

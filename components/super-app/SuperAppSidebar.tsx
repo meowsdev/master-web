@@ -6,6 +6,8 @@ import { ProviderOrderList, ProviderOrderFilter } from './ProviderOrderList';
 import { CounselorChatList } from './CounselorChatList';
 import { ServiceList } from './ServiceList';
 import { CustomerSidebarTop } from './CustomerSidebarTop';
+import { CustomerOrdersSidebar } from './order-history/CustomerOrdersSidebar';
+import { RailTab } from '@/types/super-app.types';
 import { Order } from '@/types/order.types';
 import { User } from '@/types/auth.types';
 import { Service } from '@/types/service.types';
@@ -14,6 +16,7 @@ import { ChatMessage, CustomFilterList } from '@/types/super-app.types';
 import { CounselorTab, CounselorChatItem } from '@/types/counselor.types';
 
 interface SuperAppSidebarProps {
+  activeRailTab: RailTab;
   mobileView: 'LIST' | 'CHAT';
   setMobileView: (view: 'LIST' | 'CHAT') => void;
   isDarkMode: boolean;
@@ -83,6 +86,7 @@ interface SuperAppSidebarProps {
 }
 
 export function SuperAppSidebar({
+  activeRailTab,
   mobileView,
   setMobileView,
   isDarkMode,
@@ -209,6 +213,15 @@ export function SuperAppSidebar({
           onToggleOnline={onToggleCounselorOnline}
           onOpenAddCustomer={onOpenAddCustomer}
           isDarkMode={isDarkMode}
+        />
+      ) : activeRailTab === 'ORDERS' && isAuthenticated && user ? (
+        /* Role: CUSTOMER - the Orders rail icon swaps the services list for the customer's own orders */
+        <CustomerOrdersSidebar
+          user={user}
+          onStartNewOrder={onStartNewOrder}
+          onOpenAuth={() => onOpenAuth('LOGIN')}
+          onOpenProfile={onOpenProfile}
+          onOrderOpened={() => setMobileView('CHAT')}
         />
       ) : (
         /* Role: CUSTOMER / GUEST - Shows Services Catalog */

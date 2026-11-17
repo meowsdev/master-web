@@ -8,6 +8,7 @@ import { User } from '@/types/auth.types';
 import { ChatMessage, OrderCardData } from '@/types/super-app.types';
 import { CounselorChatItem } from '@/types/counselor.types';
 import { ProviderOrderCanvas } from './ProviderOrderCanvas';
+import { CustomerOrdersCanvas } from './order-history/CustomerOrdersCanvas';
 import { CustomerChatCanvas } from './CustomerChatCanvas';
 import { CounselorChatCanvas } from './CounselorChatCanvas';
 import { WelcomeScreen } from './WelcomeScreen';
@@ -170,6 +171,9 @@ export function MainCanvasArea({
           onStartCall={handleStartCall}
           isDarkMode={isDarkMode}
         />
+      ) : activeRailTab === 'ORDERS' && !isProvider && !isCounselor && user ? (
+        /* 3a. Customer Orders view: one order's full chat history */
+        <CustomerOrdersCanvas userId={user.id} onBackMobile={() => setMobileView('LIST')} onOpenOrdersDrawer={openOrders} />
       ) : !isProvider && !isCounselor && activeService && activeServiceId ? (
         /* 3. Customer Service Chat Canvas */
         <CustomerChatCanvas

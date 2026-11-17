@@ -10,7 +10,6 @@ interface CustomerNavigationRailProps {
   /** The selected icon is drawn with the mint circle, the others with the white one. */
   selection: RailSelection;
   onSelectTab: (tab: RailTab) => void;
-  onOpenOrders?: () => void;
   /** Signed-in only: the + above the profile picture starts a new order. */
   onStartNewOrder?: () => void;
   profilePhoto?: string | null;
@@ -30,7 +29,6 @@ export function CustomerNavigationRail({
   isAuthenticated,
   selection,
   onSelectTab,
-  onOpenOrders,
   onStartNewOrder,
   profilePhoto,
   onOpenAccount,
@@ -54,7 +52,7 @@ export function CustomerNavigationRail({
 
         <button
           type="button"
-          onClick={onOpenOrders}
+          onClick={() => onSelectTab('ORDERS')}
           disabled={!isAuthenticated}
           title={isAuthenticated ? 'My Orders & History' : 'Log in to view your orders'}
           // UI hint only; the orders API itself rejects unauthenticated requests.

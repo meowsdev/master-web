@@ -31,8 +31,8 @@ export function useOrderTimeline(order: Order, messages: Message[], extraCharges
     if (order.paymentAndTip) {
       entries.push({ key: 'completion', at: toTime(order.paymentAndTip.createdAt), kind: 'completion' });
     }
-    if (order.isReviewPending) {
-      // The review is always the last thing asked of the customer, so it follows completion.
+    if (order.isReviewPending || order.providerReview) {
+      // The review is the last thing asked of the customer, so it follows completion; once sent it stays as history.
       entries.push({ key: 'review', at: toTime(order.completedAt ?? order.updatedAt) + 1, kind: 'review' });
     }
     for (const message of messages) {

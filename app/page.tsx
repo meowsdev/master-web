@@ -282,6 +282,7 @@ export default function SuperAppPage() {
 
       {/* 2. Middle Column: Role-Based Dynamic WhatsApp List */}
       <SuperAppSidebar
+        activeRailTab={activeRailTab}
         mobileView={mobileView}
         setMobileView={setMobileView}
         isDarkMode={isDarkMode}

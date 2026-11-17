@@ -1,7 +1,5 @@
 'use client';
 
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Tick02Icon } from '@hugeicons/core-free-icons';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { ExtraChargeRequest } from '@/types/extra-charge.types';
 
@@ -12,13 +10,11 @@ interface ExtraChargeCardProps {
   onReject: () => void;
 }
 
-const ANSWERED_LABEL = { APPROVED: 'Approved', REJECTED: 'Rejected' } as const;
-
 /* The customer's side of an extra-charge request: what was added, the new bill, and Reject / Approve. */
 export function ExtraChargeCard({ request, isAnswering, onApprove, onReject }: ExtraChargeCardProps) {
   const previousTotal = Number(request.previousTotal);
   const addedTotal = Number(request.totalAmount);
-  const answeredLabel = request.status === 'PENDING' ? null : ANSWERED_LABEL[request.status];
+  const isAnswered = request.status !== 'PENDING';
 
   return (
     <article className="w-full max-w-[420px] rounded-[16px] bg-white p-[14px] text-[#202939] shadow-sm">
@@ -40,21 +36,22 @@ export function ExtraChargeCard({ request, isAnswering, onApprove, onReject }: E
       </dl>
 
       <footer className="mt-[14px] flex items-center justify-end gap-[10px]">
-        {answeredLabel ? (
-          <span className="flex items-center gap-[4px] rounded-[10px] bg-[#f7f5f3] px-[14px] py-[8px] text-[14px] font-semibold text-[#697586]">
-            {request.status === 'APPROVED' && <HugeiconsIcon icon={Tick02Icon} size={16} />}
-            {answeredLabel}
-          </span>
-        ) : (
-          <>
-            <button type="button" onClick={onReject} disabled={isAnswering} className="cursor-pointer rounded-[10px] bg-white px-[16px] py-[8px] text-[15px] font-semibold shadow-sm ring-1 ring-[#e5e5e5] disabled:opacity-60">
-              Reject
-            </button>
-            <button type="button" onClick={onApprove} disabled={isAnswering} className="cursor-pointer rounded-[10px] bg-[#1daa61] px-[16px] py-[8px] text-[15px] font-semibold text-white hover:bg-[#189452] disabled:opacity-60">
-              Approve- {formatTaka(previousTotal + addedTotal)}
-            </button>
-          </>
-        )}
+        <button
+          type="button"
+          onClick={onReject}
+          disabled={isAnswered || isAnswering}
+          className="cursor-pointer rounded-[10px] bg-white px-[16px] py-[8px] text-[15px] font-semibold shadow-sm ring-1 ring-[#e5e5e5] disabled:cursor-not-allowed disabled:text-[#9aa4b2] disabled:ring-0"
+        >
+          {request.status === 'REJECTED' ? 'Rejected' : 'Reject'}
+        </button>
+        <button
+          type="button"
+          onClick={onApprove}
+          disabled={isAnswered || isAnswering}
+          className="cursor-pointer rounded-[10px] bg-[#1daa61] px-[16px] py-[8px] text-[15px] font-semibold text-white hover:bg-[#189452] disabled:cursor-not-allowed disabled:bg-[#a9e5cf] disabled:hover:bg-[#a9e5cf]"
+        >
+          {request.status === 'APPROVED' ? 'Accepted' : 'Approve'}- {formatTaka(previousTotal + addedTotal)}
+        </button>
       </footer>
     </article>
   );
