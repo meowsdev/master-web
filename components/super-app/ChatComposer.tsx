@@ -153,7 +153,8 @@ export function ChatComposer({
           if (e.key === 'Enter') onSendMessage();
         }}
         placeholder="Type a message"
-        className={`rounded-[8px] px-4 py-2 text-[14.5px] outline-none flex-1 border-none shadow-none ${
+        // min-w-0 lets the box shrink in a narrow chat; otherwise it pushes the send button out of view.
+        className={`min-w-0 rounded-[8px] px-4 py-2 text-[14.5px] outline-none flex-1 border-none shadow-none ${
           isDarkMode
             ? 'bg-[#2a3942] text-[#e9edef] placeholder:text-[#8696a0]'
             : 'bg-white text-[#111b21] placeholder:text-[#8696a0]'

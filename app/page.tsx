@@ -353,6 +353,7 @@ export default function SuperAppPage() {
       {/* 3. Right Main Area: Encapsulated Routing & Canvas Area */}
       <MainCanvasArea
         activeRailTab={activeRailTab}
+        isSidePanelOpen={modals.isAnySidePanelOpen}
         mobileView={mobileView}
         setMobileView={setMobileView}
         isProvider={isProvider}

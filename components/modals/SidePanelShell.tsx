@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { ReactNode } from 'react';
 import { AppStoreBadge, GooglePlayBadge } from '@/components/super-app/StoreBadges';
 import {
+  HEADER_BAR_HEIGHT_CLASS,
   SIDE_PANEL_BLOCKING_OVERLAY_CLASS,
   SIDE_PANEL_CLASS,
   SIDE_PANEL_OVERLAY_CLASS,
@@ -35,7 +36,7 @@ export function SidePanelShell({ title, onClose, children, blockOutside = false 
         className={`auth-drawer-slide-in flex h-full ${SIDE_PANEL_CLASS} flex-col border-l border-[#e5e5e5] bg-white`}
         style={{ fontFamily: 'var(--font-manrope), sans-serif' }}
       >
-        <header className="flex h-[65px] shrink-0 items-center gap-[12px] border-b border-[#e5e5e5] p-[20px]">
+        <header className={`flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center gap-[12px] border-b border-[#e5e5e5] p-[20px]`}>
           {onClose && (
             <button type="button" onClick={onClose} aria-label="Close" className="size-[24px] cursor-pointer">
               <Image src="/auth/close.svg" alt="" width={24} height={24} />

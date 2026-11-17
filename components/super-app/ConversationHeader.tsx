@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { ReactNode } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
+import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import { HeaderOptionsMenu, HeaderMenuItem } from './HeaderOptionsMenu';
 
 interface ConversationHeaderProps {
@@ -23,7 +24,7 @@ interface ConversationHeaderProps {
 export function ConversationHeader({ picture, title, ratingLabel, backLabel, onBack, onOpenTitle, menuItems, isDarkMode = false }: ConversationHeaderProps) {
   return (
     <header
-      className={`flex h-[56px] shrink-0 items-center justify-between gap-[12px] border-b px-[16px] ${
+      className={`flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-between gap-[12px] border-b px-[16px] ${
         isDarkMode ? 'border-[#222e35] bg-[#202c33]' : 'border-[#e5e5e5] bg-white'
       }`}
     >

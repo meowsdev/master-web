@@ -7,6 +7,7 @@ import { Order, OrderStatus } from '@/types/order.types';
 import { User } from '@/types/auth.types';
 import { ChatMessage, OrderCardData } from '@/types/super-app.types';
 import { CounselorChatItem } from '@/types/counselor.types';
+import { SIDE_PANEL_RESERVE_CLASS } from '@/components/modals/side-panel';
 import { ProviderOrderCanvas } from './ProviderOrderCanvas';
 import { CustomerOrdersCanvas } from './order-history/CustomerOrdersCanvas';
 import { CustomerChatCanvas } from './CustomerChatCanvas';
@@ -16,6 +17,8 @@ import { ProviderDirectory, ProviderItem } from './ProviderDirectory';
 
 interface MainCanvasAreaProps {
   activeRailTab: RailTab;
+  /** A right-hand panel is open: the chat leaves room for it. */
+  isSidePanelOpen: boolean;
   mobileView: 'LIST' | 'CHAT';
   setMobileView: (view: 'LIST' | 'CHAT') => void;
   // Provider states
@@ -75,6 +78,7 @@ interface MainCanvasAreaProps {
 
 export function MainCanvasArea({
   activeRailTab,
+  isSidePanelOpen,
   mobileView,
   setMobileView,
   isProvider,
@@ -130,7 +134,7 @@ export function MainCanvasArea({
     <main
       className={`${
         mobileView === 'CHAT' ? 'flex' : 'hidden md:flex'
-      } flex-col flex-1 h-full relative z-0 min-w-0`}
+      } flex-col flex-1 h-full relative z-0 min-w-0 transition-[padding] duration-200 ${isSidePanelOpen ? SIDE_PANEL_RESERVE_CLASS : ''}`}
     >
       {/* 1. Global Provider Directory (When PROVIDERS Rail Tab is selected) */}
       {activeRailTab === 'PROVIDERS' ? (
