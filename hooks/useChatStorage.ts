@@ -7,6 +7,12 @@ interface UseChatStorageProps {
   userId?: string | null;
 }
 
+/** Older chats saved the auto greeting and service card (init-1 / init-2); they are gone for good now. */
+const withoutGreetings = (stored: Record<string, ChatMessage[]>) =>
+  Object.fromEntries(
+    Object.entries(stored).map(([serviceId, messages]) => [serviceId, messages.filter((message) => !/^init-\d+$/.test(message.id))]),
+  );
+
 /**
  * Handles persistent message and activity storage with strict user session isolation.
  * Automatically switches storage keys when userId changes to prevent data leakage.
@@ -19,7 +25,7 @@ export function useChatStorage({ userId }: UseChatStorageProps) {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem(storageKey);
-        if (saved) return JSON.parse(saved);
+        if (saved) return withoutGreetings(JSON.parse(saved));
       } catch {
         // Fallback to empty state on parse error
       }
@@ -44,7 +50,7 @@ export function useChatStorage({ userId }: UseChatStorageProps) {
     if (typeof window === 'undefined') return;
     try {
       const savedMsgs = localStorage.getItem(storageKey);
-      setServiceMessages(savedMsgs ? JSON.parse(savedMsgs) : {});
+      setServiceMessages(savedMsgs ? withoutGreetings(JSON.parse(savedMsgs)) : {});
       const savedAct = localStorage.getItem(activityKey);
       setServiceLastActivity(savedAct ? JSON.parse(savedAct) : {});
     } catch {

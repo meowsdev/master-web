@@ -47,35 +47,11 @@ export function useSuperAppChat({ playSound, userId }: UseSuperAppChatProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Handle service selection & initial greetings
+  // Handle service selection
   const handleSelectService = (service: Service) => {
     setActiveServiceId(service.id);
     setMobileView('CHAT');
-
-    if (!serviceMessages[service.id] || serviceMessages[service.id].length === 0) {
-      const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const initialMsgs: ChatMessage[] = [
-        {
-          id: 'init-1',
-          sender: 'them',
-          text: `Assalamu Alaikum! Welcome to ${service.name}. I am your dedicated service counselor.`,
-          time: currentTime,
-        },
-        {
-          id: 'init-2',
-          sender: 'them',
-          text: service.description || 'Here are the details for this verified on-demand service:',
-          time: currentTime,
-          type: 'service_card',
-          serviceCard: {
-            title: service.name,
-            price: service.basePrice,
-            duration: `${service.durationMin || 45} mins`,
-          },
-        },
-      ];
-      setServiceMessages((prev) => ({ ...prev, [service.id]: initialMsgs }));
-    }
+    // No auto greeting or service card: a new chat starts empty, with the Place Order + in the middle.
   };
 
   // Send message with strict auth check
