@@ -7,6 +7,7 @@ export type TimelineEntry =
   | { key: string; at: number; kind: 'order' }
   | { key: string; at: number; kind: 'assignment' }
   | { key: string; at: number; kind: 'extraCharge'; request: ExtraChargeRequest }
+  | { key: string; at: number; kind: 'advance'; index: number }
   | { key: string; at: number; kind: 'completion' }
   | { key: string; at: number; kind: 'review' }
   | { key: string; at: number; kind: 'message'; message: Message };
@@ -28,6 +29,9 @@ export function useOrderTimeline(order: Order, messages: Message[], extraCharges
     for (const request of extraCharges) {
       entries.push({ key: `extra-${request.id}`, at: toTime(request.createdAt), kind: 'extraCharge', request });
     }
+    (order.advancePayments ?? []).forEach((payment, index) => {
+      entries.push({ key: `advance-${index}`, at: toTime(payment.createdAt), kind: 'advance', index });
+    });
     if (order.paymentAndTip) {
       entries.push({ key: 'completion', at: toTime(order.paymentAndTip.createdAt), kind: 'completion' });
     }

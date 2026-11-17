@@ -38,6 +38,8 @@ export function OrderDetailCard({ order, onPayNow, onCancel, isCancelling }: Ord
   const isCancelled = order.orderStatus === OrderStatus.CANCELLED;
   // Payment state is the backend's call (paymentStatus / dueAmount), never guessed on screen.
   const isPaid = order.paymentStatus === PaymentStatus.PAID || Number(order.dueAmount) <= 0;
+  // An advance needs a provider on the job and an order that is not settled yet (the backend enforces the same).
+  const canPayAdvance = order.orderStatus === OrderStatus.ACCEPTED || order.orderStatus === OrderStatus.IN_PROGRESS;
   const statusLabel = order.orderStatus === OrderStatus.COMPLETED ? 'Completed' : 'Accepted';
   const waitingTime = useWaitingTime(order.createdAt, isWaiting ? null : order.acceptedAt ?? order.updatedAt);
   const [problemLine, ...surchargeLines] = detail?.priceBreakdown ?? [];
@@ -58,7 +60,8 @@ export function OrderDetailCard({ order, onPayNow, onCancel, isCancelling }: Ord
           <button
             type="button"
             onClick={onPayNow}
-            disabled={isPaid || isCancelled}
+            disabled={isPaid || isCancelled || !canPayAdvance}
+            title={!canPayAdvance && !isPaid && !isCancelled ? 'You can pay once a provider accepts your order' : undefined}
             className="cursor-pointer rounded-[8px] bg-[#202939] px-[12px] py-[6px] text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#202939]/30"
           >
             {isPaid ? 'Paid' : 'Pay Now'}

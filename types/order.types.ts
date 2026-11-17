@@ -157,6 +157,15 @@ export interface Order {
   updatedAt: string;
   providerReview?: ProviderReview | null;
   paymentAndTip?: OrderPaymentAndTip | null;
+  /** Early payments (before the final settlement), oldest first. */
+  advancePayments?: Array<{
+    amount: string | number;
+    method: string;
+    /** The bill and what was still due right after this payment; null on old records. */
+    totalAtPayment?: string | number | null;
+    dueAfter?: string | number | null;
+    createdAt: string;
+  }>;
   /** Completed, not reviewed yet: the tab stays so the payment result and review card show. */
   isReviewPending?: boolean;
   revisions?: ServiceRevision[];

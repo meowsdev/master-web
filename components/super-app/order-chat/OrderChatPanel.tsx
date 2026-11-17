@@ -8,7 +8,10 @@ import { Order, OrderStatus } from '@/types/order.types';
 import { useOrderChat } from '@/hooks/useOrderChat';
 import { useExtraCharges } from '@/hooks/useExtraCharges';
 import { useOrderTimeline } from '@/hooks/useOrderTimeline';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
+import { AdvancePaymentCard } from './AdvancePaymentCard';
 import { AssignmentCard } from './AssignmentCard';
+import { CustomerOrderPanels } from './CustomerOrderPanels';
 import { CompletionCard } from './CompletionCard';
 import { ExtraChargeCard } from './ExtraChargeCard';
 import { MessageBubble } from './MessageBubble';
@@ -31,8 +34,9 @@ const apiErrorMessage = (error: unknown, fallback: string) => {
  * One order's tab: the order card, then the chat between the customer and whoever is
  * handling it. Messages carry the order id, so they never mix with General Chat.
  */
-export function OrderChatPanel({ order, userId, onOpenOrders }: OrderChatPanelProps) {
+export function OrderChatPanel({ order, userId }: OrderChatPanelProps) {
   const queryClient = useQueryClient();
+  const openPanel = useOrderPanelStore((state) => state.open);
   const { messages, draft, setDraft, submit, canSend } = useOrderChat(order, userId, 'CUSTOMER');
 
   const { requests: extraCharges, approve, reject, isAnswering } = useExtraCharges(order.id, userId);
@@ -55,7 +59,7 @@ export function OrderChatPanel({ order, userId, onOpenOrders }: OrderChatPanelPr
         {timeline.map((entry) => {
           switch (entry.kind) {
             case 'order':
-              return <OrderDetailCard key={entry.key} order={order} onPayNow={() => onOpenOrders?.()} onCancel={() => cancelOrder.mutate()} isCancelling={cancelOrder.isPending} />;
+              return <OrderDetailCard key={entry.key} order={order} onPayNow={() => openPanel(order.id, 'advance')} onCancel={() => cancelOrder.mutate()} isCancelling={cancelOrder.isPending} />;
             case 'assignment':
               return <AssignmentCard key={entry.key} order={order} />;
             case 'extraCharge':
@@ -68,6 +72,8 @@ export function OrderChatPanel({ order, userId, onOpenOrders }: OrderChatPanelPr
                   onReject={() => reject.mutate(entry.request.id)}
                 />
               );
+            case 'advance':
+              return <AdvancePaymentCard key={entry.key} order={order} index={entry.index} viewer="CUSTOMER" />;
             case 'completion':
               return <CompletionCard key={entry.key} order={order} userId={userId} />;
             case 'review':
@@ -80,6 +86,7 @@ export function OrderChatPanel({ order, userId, onOpenOrders }: OrderChatPanelPr
         <div ref={bottomRef} />
       </div>
 
+      <CustomerOrderPanels order={order} userId={userId} />
       <OrderChatComposer draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} isDisabled={order.isChatOpen === false} />
     </>
   );

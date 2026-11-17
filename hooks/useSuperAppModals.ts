@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useProviderPanelStore } from '@/store/useProviderPanelStore';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 
 export function useSuperAppModals() {
   // Auth Modal
@@ -36,8 +36,8 @@ export function useSuperAppModals() {
 
   // AGENTS.md §9: only one right-hand panel is open at a time. Opening any of them
   // closes the others, otherwise two panels would pile up on the same spot.
-  const providerPanelKind = useProviderPanelStore((state) => state.kind);
-  const closeProviderPanel = useProviderPanelStore((state) => state.close);
+  const providerPanelKind = useOrderPanelStore((state) => state.kind);
+  const closeProviderPanel = useOrderPanelStore((state) => state.close);
 
   const closePanelsExceptProvider = useCallback(() => {
     setIsAuthModalOpen(false);
@@ -58,7 +58,7 @@ export function useSuperAppModals() {
   // The provider's job panels open from the message box, outside this hook: when one opens, the others close.
   useEffect(
     () =>
-      useProviderPanelStore.subscribe((state, previous) => {
+      useOrderPanelStore.subscribe((state, previous) => {
         if (state.kind && !previous.kind) closePanelsExceptProvider();
       }),
     [closePanelsExceptProvider],

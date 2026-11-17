@@ -25,7 +25,9 @@ export function PaymentSummaryCard({ order, viewer }: { order: Order; viewer: 'C
 
   const billAmount = Number(payment.serviceAmountPaid);
   const tipAmount = Number(payment.tipAmount);
-  const totalPaid = billAmount + tipAmount;
+  // The advance was paid earlier, so the last payment is the bill minus it, plus any tip.
+  const advanceAmount = (order.advancePayments ?? []).reduce((sum, advance) => sum + Number(advance.amount), 0);
+  const totalPaid = billAmount - advanceAmount + tipAmount;
   const isMine = viewer === 'CUSTOMER';
   // Cash goes to the provider, so the platform's share becomes their due. Online money reaches the platform first.
   const companyShare = Number(order.adminCommission);
@@ -37,8 +39,9 @@ export function PaymentSummaryCard({ order, viewer }: { order: Order; viewer: 'C
 
       <ul className="mt-[14px] flex flex-col gap-[12px]">
         <Line icon={Invoice01Icon}>সার্ভিস ও পার্টস খরচ: {formatTaka(billAmount)}</Line>
+        {advanceAmount > 0 && <Line icon={Wallet01Icon}>অগ্রিম পরিশোধ (আগেই দেওয়া): −{formatTaka(advanceAmount)}</Line>}
         <Line icon={UserIcon}>টিপস: {tipAmount > 0 ? formatTaka(tipAmount) : 'নেই'}</Line>
-        <Line icon={Wallet01Icon}>মোট পেমেন্ট: {formatTaka(totalPaid)}</Line>
+        <Line icon={Wallet01Icon}>{advanceAmount > 0 ? 'শেষ পেমেন্ট' : 'মোট পেমেন্ট'}: {formatTaka(totalPaid)}</Line>
         <Line icon={CreditCardIcon}>পেমেন্ট পদ্ধতি: {METHOD_LABEL[payment.paymentMode] ?? payment.paymentMode}</Line>
         {providerOwesCompany && <Line icon={Money01Icon}>কোম্পানিকে দিতে হবে: {formatTaka(companyShare)}</Line>}
       </ul>

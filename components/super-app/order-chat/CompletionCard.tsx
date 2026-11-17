@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
-import { CreditCardIcon, Invoice01Icon, UserIcon } from '@hugeicons/core-free-icons';
+import { CreditCardIcon, Invoice01Icon, UserIcon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { useOrderPayment } from '@/hooks/useOrderPayment';
 import { OnlinePaymentMethod } from '@/services/order-completion.service';
@@ -44,6 +44,8 @@ export function CompletionCard({ order, userId }: { order: Order; userId: string
 
   const isAwaitingPayment = payment.paymentMode === 'ONLINE' && payment.confirmationStatus === 'PENDING' && !pay.isSuccess;
   const payableAmount = Number(order.dueAmount) + tipAmount;
+  // Early payments are already off the due; the card shows them so the customer sees why the amount is smaller.
+  const advanceTotal = (order.advancePayments ?? []).reduce((sum, advance) => sum + Number(advance.amount), 0);
 
   // Settled (cash or online): the same bill / tip / total card the provider sees.
   if (!isAwaitingPayment) return <PaymentSummaryCard order={order} viewer="CUSTOMER" />;
@@ -55,6 +57,7 @@ export function CompletionCard({ order, userId }: { order: Order; userId: string
 
       <ul className="mt-[14px] flex flex-col gap-[12px]">
         <Line icon={Invoice01Icon}>বিল সামারি: সার্ভিস ও পার্টস খরচ: {formatTaka(order.totalPrice)}</Line>
+        {advanceTotal > 0 && <Line icon={Wallet01Icon}>অগ্রিম পরিশোধ: −{formatTaka(advanceTotal)} • বাকি: {formatTaka(order.dueAmount)}</Line>}
         <Line icon={CreditCardIcon}>পেমেন্ট পদ্ধতি: অনলাইন</Line>
         <li className="flex flex-wrap items-center gap-[8px] text-[14px] font-semibold">
           <HugeiconsIcon icon={UserIcon} size={18} className="shrink-0" />

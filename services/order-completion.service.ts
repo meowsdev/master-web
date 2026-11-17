@@ -10,6 +10,12 @@ export const orderCompletionService = {
     return response.data;
   },
 
+  /** Customer: pay part of the bill early. The backend checks the amount against what is due. */
+  payAdvance: async (orderId: string, amount: number, method: OnlinePaymentMethod) => {
+    const response = await apiClient.post<{ advancePaid: number; dueAmount: number }>(`/orders/${orderId}/advance-payment`, { amount, method });
+    return response.data;
+  },
+
   /** Customer: Accept & Pay. The backend charges the due amount plus tip. */
   payOnline: async (orderId: string, method: OnlinePaymentMethod, tipAmount: number) => {
     const response = await apiClient.post(`/orders/${orderId}/pay-online`, { method, tipAmount });

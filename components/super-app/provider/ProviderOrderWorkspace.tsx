@@ -6,6 +6,7 @@ import { useOrderChat } from '@/hooks/useOrderChat';
 import { useOrderTimeline } from '@/hooks/useOrderTimeline';
 import { Order, OrderStatus } from '@/types/order.types';
 import { ConversationHeader } from '../ConversationHeader';
+import { AdvancePaymentCard } from '../order-chat/AdvancePaymentCard';
 import { ExtraChargeCard } from '../order-chat/ExtraChargeCard';
 import { MessageBubble } from '../order-chat/MessageBubble';
 import { ReviewCard } from '../order-chat/ReviewCard';
@@ -13,7 +14,7 @@ import { CustomerAvatar } from './CustomerAvatar';
 import { CustomerRatingCard } from './CustomerRatingCard';
 import { ProviderOrderComposer } from './ProviderOrderComposer';
 import { ProviderOrderPanels } from './ProviderOrderPanels';
-import { useProviderPanelStore } from '@/store/useProviderPanelStore';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { ProviderPendingActions } from './ProviderPendingActions';
 import { ProviderOrderInfoCard } from './ProviderOrderInfoCard';
 import { ProviderPaymentNote } from './ProviderPaymentNote';
@@ -36,7 +37,7 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
   const { messages, draft, setDraft, submit, canSend } = useOrderChat(order, userId, 'PROVIDER');
   const { requests: extraCharges } = useExtraCharges(order.id, userId);
   const timeline = useOrderTimeline(order, messages, extraCharges);
-  const openPanel = useProviderPanelStore((state) => state.open);
+  const openPanel = useOrderPanelStore((state) => state.open);
   const bottomRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -64,6 +65,8 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
               return <ProviderOrderInfoCard key={entry.key} order={order} actions={<ProviderPendingActions order={order} onUpdateStatus={onUpdateStatus} isUpdatingStatus={isUpdatingStatus} />} />;
             case 'extraCharge':
               return <ExtraChargeCard key={entry.key} request={entry.request} viewer="PROVIDER" isAnswering={false} onApprove={() => {}} onReject={() => {}} />;
+            case 'advance':
+              return <AdvancePaymentCard key={entry.key} order={order} index={entry.index} viewer="PROVIDER" />;
             case 'completion':
               return <ProviderPaymentNote key={entry.key} order={order} />;
             case 'review':
