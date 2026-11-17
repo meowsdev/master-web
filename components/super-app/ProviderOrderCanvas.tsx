@@ -82,6 +82,8 @@ export function ProviderOrderCanvas({
   const isPending = order.orderStatus === OrderStatus.PENDING;
   const isInProgress = order.orderStatus === OrderStatus.IN_PROGRESS || order.orderStatus === OrderStatus.ACCEPTED;
   const isCompleted = order.orderStatus === OrderStatus.COMPLETED;
+  // Provider already chose online payment; the customer has not paid yet.
+  const isWaitingForOnlinePayment = order.paymentAndTip?.paymentMode === 'ONLINE' && !isCompleted;
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -284,8 +286,8 @@ export function ProviderOrderCanvas({
               <div className="space-y-2">
                 <button
                   type="button"
-                  disabled={isUpdatingStatus}
-                  onClick={() => onUpdateStatus(OrderStatus.COMPLETED)}
+                  disabled={isUpdatingStatus || isWaitingForOnlinePayment}
+                  onClick={() => setIsCompletionModalOpen(true)}
                   className={`w-full py-3 px-4 rounded-xl text-white font-extrabold text-xs shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
                     hasActiveRevision
                       ? 'bg-gradient-to-r from-amber-500 via-emerald-600 to-emerald-700 hover:from-amber-600 hover:to-emerald-800 shadow-amber-500/20 ring-1 ring-amber-400'
@@ -294,9 +296,11 @@ export function ProviderOrderCanvas({
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>
-                    {hasActiveRevision
-                      ? '✅ Solve Revision & Complete Order (রিভিশন সম্পন্ন করুন)'
-                      : 'Mark Service Finished & Complete Order'}
+                    {isWaitingForOnlinePayment
+                      ? 'কাস্টমারের পেমেন্টের অপেক্ষায়...'
+                      : hasActiveRevision
+                        ? '✅ Solve Revision & Complete Order (রিভিশন সম্পন্ন করুন)'
+                        : 'কাজ শেষ (Mark Service Finished)'}
                   </span>
                 </button>
 
@@ -427,7 +431,6 @@ export function ProviderOrderCanvas({
         order={order}
         isOpen={isCompletionModalOpen}
         onClose={() => setIsCompletionModalOpen(false)}
-        onOrderCompleted={() => onUpdateStatus(OrderStatus.COMPLETED)}
         isDarkMode={isDarkMode}
       />
       <AssignTechnicianModal

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -9,8 +9,12 @@ import { chatService } from '@/services/chat.service';
 import { ordersService } from '@/services/orders.service';
 import { Order, OrderStatus } from '@/types/order.types';
 import { useExtraCharges } from '@/hooks/useExtraCharges';
+import { useOrderTimeline } from '@/hooks/useOrderTimeline';
 import { AssignmentCard } from './AssignmentCard';
+import { CompletionCard } from './CompletionCard';
 import { ExtraChargeCard } from './ExtraChargeCard';
+import { MessageBubble } from './MessageBubble';
+import { ReviewCard } from './ReviewCard';
 import { OrderDetailCard } from './OrderDetailCard';
 
 interface OrderChatPanelProps {
@@ -59,6 +63,12 @@ export function OrderChatPanel({ order, userId, onOpenOrders }: OrderChatPanelPr
 
   const { requests: extraCharges, approve, reject, isAnswering } = useExtraCharges(order.id, userId);
 
+  const timeline = useOrderTimeline(order, messages, extraCharges);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [timeline.length]);
+
   const cancelOrder = useMutation({
     mutationFn: () => ordersService.updateStatus(order.id, OrderStatus.CANCELLED),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-orders-drawer', userId] }),
@@ -72,37 +82,32 @@ export function OrderChatPanel({ order, userId, onOpenOrders }: OrderChatPanelPr
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col gap-[12px] overflow-y-auto bg-[#f7f5f3] p-[16px]">
-        <OrderDetailCard
-          order={order}
-          onPayNow={() => onOpenOrders?.()}
-          onCancel={() => cancelOrder.mutate()}
-          isCancelling={cancelOrder.isPending}
-        />
-        {/* Appears after the provider accepts: who was assigned to the job. */}
-        <AssignmentCard order={order} />
-        {extraCharges.map((request) => (
-          <ExtraChargeCard
-            key={request.id}
-            request={request}
-            isAnswering={isAnswering}
-            onApprove={() => approve.mutate(request.id)}
-            onReject={() => reject.mutate(request.id)}
-          />
-        ))}
-        {/* The API returns newest first; a chat reads oldest first. */}
-        {[...messages].reverse().map((message) => {
-          const isMine = message.senderId === userId;
-          return (
-            <p
-              key={message.id}
-              className={`max-w-[75%] rounded-[12px] px-[12px] py-[8px] text-[14px] font-medium text-[#202939] ${
-                isMine ? 'ml-auto bg-[#ade2cf]' : 'bg-white'
-              }`}
-            >
-              {message.text}
-            </p>
-          );
+        {timeline.map((entry) => {
+          switch (entry.kind) {
+            case 'order':
+              return <OrderDetailCard key={entry.key} order={order} onPayNow={() => onOpenOrders?.()} onCancel={() => cancelOrder.mutate()} isCancelling={cancelOrder.isPending} />;
+            case 'assignment':
+              return <AssignmentCard key={entry.key} order={order} />;
+            case 'extraCharge':
+              return (
+                <ExtraChargeCard
+                  key={entry.key}
+                  request={entry.request}
+                  isAnswering={isAnswering}
+                  onApprove={() => approve.mutate(entry.request.id)}
+                  onReject={() => reject.mutate(entry.request.id)}
+                />
+              );
+            case 'completion':
+              return <CompletionCard key={entry.key} order={order} userId={userId} />;
+            case 'review':
+              return <ReviewCard key={entry.key} order={order} userId={userId} />;
+            case 'message':
+              return <MessageBubble key={entry.key} message={entry.message} isMine={entry.message.senderId === userId} />;
+          }
         })}
+        {/* Newest at the bottom: the view follows new items like WhatsApp. */}
+        <div ref={bottomRef} />
       </div>
 
       <form
@@ -116,6 +121,7 @@ export function OrderChatPanel({ order, userId, onOpenOrders }: OrderChatPanelPr
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           maxLength={1000}
+          disabled={order.isChatOpen === false}
           placeholder="Type a message"
           className="h-[44px] min-w-0 flex-1 rounded-[22px] bg-white px-[18px] text-[14px] font-medium text-[#202939] outline-none placeholder:text-[#9aa4b2]"
         />

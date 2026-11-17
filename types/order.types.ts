@@ -68,6 +68,15 @@ export interface ServiceRevision {
   updatedAt: string;
 }
 
+/** Payment record of an order. ONLINE means the provider asked for online payment and the customer has not paid yet. */
+export interface OrderPaymentAndTip {
+  paymentMode: PaymentMode | 'ONLINE';
+  serviceAmountPaid: string | number;
+  tipAmount: string | number;
+  confirmationStatus: 'PENDING' | 'CONFIRMED' | 'DISPUTED' | 'EXPIRED';
+  createdAt: string;
+}
+
 /** Who is handling an order, as the backend words it for the customer. */
 export interface OrderAssignee {
   /** "@hamid115", or null while no technician is assigned. */
@@ -139,6 +148,9 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   providerReview?: ProviderReview | null;
+  paymentAndTip?: OrderPaymentAndTip | null;
+  /** Completed, not reviewed yet: the tab stays so the payment result and review card show. */
+  isReviewPending?: boolean;
   revisions?: ServiceRevision[];
 }
 

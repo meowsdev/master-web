@@ -1,31 +1,38 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, CheckCircle2, DollarSign, Star, Heart } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon } from '@hugeicons/core-free-icons';
 import { toast } from 'sonner';
-import { Order, OrderStatus } from '@/types/order.types';
-import { apiClient } from '@/lib/axios';
+import { Order } from '@/types/order.types';
+import { CompletionPaymentMode, orderCompletionService } from '@/services/order-completion.service';
+import { formatTaka } from '@/components/modals/place-order/format-taka';
 
 interface ProviderCompletionModalProps {
   order: Order;
   isOpen: boolean;
   onClose: () => void;
-  onOrderCompleted: () => void;
   isDarkMode: boolean;
 }
 
-export function ProviderCompletionModal({
-  order,
-  isOpen,
-  onClose,
-  onOrderCompleted,
-  isDarkMode,
-}: ProviderCompletionModalProps) {
-  const [totalCollected, setTotalCollected] = useState(String(order.totalPrice || order.originalPrice || 0));
-  const [hasTip, setHasTip] = useState(false);
-  const [tipAmount, setTipAmount] = useState('0');
-  const [customerRating, setCustomerRating] = useState(5);
-  const [reviewNote, setReviewNote] = useState('');
+const OPTIONS: Array<{ mode: CompletionPaymentMode; title: string; hint: string }> = [
+  { mode: 'ONLINE', title: 'অনলাইন পেমেন্ট', hint: 'কাস্টমারের কাছে পেমেন্ট কার্ড যাবে। সে "Accept & Pay" করলে অর্ডার সম্পন্ন হবে।' },
+  { mode: 'CASH', title: 'ক্যাশ / অফলাইন', hint: 'আপনি ক্যাশ বুঝে নিয়েছেন। অর্ডার সাথে সাথে সম্পন্ন হবে, কাস্টমারকে কিছু করতে হবে না।' },
+];
+
+const apiErrorMessage = (error: unknown) => {
+  const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
+  return (Array.isArray(message) ? message[0] : message) || 'অর্ডার সম্পন্ন করতে সমস্যা হয়েছে।';
+};
+
+/*
+ * "কাজ শেষ": the provider says how the customer pays. All rules (status, who may complete,
+ * cash vs online) are enforced by the backend; this only collects the choice.
+ */
+export function ProviderCompletionModal({ order, isOpen, onClose, isDarkMode }: ProviderCompletionModalProps) {
+  const queryClient = useQueryClient();
+  const [paymentMode, setPaymentMode] = useState<CompletionPaymentMode>('ONLINE');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -33,177 +40,64 @@ export function ProviderCompletionModal({
   const textPrimary = isDarkMode ? 'text-[#e9edef]' : 'text-[#111b21]';
   const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
   const bgModal = isDarkMode ? 'bg-[#202c33] border-[#2f3b43]' : 'bg-white border-[#e9edef]';
-  const bgInput = isDarkMode ? 'bg-[#111b21] border-[#2f3b43] text-[#e9edef]' : 'bg-[#f0f2f5] border-[#e9edef] text-[#111b21]';
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setIsSubmitting(true);
-
     try {
-      // 1. Update order status to COMPLETED
-      await apiClient.patch(`/orders/${order.id}/status`, {
-        orderStatus: OrderStatus.COMPLETED,
-      });
-
-      // 2. Submit payment and tips record if applicable
-      try {
-        await apiClient.post('/order-payment-and-tip', {
-          orderId: order.id,
-          serviceAmountPaid: parseFloat(totalCollected) || Number(order.totalPrice),
-          tipAmount: hasTip ? parseFloat(tipAmount) || 0 : 0,
-          hasTip,
-          completedByPartner: true,
-          paymentMode: 'CASH',
-        });
-      } catch {
-        // Non-blocking if table endpoint optional
-      }
-
-      // 3. Submit customer rating
-      try {
-        await apiClient.post('/provider-reviews', {
-          orderId: order.id,
-          providerRating: customerRating,
-          reviewComment: reviewNote || 'Customer was cooperative and payment settled in cash.',
-        });
-      } catch {
-        // Non-blocking
-      }
-
-      toast.success('অর্ডার সফলভাবে সম্পন্ন ও ক্যাশ কালেকশন কনফার্ম করা হয়েছে! 💰');
-      onOrderCompleted();
+      await orderCompletionService.complete(order.id, paymentMode);
+      toast.success(paymentMode === 'CASH' ? 'অর্ডার সম্পন্ন হয়েছে।' : 'কাস্টমারের কাছে পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে।');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['provider-assigned-orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['my-orders-drawer'] }),
+      ]);
       onClose();
-    } catch {
-      toast.error('অর্ডার সম্পন্ন করতে সমস্যা হয়েছে।');
+    } catch (error) {
+      toast.error(apiErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className={`w-full max-w-md rounded-2xl p-5 shadow-2xl border space-y-4 animate-in fade-in zoom-in-95 duration-150 ${bgModal}`}>
-        {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-black/5 dark:border-white/10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className={`text-sm font-bold ${textPrimary}`}>
-                Complete Order & Cash Collection
-              </h3>
-              <p className={`text-[11px] ${textSecondary}`}>
-                ক্যাশ আদায় ও কাজের সমাপ্তি নিশ্চিতকরণ
-              </p>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className={`w-full max-w-md space-y-4 rounded-2xl border p-5 shadow-2xl ${bgModal}`}>
+        <div className="flex items-center justify-between border-b border-black/5 pb-3 dark:border-white/10">
+          <div>
+            <h3 className={`text-sm font-bold ${textPrimary}`}>কাজ শেষ করুন</h3>
+            <p className={`text-[11px] ${textSecondary}`}>মোট বিল: {formatTaka(order.totalPrice)} • বাকি: {formatTaka(order.dueAmount)}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 cursor-pointer"
-          >
-            <X className="w-4 h-4" />
+          <button type="button" onClick={onClose} aria-label="Close" className="cursor-pointer rounded-full p-1.5 text-gray-500 hover:bg-black/5 dark:hover:bg-white/10">
+            <HugeiconsIcon icon={Cancel01Icon} size={16} />
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="space-y-3.5">
-          {/* Total Amount Paid / Collected */}
-          <div>
-            <label className={`block text-xs font-semibold mb-1 ${textPrimary}`}>
-              মোট আদায়কৃত সার্ভিস চার্জ (ক্যাশ):
-            </label>
-            <div className="relative">
-              <DollarSign className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
-              <input
-                type="number"
-                min="0"
-                required
-                value={totalCollected}
-                onChange={(e) => setTotalCollected(e.target.value)}
-                className={`w-full py-2 pl-9 pr-3 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-[#008069] ${bgInput}`}
-              />
-            </div>
-          </div>
-
-          {/* Tips Status Toggle */}
-          <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/10 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className={`text-xs font-semibold flex items-center gap-1.5 ${textPrimary}`}>
-                <Heart className="w-3.5 h-3.5 text-rose-500" />
-                <span>কাস্টমার কি কোনো টিপস দিয়েছেন?</span>
-              </span>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <p className={`text-xs font-semibold ${textPrimary}`}>কাস্টমার কীভাবে পেমেন্ট করবে?</p>
+          <div role="radiogroup" className="space-y-2">
+            {OPTIONS.map((option) => (
               <button
+                key={option.mode}
                 type="button"
-                onClick={() => setHasTip(!hasTip)}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer ${
-                  hasTip
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-black/5 dark:bg-white/10 text-gray-500'
+                role="radio"
+                aria-checked={paymentMode === option.mode}
+                onClick={() => setPaymentMode(option.mode)}
+                className={`w-full cursor-pointer rounded-xl border p-3 text-left ${
+                  paymentMode === option.mode ? 'border-[#1daa61] bg-[#1daa61]/10' : 'border-black/10 dark:border-white/10'
                 }`}
               >
-                {hasTip ? 'হ্যাঁ (YES)' : 'না (NO)'}
+                <span className={`block text-xs font-bold ${textPrimary}`}>{option.title}</span>
+                <span className={`mt-0.5 block text-[11px] ${textSecondary}`}>{option.hint}</span>
               </button>
-            </div>
-
-            {hasTip && (
-              <div className="pt-2 animate-in fade-in">
-                <label className={`block text-[11px] font-medium mb-1 ${textSecondary}`}>
-                  টিপসের পরিমাণ (টাকা):
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={tipAmount}
-                  onChange={(e) => setTipAmount(e.target.value)}
-                  placeholder="e.g. 100"
-                  className={`w-full py-1.5 px-3 rounded-lg text-xs border focus:outline-none focus:ring-1 focus:ring-[#008069] ${bgInput}`}
-                />
-              </div>
-            )}
+            ))}
           </div>
 
-          {/* Customer Rating */}
-          <div>
-            <label className={`block text-xs font-semibold mb-1.5 ${textPrimary}`}>
-              কাস্টমারকে রেটিং দিন (Partner Rating):
-            </label>
-            <div className="flex items-center gap-1.5">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setCustomerRating(star)}
-                  className="p-1 cursor-pointer transition-transform hover:scale-110"
-                >
-                  <Star
-                    className={`w-6 h-6 ${
-                      star <= customerRating
-                        ? 'text-amber-400 fill-amber-400'
-                        : 'text-gray-300 dark:text-gray-600'
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 text-xs font-semibold transition-colors cursor-pointer"
-            >
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 cursor-pointer rounded-xl bg-black/5 py-2 text-xs font-semibold hover:bg-black/10 dark:bg-white/5">
               বাতিল
             </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-md cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{isSubmitting ? 'প্রসেসিং...' : 'কনফার্ম ও অর্ডার সমাপ্ত'}</span>
+            <button type="submit" disabled={isSubmitting} className="flex-1 cursor-pointer rounded-xl bg-[#1daa61] py-2 text-xs font-bold text-white hover:bg-[#189452] disabled:opacity-50">
+              {isSubmitting ? 'অপেক্ষা করুন...' : 'কাজ শেষ নিশ্চিত করুন'}
             </button>
           </div>
         </form>
