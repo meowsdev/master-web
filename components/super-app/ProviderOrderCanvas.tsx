@@ -307,7 +307,7 @@ export function ProviderOrderCanvas({
                     onClick={() => setIsPriceEditOpen(true)}
                     className="py-2 px-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold text-[11px] border border-amber-500/20 transition-all flex items-center justify-center gap-1 cursor-pointer"
                   >
-                    <span>✏️ Edit Price (+Add-on)</span>
+                    <span>➕ Extra Charge (অতিরিক্ত চার্জ)</span>
                   </button>
                   <button
                     type="button"

@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
-import { Alert02Icon, Calendar03Icon, Note01Icon, Wrench01Icon } from '@hugeicons/core-free-icons';
+import { Alert02Icon, Calendar03Icon, Store01Icon, UserIcon } from '@hugeicons/core-free-icons';
 import { Order, OrderStatus } from '@/types/order.types';
 import { buildOrderTabLabel, formatScheduleDate } from './order-labels';
 
@@ -37,14 +37,14 @@ export function AssignmentCard({ order }: { order: Order }) {
   const roleLabel = card.role === 'TECHNICIAN' ? 'টেকনিশিয়ান' : 'প্রোভাইডার';
 
   return (
-    <article className="w-full max-w-[520px] rounded-[20px] bg-white p-[16px] shadow-sm">
+    <article className="w-full max-w-[420px] rounded-[20px] bg-white p-[16px]">
       <div className="flex items-start justify-between gap-[12px]">
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-semibold text-[#202939]">{buildOrderTabLabel(order)}</p>
           <ul className="mt-[12px] flex flex-col gap-[10px]">
-            {card.name && <Line icon={Wrench01Icon}>{roleLabel}: {card.name}</Line>}
+            {card.name && <Line icon={UserIcon}>{roleLabel}: {card.name}</Line>}
             {card.workshopAddress && <Line icon={Alert02Icon}>ওয়ার্কশপ: {card.workshopAddress}</Line>}
-            {card.shopName && <Line icon={Note01Icon}>দোকানের নাম: {card.shopName}</Line>}
+            {card.shopName && <Line icon={Store01Icon}>দোকানের নাম: {card.shopName}</Line>}
             {detail && (
               <Line icon={Calendar03Icon}>
                 {formatScheduleDate(detail.scheduledDate)} | {detail.timeSlot}
@@ -53,9 +53,14 @@ export function AssignmentCard({ order }: { order: Order }) {
           </ul>
         </div>
 
-        {card.photoUrl && (
+        {/* Rounded square, as in the Figma card; the initial stands in when there is no photo. */}
+        {card.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary hosts
-          <img src={card.photoUrl} alt={card.name ?? ''} className="size-[72px] shrink-0 rounded-full object-cover" />
+          <img src={card.photoUrl} alt={card.name ?? ''} className="size-[58px] shrink-0 rounded-[16px] object-cover" />
+        ) : (
+          <span className="flex size-[58px] shrink-0 items-center justify-center rounded-[16px] bg-[#d7fdd2] text-[22px] font-semibold text-[#205737]">
+            {(card.name ?? '?').charAt(0)}
+          </span>
         )}
       </div>
 

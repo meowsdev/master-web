@@ -110,6 +110,8 @@ export interface Order {
   /** Random 6-character code (A-Z, 0-9) the customer quotes, e.g. A94K2B. */
   referenceCode: string;
   completedAt?: string | null;
+  /** When a provider first took the order; null while it is pending. */
+  acceptedAt?: string | null;
   assignee?: OrderAssignee;
   assignmentCard?: OrderAssignmentCard | null;
   /** Backend rule: running orders, or a completed one reopened by a revision. */

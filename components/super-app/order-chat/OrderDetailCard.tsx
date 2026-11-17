@@ -23,15 +23,20 @@ function DetailLine({ icon, children }: { icon: IconSvgElement; children: ReactN
   );
 }
 
-/** Minutes and seconds since the order was placed, ticking while it waits for acceptance. */
-function useWaitingTime(since: string, isWaiting: boolean) {
+/**
+ * "mm.ss" since the order was placed. It ticks while the order waits and freezes at the
+ * moment of acceptance (`stoppedAt`), so the customer sees how long the provider took.
+ */
+function useWaitingTime(since: string, stoppedAt?: string | null) {
   const [now, setNow] = useState(() => Date.now());
+  const isTicking = !stoppedAt;
   useEffect(() => {
-    if (!isWaiting) return;
+    if (!isTicking) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
-  }, [isWaiting]);
-  const seconds = Math.max(0, Math.floor((now - new Date(since).getTime()) / 1000));
+  }, [isTicking]);
+  const endTime = stoppedAt ? new Date(stoppedAt).getTime() : now;
+  const seconds = Math.max(0, Math.floor((endTime - new Date(since).getTime()) / 1000));
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}.${String(seconds % 60).padStart(2, '0')}`;
 }
 
@@ -39,7 +44,8 @@ function useWaitingTime(since: string, isWaiting: boolean) {
 export function OrderDetailCard({ order, onPayNow, onCancel, isCancelling }: OrderDetailCardProps) {
   const detail = order.bookingDetail;
   const isWaiting = order.orderStatus === OrderStatus.PENDING;
-  const waitingTime = useWaitingTime(order.createdAt, isWaiting);
+  const isCancelled = order.orderStatus === OrderStatus.CANCELLED;
+  const waitingTime = useWaitingTime(order.createdAt, isWaiting ? null : order.acceptedAt ?? order.updatedAt);
   const [problemLine, ...surchargeLines] = detail?.priceBreakdown ?? [];
 
   return (
@@ -78,21 +84,22 @@ export function OrderDetailCard({ order, onPayNow, onCancel, isCancelling }: Ord
         )}
       </ul>
 
-      <footer className="mt-[14px] flex items-center justify-end gap-[12px]">
-        {isWaiting && (
-          <>
-            <span className="text-[13px] font-medium">Waiting time: {waitingTime}</span>
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={isCancelling}
-              className="cursor-pointer rounded-[10px] bg-white px-[14px] py-[8px] text-[14px] font-semibold disabled:opacity-60"
-            >
-              Cancel Order
-            </button>
-          </>
-        )}
-      </footer>
+      {!isCancelled && (
+        <footer className="mt-[14px] flex items-center justify-end gap-[12px]">
+          <span className="text-[13px] font-medium">
+            {isWaiting ? 'Waiting time' : 'Accepted in'}: {waitingTime}
+          </span>
+          {/* Once a provider has accepted, cancelling is no longer possible: the button stays but is disabled. */}
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={!isWaiting || isCancelling}
+            className="cursor-pointer rounded-[10px] bg-white px-[14px] py-[8px] text-[14px] font-semibold disabled:cursor-not-allowed disabled:text-[#9aa4b2] disabled:opacity-80"
+          >
+            {isWaiting ? 'Cancel Order' : 'Accepted'}
+          </button>
+        </footer>
+      )}
     </article>
   );
 }

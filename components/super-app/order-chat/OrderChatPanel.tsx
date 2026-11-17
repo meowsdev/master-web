@@ -8,7 +8,9 @@ import { SentIcon } from '@hugeicons/core-free-icons';
 import { chatService } from '@/services/chat.service';
 import { ordersService } from '@/services/orders.service';
 import { Order, OrderStatus } from '@/types/order.types';
+import { useExtraCharges } from '@/hooks/useExtraCharges';
 import { AssignmentCard } from './AssignmentCard';
+import { ExtraChargeCard } from './ExtraChargeCard';
 import { OrderDetailCard } from './OrderDetailCard';
 
 interface OrderChatPanelProps {
@@ -55,6 +57,8 @@ export function OrderChatPanel({ order, userId, onOpenOrders }: OrderChatPanelPr
     onError: (error) => toast.error(apiErrorMessage(error, 'Message could not be sent')),
   });
 
+  const { requests: extraCharges, approve, reject, isAnswering } = useExtraCharges(order.id, userId);
+
   const cancelOrder = useMutation({
     mutationFn: () => ordersService.updateStatus(order.id, OrderStatus.CANCELLED),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-orders-drawer', userId] }),
@@ -76,6 +80,15 @@ export function OrderChatPanel({ order, userId, onOpenOrders }: OrderChatPanelPr
         />
         {/* Appears after the provider accepts: who was assigned to the job. */}
         <AssignmentCard order={order} />
+        {extraCharges.map((request) => (
+          <ExtraChargeCard
+            key={request.id}
+            request={request}
+            isAnswering={isAnswering}
+            onApprove={() => approve.mutate(request.id)}
+            onReject={() => reject.mutate(request.id)}
+          />
+        ))}
         {/* The API returns newest first; a chat reads oldest first. */}
         {[...messages].reverse().map((message) => {
           const isMine = message.senderId === userId;

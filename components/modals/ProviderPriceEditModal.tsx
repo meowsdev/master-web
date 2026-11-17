@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, DollarSign, AlertCircle, Sparkles } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Add01Icon, Cancel01Icon, Delete02Icon } from '@hugeicons/core-free-icons';
 import { toast } from 'sonner';
 import { Order } from '@/types/order.types';
-import { ordersService } from '@/services/orders.service';
+import { extraChargeService } from '@/services/extra-charge.service';
 
 interface ProviderPriceEditModalProps {
   order: Order;
@@ -14,151 +15,122 @@ interface ProviderPriceEditModalProps {
   isDarkMode: boolean;
 }
 
-export function ProviderPriceEditModal({
-  order,
-  isOpen,
-  onClose,
-  onPriceUpdated,
-  isDarkMode,
-}: ProviderPriceEditModalProps) {
-  const [additionalAmount, setAdditionalAmount] = useState('');
-  const [reason, setReason] = useState('');
+interface ChargeRow {
+  label: string;
+  amount: string;
+}
+
+const EMPTY_ROW: ChargeRow = { label: '', amount: '' };
+const MAX_ROWS = 10;
+
+const apiErrorMessage = (error: unknown) => {
+  const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
+  return (Array.isArray(message) ? message[0] : message) || 'Could not send the extra charge';
+};
+
+/*
+ * Provider's extra-charge form. Nothing changes the order price here: the request goes to the
+ * customer, and the backend adds it to the total only after they approve.
+ */
+export function ProviderPriceEditModal({ order, isOpen, onClose, onPriceUpdated, isDarkMode }: ProviderPriceEditModalProps) {
+  const [rows, setRows] = useState<ChargeRow[]>([EMPTY_ROW]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const originalPriceNum = Number(order.originalPrice || order.totalPrice || 0);
-  const additionalNum = Math.max(0, parseFloat(additionalAmount) || 0);
-  const newTotal = originalPriceNum + additionalNum;
-  const currentEdits = order.priceEditCount || 0;
-  const remainingEdits = Math.max(0, 2 - currentEdits);
+  const currentTotal = Number(order.totalPrice || 0);
+  const addedTotal = rows.reduce((sum, row) => sum + Math.max(0, parseFloat(row.amount) || 0), 0);
 
   const textPrimary = isDarkMode ? 'text-[#e9edef]' : 'text-[#111b21]';
   const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
   const bgModal = isDarkMode ? 'bg-[#202c33] border-[#2f3b43]' : 'bg-white border-[#e9edef]';
   const bgInput = isDarkMode ? 'bg-[#111b21] border-[#2f3b43] text-[#e9edef]' : 'bg-[#f0f2f5] border-[#e9edef] text-[#111b21]';
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (remainingEdits <= 0) {
-      toast.error('সর্বোচ্চ ২ বার দাম পরিবর্তনের সীমা পূর্ণ হয়েছে!');
-      return;
-    }
-    if (additionalNum <= 0) {
-      toast.error('অনুগ্রহ করে সঠিক অতিরিক্ত চার্জ ইনপুট দিন।');
+  const updateRow = (index: number, changes: Partial<ChargeRow>) =>
+    setRows((previous) => previous.map((row, rowIndex) => (rowIndex === index ? { ...row, ...changes } : row)));
+  const removeRow = (index: number) => setRows((previous) => previous.filter((_, rowIndex) => rowIndex !== index));
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const items = rows.map((row) => ({ label: row.label.trim(), amount: parseFloat(row.amount) }));
+    if (items.some((item) => item.label.length < 2 || !(item.amount > 0))) {
+      toast.error('প্রতিটি চার্জের নাম ও সঠিক পরিমাণ দিন।');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await ordersService.updateOrder(order.id, {
-        additionalPrice: additionalNum,
-      });
-      toast.success(`অতিরিক্ত চার্জ ৳${additionalNum} যোগ করে কাস্টমারের অনুমোদনের জন্য পাঠানো হয়েছে!`);
+      await extraChargeService.request(order.id, items);
+      toast.success('অতিরিক্ত চার্জ কাস্টমারের অনুমোদনের জন্য পাঠানো হয়েছে।');
+      setRows([EMPTY_ROW]);
       onPriceUpdated();
       onClose();
-    } catch {
-      toast.error('দাম আপডেট করতে ব্যর্থ হয়েছে।');
+    } catch (error) {
+      toast.error(apiErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className={`w-full max-w-md rounded-2xl p-5 shadow-2xl border space-y-4 animate-in fade-in zoom-in-95 duration-150 ${bgModal}`}>
-        {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-black/5 dark:border-white/10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#008069]/10 text-[#008069] dark:text-[#25D366] flex items-center justify-center">
-              <DollarSign className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className={`text-sm font-bold ${textPrimary}`}>
-                Modify Order Price (+ Add-On)
-              </h3>
-              <p className={`text-[11px] ${textSecondary}`}>
-                কাজের অতিরিক্ত চার্জ যোগ করুন (সর্বোচ্চ ২ বার)
-              </p>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className={`w-full max-w-md space-y-4 rounded-2xl border p-5 shadow-2xl ${bgModal}`}>
+        <div className="flex items-center justify-between border-b border-black/5 pb-3 dark:border-white/10">
+          <div>
+            <h3 className={`text-sm font-bold ${textPrimary}`}>অতিরিক্ত চার্জ যোগ করুন</h3>
+            <p className={`text-[11px] ${textSecondary}`}>কাস্টমার অনুমোদন দিলে মূল বিলের সাথে যোগ হবে</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 cursor-pointer"
-          >
-            <X className="w-4 h-4" />
+          <button type="button" onClick={onClose} aria-label="Close" className="cursor-pointer rounded-full p-1.5 text-gray-500 hover:bg-black/5 dark:hover:bg-white/10">
+            <HugeiconsIcon icon={Cancel01Icon} size={16} />
           </button>
         </div>
 
-        {/* Edit Limits Notice */}
-        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs flex items-center gap-2.5 text-amber-800 dark:text-amber-300">
-          <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-          <p className="leading-tight">
-            অরিজিনাল দাম অপরিবর্তিত থাকবে। অবশিষ্ট সুযোগ: <span className="font-bold">{remainingEdits}/2 বার</span>।
-          </p>
-        </div>
-
-        {/* Calculation Preview */}
-        <div className="p-3.5 rounded-xl bg-black/[0.03] dark:bg-white/[0.03] border border-black/5 dark:border-white/10 space-y-1.5 font-mono text-xs">
-          <div className="flex justify-between text-[#8696a0]">
-            <span>Original Price:</span>
-            <span>৳{originalPriceNum}</span>
-          </div>
-          <div className="flex justify-between text-amber-600 dark:text-amber-400 font-bold">
-            <span>+ Additional Add-On:</span>
-            <span>৳{additionalNum}</span>
-          </div>
-          <div className="border-t border-black/10 dark:border-white/10 pt-1.5 flex justify-between font-bold text-sm text-[#008069] dark:text-[#25D366]">
-            <span>New Total:</span>
-            <span>৳{newTotal}</span>
-          </div>
-        </div>
-
-        {/* Form Inputs */}
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <label className={`block text-xs font-semibold mb-1 ${textPrimary}`}>
-              অতিরিক্ত চার্জের পরিমাণ (টাকা):
-            </label>
-            <input
-              type="number"
-              min="1"
-              required
-              value={additionalAmount}
-              onChange={(e) => setAdditionalAmount(e.target.value)}
-              placeholder="e.g. 500"
-              className={`w-full py-2 px-3 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-[#008069] ${bgInput}`}
-            />
+          {rows.map((row, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <input
+                value={row.label}
+                onChange={(event) => updateRow(index, { label: event.target.value })}
+                maxLength={100}
+                placeholder="যেমন: ক্যাপাসিটর পরিবর্তন"
+                className={`min-w-0 flex-1 rounded-xl border px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1daa61] ${bgInput}`}
+              />
+              <input
+                type="number"
+                min="1"
+                value={row.amount}
+                onChange={(event) => updateRow(index, { amount: event.target.value })}
+                placeholder="৳"
+                className={`w-24 rounded-xl border px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#1daa61] ${bgInput}`}
+              />
+              {rows.length > 1 && (
+                <button type="button" onClick={() => removeRow(index)} aria-label="Remove charge" className="cursor-pointer text-[#d64545]">
+                  <HugeiconsIcon icon={Delete02Icon} size={16} />
+                </button>
+              )}
+            </div>
+          ))}
+
+          {rows.length < MAX_ROWS && (
+            <button type="button" onClick={() => setRows((previous) => [...previous, EMPTY_ROW])} className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-[#1daa61]">
+              <HugeiconsIcon icon={Add01Icon} size={14} /> আরেকটি চার্জ যোগ করুন
+            </button>
+          )}
+
+          <div className={`space-y-1.5 rounded-xl border border-black/5 p-3.5 text-xs dark:border-white/10 ${textSecondary}`}>
+            <div className="flex justify-between"><span>পূর্বের বিল</span><span>৳{currentTotal}</span></div>
+            <div className="flex justify-between"><span>নতুন সংযোজিত খরচ</span><span>৳{addedTotal}</span></div>
+            <div className="flex justify-between border-t border-black/10 pt-1.5 text-sm font-bold text-[#1daa61] dark:border-white/10">
+              <span>সর্বমোট নতুন বিল</span><span>৳{currentTotal + addedTotal}</span>
+            </div>
           </div>
 
-          <div>
-            <label className={`block text-xs font-semibold mb-1 ${textPrimary}`}>
-              অতিরিক্ত চার্জের কারণ (Optional):
-            </label>
-            <input
-              type="text"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g. অতিরিক্ত গ্যাস রিফিল বা ক্যাপাসিটর পরিবর্তন"
-              className={`w-full py-2 px-3 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-[#008069] ${bgInput}`}
-            />
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 text-xs font-semibold transition-colors cursor-pointer"
-            >
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 cursor-pointer rounded-xl bg-black/5 py-2 text-xs font-semibold hover:bg-black/10 dark:bg-white/5">
               বাতিল
             </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || remainingEdits <= 0}
-              className="flex-1 py-2 rounded-xl bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] text-xs font-bold transition-all shadow-md cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{isSubmitting ? 'পাঠানো হচ্ছে...' : 'দাম আপডেট পাঠান'}</span>
+            <button type="submit" disabled={isSubmitting} className="flex-1 cursor-pointer rounded-xl bg-[#1daa61] py-2 text-xs font-bold text-white hover:bg-[#189452] disabled:opacity-50">
+              {isSubmitting ? 'পাঠানো হচ্ছে...' : 'কাস্টমারের কাছে পাঠান'}
             </button>
           </div>
         </form>
