@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { ReactNode } from 'react';
 import { Order, OrderStatus } from '@/types/order.types';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { buildOrderTabLabel } from '@/components/super-app/order-chat/order-labels';
@@ -11,11 +12,17 @@ interface OrderHistoryListItemProps {
   order: Order;
   isSelected: boolean;
   onSelect: (order: Order) => void;
+  /** Defaults to the customer's label (#ref | technician | provider). */
+  title?: string;
+  /** Defaults to the order's assignee / service picture. */
+  avatar?: ReactNode;
+  /** Replaces the status text, e.g. "Revision" for the provider. */
+  statusOverride?: { text: string; className: string };
 }
 
 /* One row of the Orders list, in the same shape as a service row: picture, title, subtitle, status. */
-export function OrderHistoryListItem({ order, isSelected, onSelect }: OrderHistoryListItemProps) {
-  const status = ORDER_STATUS_LABEL[order.orderStatus];
+export function OrderHistoryListItem({ order, isSelected, onSelect, title, avatar, statusOverride }: OrderHistoryListItemProps) {
+  const status = statusOverride ?? ORDER_STATUS_LABEL[order.orderStatus];
 
   return (
     <button
@@ -26,11 +33,11 @@ export function OrderHistoryListItem({ order, isSelected, onSelect }: OrderHisto
         isSelected ? 'bg-[#f7f5f3]' : 'hover:bg-[#f7f5f3]/60'
       }`}
     >
-      <OrderAvatar order={order} />
+      {avatar ?? <OrderAvatar order={order} />}
 
       <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
         <div className="flex items-center justify-between gap-[8px]">
-          <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{buildOrderTabLabel(order)}</span>
+          <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{title ?? buildOrderTabLabel(order)}</span>
           <span className={`flex shrink-0 items-center gap-[4px] text-[12px] font-semibold ${status.className}`}>
             {order.orderStatus === OrderStatus.COMPLETED && (
               <span className="flex size-[16px] items-center justify-center rounded-full bg-black p-[2px]">

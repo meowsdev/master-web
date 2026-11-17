@@ -49,13 +49,15 @@ export function NavigationRail({
 }: NavigationRailProps) {
   // Guests and customers share the slim Figma rail; staff roles keep the full one.
   const isCustomerView = !activeRole || activeRole === 'CUSTOMER';
-  if (isCustomerView) {
+  const isProviderView = activeRole === 'PROVIDER';
+  if (isCustomerView || isProviderView) {
     return (
       <CustomerNavigationRail
         isAuthenticated={Boolean(user)}
         selection={activeRailTab}
         onSelectTab={onSelectTab}
-        onStartNewOrder={onStartNewOrder}
+        onStartNewOrder={isProviderView ? undefined : onStartNewOrder}
+        showOrdersTab={!isProviderView}
         profilePhoto={user?.profilePhoto}
         onOpenAccount={user ? onOpenProfile : onOpenAuth}
         runningCount={runningCount}
@@ -75,6 +77,7 @@ export function NavigationRail({
     <aside className="z-20 hidden h-full w-[64px] shrink-0 select-none flex-col items-center justify-between overflow-clip bg-[#f7f5f3] px-[8px] pb-[27px] pt-[16px] md:flex">
       {/* Top Navigation Tabs */}
       <div className="flex flex-col items-center gap-[8px]">
+        <Image src="/chat-list/brand-logo.svg" alt="Super App" width={36} height={36} priority className="mb-[8px]" />
         <button
           onClick={() => onSelectTab('CHATS')}
           className={railButtonClass(activeRailTab === 'CHATS')}

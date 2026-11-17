@@ -5,13 +5,15 @@ import { ExtraChargeRequest } from '@/types/extra-charge.types';
 
 interface ExtraChargeCardProps {
   request: ExtraChargeRequest;
+  /** The provider sees the request and its answer, but never the buttons. */
+  viewer?: 'CUSTOMER' | 'PROVIDER';
   isAnswering: boolean;
   onApprove: () => void;
   onReject: () => void;
 }
 
 /* The customer's side of an extra-charge request: what was added, the new bill, and Reject / Approve. */
-export function ExtraChargeCard({ request, isAnswering, onApprove, onReject }: ExtraChargeCardProps) {
+export function ExtraChargeCard({ request, viewer = 'CUSTOMER', isAnswering, onApprove, onReject }: ExtraChargeCardProps) {
   const previousTotal = Number(request.previousTotal);
   const addedTotal = Number(request.totalAmount);
   const isAnswered = request.status !== 'PENDING';
@@ -35,6 +37,13 @@ export function ExtraChargeCard({ request, isAnswering, onApprove, onReject }: E
         <div className="flex justify-between font-semibold"><dt>সর্বমোট নতুন বিল</dt><dd>{formatTaka(previousTotal + addedTotal)}</dd></div>
       </dl>
 
+      {viewer === 'PROVIDER' ? (
+        <footer className="mt-[14px] flex justify-end">
+          <span className="rounded-[10px] bg-[#f7f5f3] px-[14px] py-[8px] text-[14px] font-semibold text-[#697586]">
+            {request.status === 'PENDING' ? 'Waiting for the customer' : request.status === 'APPROVED' ? 'Customer approved' : 'Customer rejected'}
+          </span>
+        </footer>
+      ) : (
       <footer className="mt-[14px] flex items-center justify-end gap-[10px]">
         <button
           type="button"
@@ -53,6 +62,7 @@ export function ExtraChargeCard({ request, isAnswering, onApprove, onReject }: E
           {request.status === 'APPROVED' ? 'Accepted' : 'Approve'}- {formatTaka(previousTotal + addedTotal)}
         </button>
       </footer>
+      )}
     </article>
   );
 }

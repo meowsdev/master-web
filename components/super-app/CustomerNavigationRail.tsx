@@ -17,6 +17,8 @@ interface CustomerNavigationRailProps {
   onOpenAccount: () => void;
   runningCount?: number;
   accountTitle: string;
+  /** Providers only have the Messages tab; customers also get Orders. */
+  showOrdersTab?: boolean;
 }
 
 /*
@@ -34,12 +36,16 @@ export function CustomerNavigationRail({
   onOpenAccount,
   runningCount = 0,
   accountTitle,
+  showOrdersTab = true,
 }: CustomerNavigationRailProps) {
   const iconState = (isSelected: boolean) => (isSelected ? 'active' : 'inactive');
 
   return (
     <aside className="z-20 hidden h-full w-[64px] shrink-0 select-none flex-col items-center justify-between overflow-clip bg-[#f7f5f3] px-[8px] pb-[27px] pt-[16px] md:flex">
       <div className="flex w-[36px] flex-col gap-[8px]">
+        {/* The app logo heads the rail in every role. */}
+        <Image src="/chat-list/brand-logo.svg" alt="Super App" width={36} height={36} priority className="mb-[8px]" />
+
         <button
           type="button"
           onClick={() => onSelectTab('CHATS')}
@@ -50,6 +56,7 @@ export function CustomerNavigationRail({
           <Image src={`/rail/chats-${iconState(selection === 'CHATS')}.svg`} alt="Chats" width={36} height={36} />
         </button>
 
+        {showOrdersTab && (
         <button
           type="button"
           onClick={() => onSelectTab('ORDERS')}
@@ -64,6 +71,7 @@ export function CustomerNavigationRail({
             <span className="absolute right-0 top-0 size-[10px] rounded-full bg-[#1daa61] ring-2 ring-[#f7f5f3]" />
           )}
         </button>
+        )}
       </div>
 
       <div className="flex flex-col items-center gap-[12px]">

@@ -38,6 +38,12 @@ export interface CustomOfferDto {
 }
 
 export const chatService = {
+  /** Provider / technician: the customer's conversation for one of their own orders. */
+  getOrderConversation: async (orderId: string) => {
+    const response = await apiClient.get<ChatSession>(`/chat/orders/${orderId}/conversation`);
+    return response.data;
+  },
+
   getOrCreateConversation: async (dto: CreateConversationDto) => {
     const payload: Record<string, any> = {};
     if (dto.serviceId?.trim()) payload.serviceId = dto.serviceId.trim();

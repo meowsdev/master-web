@@ -38,10 +38,8 @@ export function useProviderOrders({ isProvider, userId }: UseProviderOrdersProps
 
   // Currently selected active order
   const activeOrder = useMemo(() => {
-    if (!activeOrderId) {
-      // Auto-select the first pending order if available
-      return orders[0] || null;
-    }
+    // Nothing is open until the provider picks an order: the landing page shows the empty canvas.
+    if (!activeOrderId) return null;
     return orders.find((o) => o.id === activeOrderId) || null;
   }, [orders, activeOrderId]);
 

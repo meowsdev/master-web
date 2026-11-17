@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { SidebarHeader } from './SidebarHeader';
-import { ProviderOrderList, ProviderOrderFilter } from './ProviderOrderList';
+import { ProviderOrderFilter } from './ProviderOrderList';
+import { ProviderOrdersSidebar } from './provider/ProviderOrdersSidebar';
 import { CounselorChatList } from './CounselorChatList';
 import { ServiceList } from './ServiceList';
 import { CustomerSidebarTop } from './CustomerSidebarTop';
@@ -158,7 +159,7 @@ export function SuperAppSidebar({
       } flex-col w-full md:w-[380px] lg:w-[420px] border-r shrink-0 h-full relative z-10 ${bgSidebar}`}
       style={{ fontFamily: 'var(--font-manrope), sans-serif' }}
     >
-      {isStaffView && (
+      {isStaffView && !isProvider && (
       <SidebarHeader
         isDarkMode={isDarkMode}
         soundEnabled={soundEnabled}
@@ -174,28 +175,18 @@ export function SuperAppSidebar({
       />
       )}
 
-      {isProvider ? (
-        /* Role: PROVIDER - Shows Assigned Job Orders & Dispatches */
-        <ProviderOrderList
+      {isProvider && user ? (
+        /* Role: PROVIDER - the Figma landing list: profile with due + Pay Now, search, chips, one row per order */
+        <ProviderOrdersSidebar
+          user={user}
           orders={providerOrders}
           isLoading={isProviderOrdersLoading}
-          onRefresh={refetchProviderOrders}
           activeOrderId={activeOrderId}
           onSelectOrder={(order) => {
             setActiveOrderId(order.id);
             setMobileView('CHAT');
           }}
-          searchQuery={providerSearchQuery}
-          onSearchChange={setProviderSearchQuery}
-          activeFilter={providerActiveFilter}
-          onSelectFilter={setProviderActiveFilter}
-          user={user}
-          onOpenProfile={onOpenProfile}
-          onOpenSkillsModal={onOpenSkillsModal}
-          onOpenTeamManagement={onOpenTeamManagement}
-          onOpenLeveling={onOpenLeveling}
-          onOpenStartChat={onOpenStartChat}
-          isDarkMode={isDarkMode}
+          onOpenAuth={() => onOpenAuth('LOGIN')}
         />
       ) : isCounselor ? (
         /* Role: COUNSELOR - Shows 4 Control Panel Tabs (Public, Ongoing, Hold, Completed) */

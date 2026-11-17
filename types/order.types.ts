@@ -41,6 +41,7 @@ export interface ProviderReview {
 export interface OrderUserProfile {
   id: string;
   name?: string | null;
+  username?: string | null;
   mobileNumber: string;
   profilePhoto?: string | null;
 }
@@ -88,6 +89,10 @@ export interface OrderAssignee {
   provider: string | null;
   /** Technician first, else the provider. */
   primary: string | null;
+  /** "@manik05"; null until a provider accepts. */
+  providerUsername: string | null;
+  /** The provider's company name, or their own name without a company; null until accepted. */
+  providerName: string | null;
 }
 
 /** Who is coming for an accepted order; null while it is still pending. */

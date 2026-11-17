@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useHorizontalScroll } from '@/hooks/useHorizontalScroll';
 import { FilterChip } from '@/types/super-app.types';
@@ -30,6 +31,8 @@ interface CustomerSidebarTopProps {
   isSearchCollapsed: boolean;
   /** The Orders list reuses this top section with its own placeholder. */
   searchPlaceholder?: string;
+  /** Replaces the customer profile header (the provider view shows its own, with the due and Pay Now). */
+  profileSlot?: ReactNode;
 }
 
 /* Brand header, search pill and filter chips of the Figma customer sidebar. */
@@ -50,6 +53,7 @@ export function CustomerSidebarTop({
   showBrandRow = true,
   isSearchCollapsed,
   searchPlaceholder = 'Search services...',
+  profileSlot,
 }: CustomerSidebarTopProps) {
   const filterChips: FilterChip[] = ['All', ...categoryNames];
   const { ref: chipRowRef, canScrollLeft, canScrollRight, scrollByAmount, wasDragged } =
@@ -59,10 +63,11 @@ export function CustomerSidebarTop({
     'absolute top-1/2 z-10 flex size-[28px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[#e5e5e5] bg-white text-[#202939] shadow-md transition-transform hover:scale-110';
   return (
     <div className={`flex shrink-0 flex-col px-[8px] pb-0 ${showBrandRow ? 'pt-[8px]' : 'pt-0'}`}>
-      {showBrandRow && isAuthenticated && user && onStartNewOrder && (
+      {showBrandRow && profileSlot}
+      {showBrandRow && !profileSlot && isAuthenticated && user && onStartNewOrder && (
         <CustomerProfileHeader user={user} onStartNewOrder={onStartNewOrder} />
       )}
-      {showBrandRow && !(isAuthenticated && user && onStartNewOrder) && (
+      {showBrandRow && !profileSlot && !(isAuthenticated && user && onStartNewOrder) && (
         <div className="flex h-[50px] items-center justify-between">
           <div className="flex items-center gap-[8px]">
             <Image src="/chat-list/brand-logo.svg" alt="" width={36} height={36} />

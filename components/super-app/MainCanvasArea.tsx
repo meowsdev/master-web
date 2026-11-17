@@ -8,7 +8,8 @@ import { User } from '@/types/auth.types';
 import { ChatMessage, OrderCardData } from '@/types/super-app.types';
 import { CounselorChatItem } from '@/types/counselor.types';
 import { SIDE_PANEL_RESERVE_CLASS } from '@/components/modals/side-panel';
-import { ProviderOrderCanvas } from './ProviderOrderCanvas';
+import { ProviderOrderWorkspace } from './provider/ProviderOrderWorkspace';
+import { ChatEmptyHeader } from './ChatEmptyHeader';
 import { CustomerOrdersCanvas } from './order-history/CustomerOrdersCanvas';
 import { CustomerChatCanvas } from './CustomerChatCanvas';
 import { CounselorChatCanvas } from './CounselorChatCanvas';
@@ -153,16 +154,22 @@ export function MainCanvasArea({
           hasRunningOrder={runningServiceIds.length > 0}
           isDarkMode={isDarkMode}
         />
-      ) : isProvider && activeProviderOrder ? (
-        /* 2. Provider Order Workspace */
-        <ProviderOrderCanvas
+      ) : isProvider && activeProviderOrder && user ? (
+        /* 2. Provider Order Workspace: full order info + live chat with the customer */
+        <ProviderOrderWorkspace
           order={activeProviderOrder}
+          userId={user.id}
           onBack={() => setMobileView('LIST')}
           onUpdateStatus={handleUpdateStatus}
           isUpdatingStatus={isUpdatingStatus}
           onStartCall={handleStartCall}
-          isDarkMode={isDarkMode}
         />
+      ) : isProvider ? (
+        /* 2a. Provider landing: nothing open yet, just the header with Switch Account */
+        <>
+          <ChatEmptyHeader onSwitchAccount={openSettings} menuItems={[]} />
+          <div className="flex-1 bg-[#f7f5f3]" />
+        </>
       ) : isCounselor && activeCounselorChat ? (
         /* 2.5 Counselor Chat Workspace */
         <CounselorChatCanvas

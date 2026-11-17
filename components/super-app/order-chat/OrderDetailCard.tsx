@@ -1,26 +1,17 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
-import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
+import { useEffect, useState } from 'react';
 import { Alert02Icon, Calendar03Icon, Home01Icon, Note01Icon, ScaleIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
 import { Order, OrderStatus, PaymentStatus } from '@/types/order.types';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { buildOrderTabLabel, formatScheduleDate } from './order-labels';
+import { OrderDetailLine } from './OrderDetailLine';
 
 interface OrderDetailCardProps {
   order: Order;
   onPayNow: () => void;
   onCancel: () => void;
   isCancelling: boolean;
-}
-
-function DetailLine({ icon, children }: { icon: IconSvgElement; children: ReactNode }) {
-  return (
-    <li className="flex items-start gap-[10px] text-[14px] font-medium text-[#202939]">
-      <HugeiconsIcon icon={icon} size={18} className="mt-[2px] shrink-0" />
-      <span className="min-w-0">{children}</span>
-    </li>
-  );
 }
 
 /**
@@ -76,24 +67,24 @@ export function OrderDetailCard({ order, onPayNow, onCancel, isCancelling }: Ord
       </header>
 
       <ul className="mt-[14px] flex flex-col gap-[10px]">
-        <DetailLine icon={Wrench01Icon}>{order.service?.category?.name}</DetailLine>
+        <OrderDetailLine icon={Wrench01Icon}>{order.service?.category?.name}</OrderDetailLine>
         {problemLine && (
-          <DetailLine icon={Alert02Icon}>
+          <OrderDetailLine icon={Alert02Icon}>
             {problemLine.label}
             {problemLine.count > 1 ? ` × ${problemLine.count}` : ''} ({formatTaka(problemLine.amount)})
-          </DetailLine>
+          </OrderDetailLine>
         )}
-        {detail?.description && <DetailLine icon={Note01Icon}>{detail.description}</DetailLine>}
+        {detail?.description && <OrderDetailLine icon={Note01Icon}>{detail.description}</OrderDetailLine>}
         {surchargeLines.map((line) => (
-          <DetailLine key={line.label} icon={ScaleIcon}>
+          <OrderDetailLine key={line.label} icon={ScaleIcon}>
             {line.label} ({formatTaka(line.amount)})
-          </DetailLine>
+          </OrderDetailLine>
         ))}
-        {detail && <DetailLine icon={Home01Icon}>{detail.addressDetail}</DetailLine>}
+        {detail && <OrderDetailLine icon={Home01Icon}>{detail.addressDetail}</OrderDetailLine>}
         {detail && (
-          <DetailLine icon={Calendar03Icon}>
+          <OrderDetailLine icon={Calendar03Icon}>
             {formatScheduleDate(detail.scheduledDate)} | {detail.timeSlot}
-          </DetailLine>
+          </OrderDetailLine>
         )}
       </ul>
 

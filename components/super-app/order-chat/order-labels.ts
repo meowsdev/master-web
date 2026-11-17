@@ -1,14 +1,12 @@
 import { Order } from '@/types/order.types';
 
-const WAITING_LABEL = 'Waiting...';
-
-/** "#A94K2B | @hamid115 | SmartCool" — technician first, provider after; "Waiting..." until someone is assigned. */
+/**
+ * "#A94K2B | @manik05 | Master" - the order id, the provider's username, then their company
+ * (or their own name without a company). Until a provider accepts, only "#A94K2B".
+ */
 export function buildOrderTabLabel(order: Order): string {
-  const { technician, provider } = order.assignee ?? { technician: null, provider: null };
-  const parts = [`#${order.referenceCode}`, technician ?? provider ?? WAITING_LABEL];
-  if (technician && provider) parts.push(provider);
-  if (!technician && !provider) parts.push(WAITING_LABEL);
-  return parts.join(' | ');
+  const { providerUsername, providerName } = order.assignee ?? { providerUsername: null, providerName: null };
+  return [`#${order.referenceCode}`, providerUsername, providerName].filter(Boolean).join(' | ');
 }
 
 /** The scheduled day in Bengali, e.g. "২০ নভেম্বর ২০২৬". */
