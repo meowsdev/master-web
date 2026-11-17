@@ -30,6 +30,12 @@ export function ScheduleSection({ state }: { state: FormState }) {
         options={locations.upazilas.map((upazila) => ({ value: upazila.id, label: upazila.bnName || upazila.name }))}
         onChange={(value) => state.setUpazilaId(value ? Number(value) : null)}
       />
+      {locations.hasUpazilaError && (
+        <p className="mt-[6px] text-[12px] font-medium text-[#d64545]">
+          উপজেলার তালিকা লোড হয়নি।{' '}
+          <button type="button" onClick={() => locations.retryUpazilas()} className="cursor-pointer font-semibold underline">আবার চেষ্টা করুন</button>
+        </p>
+      )}
       <OrderField icon={Home01Icon}>
         <input
           value={state.addressDetail}

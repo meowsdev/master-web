@@ -166,6 +166,10 @@ export interface Order {
     dueAfter?: string | number | null;
     createdAt: string;
   }>;
+  /** False while the order is only offered to providers (the provider on it is a stand-in); true once one accepted. */
+  isAccepted?: boolean;
+  /** Provider only: while a new order is offered to them, when their offer runs out. */
+  myOfferExpiresAt?: string | null;
   /** Completed, not reviewed yet: the tab stays so the payment result and review card show. */
   isReviewPending?: boolean;
   revisions?: ServiceRevision[];

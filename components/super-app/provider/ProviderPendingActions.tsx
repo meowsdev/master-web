@@ -1,28 +1,64 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { ordersService } from '@/services/orders.service';
 import { Order, OrderStatus } from '@/types/order.types';
 
 interface ProviderPendingActionsProps {
   order: Order;
+  userId: string;
   onUpdateStatus: (status: OrderStatus) => Promise<void>;
   isUpdatingStatus: boolean;
 }
 
+/** "1:12" left on the offer, ticking; null when the offer has no end time. */
+function useOfferCountdown(expiresAt?: string | null) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!expiresAt) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [expiresAt]);
+  if (!expiresAt) return null;
+  const seconds = Math.max(0, Math.ceil((new Date(expiresAt).getTime() - now) / 1000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
 /*
- * Accept / Decline for a new order, on its card. Accepting starts the work at once (there is no
- * separate Start Work step). The backend decides whether the provider may take the order.
+ * Accept / Decline for a new order, on its card. The order was offered to several providers at once:
+ * Accept starts the work if you are first (the backend decides), and Decline only turns down your own
+ * offer, so the order stays open for the others. Accepting starts the work at once.
  */
-export function ProviderPendingActions({ order, onUpdateStatus, isUpdatingStatus }: ProviderPendingActionsProps) {
+export function ProviderPendingActions({ order, userId, onUpdateStatus, isUpdatingStatus }: ProviderPendingActionsProps) {
+  const queryClient = useQueryClient();
+  const timeLeft = useOfferCountdown(order.myOfferExpiresAt);
+
+  const decline = useMutation({
+    mutationFn: () => ordersService.declineOffer(order.id),
+    onSuccess: () => {
+      toast.info('You declined this order. It stays open for other providers.');
+      queryClient.invalidateQueries({ queryKey: ['provider-assigned-orders', userId] });
+    },
+    onError: (error) => {
+      const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
+      toast.error((Array.isArray(message) ? message[0] : message) || 'Could not decline this order');
+    },
+  });
+
   if (order.orderStatus !== OrderStatus.PENDING) return null;
+  const isBusy = isUpdatingStatus || decline.isPending;
 
   return (
-    <div className="flex items-center gap-[8px]">
-      <button type="button" disabled={isUpdatingStatus} onClick={() => onUpdateStatus(OrderStatus.IN_PROGRESS)} className="cursor-pointer rounded-[10px] bg-[#1daa61] px-[18px] py-[8px] text-[14px] font-semibold text-white hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50">
+    <div className="flex flex-wrap items-center gap-[8px]">
+      <button type="button" disabled={isBusy} onClick={() => onUpdateStatus(OrderStatus.IN_PROGRESS)} className="cursor-pointer rounded-[10px] bg-[#1daa61] px-[18px] py-[8px] text-[14px] font-semibold text-white hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50">
         Accept
       </button>
-      <button type="button" disabled={isUpdatingStatus} onClick={() => onUpdateStatus(OrderStatus.CANCELLED)} className="cursor-pointer rounded-[10px] border border-[#cecece] bg-white px-[18px] py-[8px] text-[14px] font-semibold text-[#202939] hover:bg-[#f7f5f3] disabled:cursor-not-allowed disabled:opacity-50">
+      <button type="button" disabled={isBusy} onClick={() => decline.mutate()} className="cursor-pointer rounded-[10px] border border-[#cecece] bg-white px-[18px] py-[8px] text-[14px] font-semibold text-[#202939] hover:bg-[#f7f5f3] disabled:cursor-not-allowed disabled:opacity-50">
         Decline
       </button>
+      {timeLeft && <span className="text-[13px] font-medium text-[#697586]">Respond within {timeLeft}</span>}
     </div>
   );
 }

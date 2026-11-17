@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 
-/** assign / extraCharge / complete: the provider's job panels. advance: the customer's Pay Now panel. */
-export type OrderPanelKind = 'assign' | 'extraCharge' | 'complete' | 'advance';
+/** assign / extraCharge / complete: the provider's job panels. advance: the customer's Pay Now panel. admin*: the admin's management panels (orderId is null, except adminService where it holds the service id, or 'new' / 'new:<categoryId>' while creating one under a main service). */
+export type OrderPanelKind = 'assign' | 'extraCharge' | 'complete' | 'advance' | 'adminService' | 'adminCategory' | 'adminTechnicians' | 'adminProviders';
 
 interface ProviderPanelState {
   /** Which order the open panel belongs to, so it never shows over another order. */
   orderId: string | null;
   kind: OrderPanelKind | null;
-  open: (orderId: string, kind: OrderPanelKind) => void;
+  open: (orderId: string | null, kind: OrderPanelKind) => void;
   close: () => void;
 }
 

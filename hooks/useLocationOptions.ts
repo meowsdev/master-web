@@ -26,5 +26,8 @@ export function useLocationOptions(districtId: number | null) {
     upazilas: districtId === null ? [] : (upazilasQuery.data ?? []),
     isLoadingDistricts: districtsQuery.isLoading,
     isLoadingUpazilas: upazilasQuery.isFetching,
+    /** The list could not be loaded (for example the server is down); the form says so and offers a retry. */
+    hasUpazilaError: upazilasQuery.isError,
+    retryUpazilas: () => upazilasQuery.refetch(),
   };
 }

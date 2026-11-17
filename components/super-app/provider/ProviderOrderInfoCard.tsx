@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert02Icon, Calendar03Icon, CreditCardIcon, Home01Icon, Note01Icon, ScaleIcon, UserIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
+import { Alert02Icon, Calendar03Icon, CreditCardIcon, Call02Icon, Home01Icon, Note01Icon, Store01Icon, ScaleIcon, UserIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { ReactNode } from 'react';
 import { Order } from '@/types/order.types';
@@ -13,10 +13,12 @@ interface ProviderOrderInfoCardProps {
   order: Order;
   /** What the provider can do next; lives on the card so every step happens in one place. */
   actions?: ReactNode;
+  /** Admin view: also name the provider and technician and show phone numbers (the backend sends numbers to staff only). */
+  showParties?: boolean;
 }
 
 /* Everything the provider needs to know about the job: who, what, where, when and the money. The customer's phone number is never shown; the backend does not send it either. */
-export function ProviderOrderInfoCard({ order, actions }: ProviderOrderInfoCardProps) {
+export function ProviderOrderInfoCard({ order, actions, showParties = false }: ProviderOrderInfoCardProps) {
   const detail = order.bookingDetail;
   const customer = order.customer?.user;
   const status = ORDER_STATUS_LABEL[order.orderStatus];
@@ -31,6 +33,17 @@ export function ProviderOrderInfoCard({ order, actions }: ProviderOrderInfoCardP
 
       <ul className="mt-[14px] flex flex-col gap-[10px]">
         <OrderDetailLine icon={UserIcon}>{customer?.name ?? 'Customer'}</OrderDetailLine>
+        {showParties && customer?.mobileNumber && <OrderDetailLine icon={Call02Icon}>Customer: {customer.mobileNumber}</OrderDetailLine>}
+        {/* Until a provider accepts, the provider on the order is only a stand-in, so nobody is named. */}
+        {showParties && !order.isAccepted && <OrderDetailLine icon={Store01Icon}>Provider: waiting for a provider to accept</OrderDetailLine>}
+        {showParties && order.isAccepted && (
+          <OrderDetailLine icon={Store01Icon}>
+            Provider: {order.provider?.companyName || order.provider?.user?.name || '—'}
+            {order.provider?.user?.username ? ` (@${order.provider.user.username})` : ''}
+          </OrderDetailLine>
+        )}
+        {showParties && order.isAccepted && order.provider?.user?.mobileNumber && <OrderDetailLine icon={Call02Icon}>Provider: {order.provider.user.mobileNumber}</OrderDetailLine>}
+        {showParties && order.isAccepted && order.technician?.user && <OrderDetailLine icon={UserIcon}>Technician: {order.technician.user.name ?? order.technician.user.username}</OrderDetailLine>}
         <OrderDetailLine icon={Wrench01Icon}>{order.service?.category?.name}</OrderDetailLine>
         {problemLine && (
           <OrderDetailLine icon={Alert02Icon}>

@@ -88,6 +88,16 @@ export function usePlaceOrderForm({ initialServiceId, onPlaced }: UsePlaceOrderF
     subService && districtId && upazilaId && addressDetail.trim() && scheduledDate && timeSlot,
   );
 
+  // Names what is still missing, so a greyed-out Confirm button always explains itself.
+  const missingFields = [
+    !subService && 'সমস্যা',
+    !districtId && 'জেলা',
+    !upazilaId && 'উপজেলা',
+    !addressDetail.trim() && 'ঠিকানা',
+    !scheduledDate && 'তারিখ',
+    !timeSlot && 'টাইম',
+  ].filter((field): field is string => Boolean(field));
+
   const submit = async () => {
     if (!isReady || !subService || !districtId || !upazilaId) return;
     setIsSubmitting(true);
@@ -122,6 +132,6 @@ export function usePlaceOrderForm({ initialServiceId, onPlaced }: UsePlaceOrderF
     locations, districtId, selectDistrict, upazilaId, setUpazilaId,
     addressDetail, setAddressDetail,
     scheduledDate, setScheduledDate, timeSlot, setTimeSlot,
-    quote, isReady, isSubmitting, submit,
+    quote, isReady, missingFields, isSubmitting, submit,
   };
 }

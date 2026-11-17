@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { RailSelection, RailTab } from '@/types/super-app.types';
 import { User } from '@/types/auth.types';
 import { CustomerNavigationRail } from './CustomerNavigationRail';
+import { AdminNavigationRail } from './admin/AdminNavigationRail';
 
 interface NavigationRailProps {
   /** The selected tab, or ORDERS / ACCOUNT while that right-hand panel is open. */
@@ -50,6 +51,9 @@ export function NavigationRail({
   // Guests and customers share the slim Figma rail; staff roles keep the full one.
   const isCustomerView = !activeRole || activeRole === 'CUSTOMER';
   const isProviderView = activeRole === 'PROVIDER';
+  if (activeRole === 'ADMIN') {
+    return <AdminNavigationRail selection={activeRailTab} onSelectTab={onSelectTab} profilePhoto={user?.profilePhoto} onOpenAccount={onOpenProfile} />;
+  }
   if (isCustomerView || isProviderView) {
     return (
       <CustomerNavigationRail

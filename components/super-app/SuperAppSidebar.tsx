@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { SidebarHeader } from './SidebarHeader';
 import { ProviderOrderFilter } from './ProviderOrderList';
 import { ProviderOrdersSidebar } from './provider/ProviderOrdersSidebar';
+import { AdminOrdersSidebar } from './admin/AdminOrdersSidebar';
+import { AdminServicesSidebar } from './admin/AdminServicesSidebar';
 import { CounselorChatList } from './CounselorChatList';
 import { ServiceList } from './ServiceList';
 import { CustomerSidebarTop } from './CustomerSidebarTop';
@@ -149,6 +151,7 @@ export function SuperAppSidebar({
 }: SuperAppSidebarProps) {
   // Staff roles keep the options-menu header (restyled to Figma); guests/customers get the Join Now header.
   const [isSearchCollapsed, setIsSearchCollapsed] = useState(false);
+  const isAdmin = activeRole === 'ADMIN';
   const isStaffView = Boolean(activeRole && activeRole !== 'CUSTOMER');
   const bgSidebar = isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]';
 
@@ -159,7 +162,7 @@ export function SuperAppSidebar({
       } flex-col w-full md:w-[380px] lg:w-[420px] border-r shrink-0 h-full relative z-10 ${bgSidebar}`}
       style={{ fontFamily: 'var(--font-manrope), sans-serif' }}
     >
-      {isStaffView && !isProvider && (
+      {isStaffView && !isProvider && !isAdmin && (
       <SidebarHeader
         isDarkMode={isDarkMode}
         soundEnabled={soundEnabled}
@@ -175,7 +178,12 @@ export function SuperAppSidebar({
       />
       )}
 
-      {isProvider && user ? (
+      {isAdmin && user && activeRailTab === 'SERVICES' ? (
+        <AdminServicesSidebar user={user} onServiceOpened={() => setMobileView('CHAT')} onOpenAuth={() => onOpenAuth('LOGIN')} />
+      ) : isAdmin && user ? (
+        /* Role: ADMIN - every order on the platform, same list design as the provider */
+        <AdminOrdersSidebar user={user} onOrderOpened={() => setMobileView('CHAT')} onOpenAuth={() => onOpenAuth('LOGIN')} />
+      ) : isProvider && user ? (
         /* Role: PROVIDER - the Figma landing list: profile with due + Pay Now, search, chips, one row per order */
         <ProviderOrdersSidebar
           user={user}
@@ -187,6 +195,7 @@ export function SuperAppSidebar({
             setMobileView('CHAT');
           }}
           onOpenAuth={() => onOpenAuth('LOGIN')}
+          onOpenSkills={onOpenSkillsModal}
         />
       ) : isCounselor ? (
         /* Role: COUNSELOR - Shows 4 Control Panel Tabs (Public, Ongoing, Hold, Completed) */

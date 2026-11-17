@@ -4,12 +4,17 @@ import { ReactNode } from 'react';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons';
 
-/** One underlined row of the Figma order form: a leading icon and the control. */
+/**
+ * One row of the Figma order form: a leading icon and the control. The underline belongs to the control
+ * only, so it starts after the icon and never runs beneath it.
+ */
 export function OrderField({ icon, children }: { icon: IconSvgElement; children: ReactNode }) {
   return (
-    <div className="flex items-center gap-[12px] border-b border-[#202939]/60 pb-[8px] pt-[22px]">
-      <HugeiconsIcon icon={icon} size={20} className="shrink-0 text-[#202939]" />
-      {children}
+    <div className="flex items-start gap-[12px] pt-[22px]">
+      <span className="flex h-[22px] shrink-0 items-center">
+        <HugeiconsIcon icon={icon} size={20} className="text-[#202939]" />
+      </span>
+      <div className="flex min-w-0 flex-1 items-center gap-[12px] border-b border-[#202939]/60 pb-[8px]">{children}</div>
     </div>
   );
 }

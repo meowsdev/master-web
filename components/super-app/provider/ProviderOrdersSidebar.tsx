@@ -16,13 +16,15 @@ interface ProviderOrdersSidebarProps {
   activeOrderId: string | null;
   onSelectOrder: (order: Order) => void;
   onOpenAuth: () => void;
+  /** Opens the services this provider offers. New orders only reach providers who enabled the service. */
+  onOpenSkills: () => void;
 }
 
 /*
  * The provider's landing list: their profile with the due and Pay Now, search, status chips and
  * one row per order (id and customer). Same top section and rows as the customer's list.
  */
-export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, onSelectOrder, onOpenAuth }: ProviderOrdersSidebarProps) {
+export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, onSelectOrder, onOpenAuth, onOpenSkills }: ProviderOrdersSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilterChip, setActiveFilterChip] = useState('All');
 
@@ -58,6 +60,9 @@ export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, 
       />
 
       <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[8px]">
+        <button type="button" onClick={onOpenSkills} className="mb-[4px] w-full cursor-pointer rounded-[10px] bg-[#f7f5f3] px-[12px] py-[8px] text-left text-[13px] font-semibold text-[#202939] hover:bg-[#efede9]">
+          Services I offer <span className="font-medium text-[#697586]">— enable a service to receive its orders</span>
+        </button>
         {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-[#697586]">Loading orders...</p>}
         {!isLoading && visibleOrders.length === 0 && (
           <p className="p-[24px] text-center text-[14px] font-medium text-[#697586]">{orders.length === 0 ? 'No orders yet.' : 'No orders match.'}</p>

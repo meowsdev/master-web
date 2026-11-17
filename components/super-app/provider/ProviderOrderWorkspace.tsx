@@ -62,7 +62,7 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
         {timeline.map((entry) => {
           switch (entry.kind) {
             case 'order':
-              return <ProviderOrderInfoCard key={entry.key} order={order} actions={<ProviderPendingActions order={order} onUpdateStatus={onUpdateStatus} isUpdatingStatus={isUpdatingStatus} />} />;
+              return <ProviderOrderInfoCard key={entry.key} order={order} actions={<ProviderPendingActions order={order} userId={userId} onUpdateStatus={onUpdateStatus} isUpdatingStatus={isUpdatingStatus} />} />;
             case 'extraCharge':
               return <ExtraChargeCard key={entry.key} request={entry.request} viewer="PROVIDER" isAnswering={false} onApprove={() => {}} onReject={() => {}} />;
             case 'advance':

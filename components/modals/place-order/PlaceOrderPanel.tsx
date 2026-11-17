@@ -51,6 +51,9 @@ export function PlaceOrderPanel({ initialServiceId, onClose, onPlaced }: PlaceOr
             {state.isSubmitting ? 'Placing order...' : 'Confirm & Chat'}
           </button>
         </div>
+        {!state.isReady && state.missingFields.length > 0 && (
+          <p className="mt-[10px] text-center text-[12px] font-medium text-[#697586]">বাকি আছে: {state.missingFields.join(', ')}</p>
+        )}
       </div>
     </SidePanelShell>
   );

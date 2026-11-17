@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Video, Mic, MicOff, PhoneMissed } from 'lucide-react';
 import { Service } from '@/types/service.types';
+import { EntityPicture } from '@/components/common/EntityPicture';
 
 interface CallingModalProps {
   isOpen: boolean;
@@ -50,8 +51,8 @@ export function CallingModal({
       >
         {/* Caller Avatar */}
         <div className="relative mx-auto w-24 h-24">
-          <div className="w-24 h-24 rounded-full bg-[#202c33] border-4 border-[#25D366] flex items-center justify-center text-4xl shadow-xl">
-            {service.category?.iconUrl || '🛠️'}
+          <div className="w-24 h-24 overflow-hidden rounded-full bg-[#202c33] border-4 border-[#25D366] flex items-center justify-center text-4xl shadow-xl">
+            <EntityPicture source={service.category?.iconUrl} />
           </div>
           <span className="absolute bottom-1 right-1 w-4 h-4 bg-[#25D366] rounded-full border-2 border-[#111b21] animate-pulse" />
         </div>

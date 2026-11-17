@@ -19,7 +19,7 @@ function ServiceHero({ service }: { service: Service }) {
   if (service.imageUrl) {
     return (
       <div className="relative aspect-[2/1] w-full overflow-hidden rounded-[12px] bg-[#f7f5f3]">
-        <Image src={service.imageUrl} alt={service.name} fill sizes="530px" className="object-cover" />
+        <Image src={service.imageUrl} alt={service.name} fill sizes="530px" unoptimized className="object-cover" />
       </div>
     );
   }

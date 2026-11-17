@@ -5,6 +5,7 @@ import { Calendar, CheckCheck } from 'lucide-react';
 import { Service } from '@/types/service.types';
 import { ChatMessage } from '@/types/super-app.types';
 import { OrderCard } from './OrderCard';
+import { EntityPicture } from '@/components/common/EntityPicture';
 
 interface ChatMessagesProps {
   activeService: Service;
@@ -84,11 +85,11 @@ export function ChatMessages({
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xl ${
+                    className={`w-10 h-10 overflow-hidden rounded-xl flex items-center justify-center shrink-0 text-xl ${
                       isDarkMode ? 'bg-[#005c4b]/50 text-white' : 'bg-[#e7fce3] text-[#075E54]'
                     }`}
                   >
-                    {activeService.category?.iconUrl || '🛠️'}
+                    <EntityPicture source={activeService.category?.iconUrl} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className={`text-[15px] font-bold leading-snug ${textPrimary}`}>

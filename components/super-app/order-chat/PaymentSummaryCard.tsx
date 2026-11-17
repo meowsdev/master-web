@@ -19,7 +19,7 @@ const METHOD_LABEL: Record<string, string> = { CASH: 'ক্যাশ', BKASH: '
  * the bill, the tip and the total, so neither has to work them out. The customer's own card is the
  * mint bubble on the right; the provider's is the white incoming card on the left.
  */
-export function PaymentSummaryCard({ order, viewer }: { order: Order; viewer: 'CUSTOMER' | 'PROVIDER' }) {
+export function PaymentSummaryCard({ order, viewer }: { order: Order; viewer: 'CUSTOMER' | 'PROVIDER' | 'ADMIN' }) {
   const payment = order.paymentAndTip;
   if (!payment) return null;
 
@@ -31,7 +31,7 @@ export function PaymentSummaryCard({ order, viewer }: { order: Order; viewer: 'C
   const isMine = viewer === 'CUSTOMER';
   // Cash goes to the provider, so the platform's share becomes their due. Online money reaches the platform first.
   const companyShare = Number(order.adminCommission);
-  const providerOwesCompany = viewer === 'PROVIDER' && payment.paymentMode === 'CASH' && companyShare > 0;
+  const providerOwesCompany = viewer !== 'CUSTOMER' && payment.paymentMode === 'CASH' && companyShare > 0;
 
   return (
     <article className={`w-full max-w-[460px] rounded-[16px] p-[16px] text-[#202939] ${isMine ? 'ml-auto bg-[#ade2cf]' : 'bg-white shadow-sm'}`}>
@@ -43,10 +43,10 @@ export function PaymentSummaryCard({ order, viewer }: { order: Order; viewer: 'C
         <Line icon={UserIcon}>টিপস: {tipAmount > 0 ? formatTaka(tipAmount) : 'নেই'}</Line>
         <Line icon={Wallet01Icon}>{advanceAmount > 0 ? 'শেষ পেমেন্ট' : 'মোট পেমেন্ট'}: {formatTaka(totalPaid)}</Line>
         <Line icon={CreditCardIcon}>পেমেন্ট পদ্ধতি: {METHOD_LABEL[payment.paymentMode] ?? payment.paymentMode}</Line>
-        {providerOwesCompany && <Line icon={Money01Icon}>কোম্পানিকে দিতে হবে: {formatTaka(companyShare)}</Line>}
+        {providerOwesCompany && <Line icon={Money01Icon}>{viewer === 'ADMIN' ? 'কোম্পানির পাওনা (প্রোভাইডারের ডিউ)' : 'কোম্পানিকে দিতে হবে'}: {formatTaka(companyShare)}</Line>}
       </ul>
 
-      {providerOwesCompany && (
+      {providerOwesCompany && viewer === 'PROVIDER' && (
         <p className="mt-[10px] text-[12px] font-medium text-[#697586]">ক্যাশ আপনি পেয়েছেন, তাই এই পরিমাণ আপনার প্রোফাইলের ডিউতে যোগ হয়েছে। Pay Now দিয়ে কোম্পানিকে পরিশোধ করুন।</p>
       )}
 

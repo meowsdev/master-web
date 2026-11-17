@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { X, Search, Check, ListFilter } from 'lucide-react';
 import { Service } from '@/types/service.types';
+import { EntityPicture } from '@/components/common/EntityPicture';
 
 interface CreateFilterModalProps {
   isOpen: boolean;
@@ -162,8 +163,8 @@ export function CreateFilterModal({
                     className={`flex items-center justify-between py-2.5 px-2 rounded-lg cursor-pointer transition-colors ${rowHover}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-[#f0f2f5] dark:bg-[#111b21] flex items-center justify-center text-sm shrink-0">
-                        {service.category?.iconUrl || '🛠️'}
+                      <div className="w-8 h-8 overflow-hidden rounded-full bg-[#f0f2f5] dark:bg-[#111b21] flex items-center justify-center text-sm shrink-0">
+                        <EntityPicture source={service.category?.iconUrl} />
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium leading-tight truncate">{service.name}</p>

@@ -68,6 +68,12 @@ export const ordersService = {
     return response.data;
   },
 
+  /** Provider: turn down the offer of a new order. The order stays open for the other providers. */
+  declineOffer: async (id: string) => {
+    const response = await apiClient.post<{ declined: true }>(`/orders/${id}/decline-offer`);
+    return response.data;
+  },
+
   acceptPrice: async (id: string) => {
     const response = await apiClient.patch<Order>(`/orders/${id}/accept-price`);
     return response.data;

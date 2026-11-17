@@ -54,16 +54,20 @@ export function CustomerRatingCard({ order, userId }: { order: Order; userId: st
         ))}
       </div>
 
-      <label className="mt-[22px] flex items-center gap-[10px] border-b border-[#202939]/60 pb-[6px]">
-        <HugeiconsIcon icon={Comment01Icon} size={18} className="shrink-0" />
-        <input
-          value={isRated ? saved.comment ?? '' : comment}
-          onChange={(event) => setComment(event.target.value)}
-          readOnly={isRated}
-          maxLength={300}
-          placeholder="মতামত দিন..."
-          className="min-w-0 flex-1 bg-transparent text-[14px] font-medium outline-none placeholder:text-[#9aa4b2]"
-        />
+      <label className="mt-[22px] flex items-start gap-[10px]">
+        <span className="flex h-[22px] shrink-0 items-center">
+          <HugeiconsIcon icon={Comment01Icon} size={18} />
+        </span>
+        <span className="flex min-w-0 flex-1 border-b border-[#202939]/60 pb-[6px]">
+          <input
+            value={isRated ? saved.comment ?? '' : comment}
+            onChange={(event) => setComment(event.target.value)}
+            readOnly={isRated}
+            maxLength={300}
+            placeholder="মতামত দিন..."
+            className="min-w-0 flex-1 bg-transparent text-[14px] font-medium outline-none placeholder:text-[#9aa4b2]"
+          />
+        </span>
       </label>
 
       <footer className="mt-[16px] flex justify-end">

@@ -8,6 +8,7 @@ import { servicesService } from '@/services/services.service';
 import { serviceAssigneeService } from '@/services/service-assignee.service';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Service } from '@/types/service.types';
+import { EntityPicture } from '@/components/common/EntityPicture';
 
 interface ProviderSkillsModalProps {
   isOpen: boolean;
@@ -197,7 +198,7 @@ export function ProviderSkillsModal({
             categories.map((cat) => (
               <div key={cat.name} className="space-y-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-base">{cat.icon}</span>
+                  <span className="flex size-[22px] items-center justify-center overflow-hidden rounded-full text-base"><EntityPicture source={cat.icon} /></span>
                   <h4 className={`text-xs font-bold uppercase tracking-wider ${textSecondary}`}>
                     {cat.name} ({cat.services.length})
                   </h4>

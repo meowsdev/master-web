@@ -10,6 +10,7 @@ import { CounselorChatItem } from '@/types/counselor.types';
 import { SIDE_PANEL_RESERVE_CLASS } from '@/components/modals/side-panel';
 import { ProviderOrderWorkspace } from './provider/ProviderOrderWorkspace';
 import { ChatEmptyHeader } from './ChatEmptyHeader';
+import { AdminCanvas } from './admin/AdminCanvas';
 import { CustomerOrdersCanvas } from './order-history/CustomerOrdersCanvas';
 import { CustomerChatCanvas } from './CustomerChatCanvas';
 import { CounselorChatCanvas } from './CounselorChatCanvas';
@@ -154,6 +155,9 @@ export function MainCanvasArea({
           hasRunningOrder={runningServiceIds.length > 0}
           isDarkMode={isDarkMode}
         />
+      ) : activeRole === 'ADMIN' && user ? (
+        /* 1b. Admin: one order's full picture and chat, or the empty landing canvas */
+        <AdminCanvas userId={user.id} activeRailTab={activeRailTab} onBack={() => setMobileView('LIST')} onSwitchAccount={openSettings} />
       ) : isProvider && activeProviderOrder && user ? (
         /* 2. Provider Order Workspace: full order info + live chat with the customer */
         <ProviderOrderWorkspace
