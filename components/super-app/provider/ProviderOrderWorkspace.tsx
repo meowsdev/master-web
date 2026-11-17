@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useExtraCharges } from '@/hooks/useExtraCharges';
 import { useOrderChat } from '@/hooks/useOrderChat';
 import { useOrderTimeline } from '@/hooks/useOrderTimeline';
@@ -10,8 +10,10 @@ import { ExtraChargeCard } from '../order-chat/ExtraChargeCard';
 import { MessageBubble } from '../order-chat/MessageBubble';
 import { ReviewCard } from '../order-chat/ReviewCard';
 import { CustomerAvatar } from './CustomerAvatar';
+import { CustomerRatingCard } from './CustomerRatingCard';
 import { ProviderOrderComposer } from './ProviderOrderComposer';
-import { ProviderOrderModal, ProviderOrderModals } from './ProviderOrderModals';
+import { ProviderOrderPanels } from './ProviderOrderPanels';
+import { useProviderPanelStore } from '@/store/useProviderPanelStore';
 import { ProviderPendingActions } from './ProviderPendingActions';
 import { ProviderOrderInfoCard } from './ProviderOrderInfoCard';
 import { ProviderPaymentNote } from './ProviderPaymentNote';
@@ -34,7 +36,7 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
   const { messages, draft, setDraft, submit, canSend } = useOrderChat(order, userId, 'PROVIDER');
   const { requests: extraCharges } = useExtraCharges(order.id, userId);
   const timeline = useOrderTimeline(order, messages, extraCharges);
-  const [openModal, setOpenModal] = useState<ProviderOrderModal>(null);
+  const openPanel = useProviderPanelStore((state) => state.open);
   const bottomRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -72,11 +74,13 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
               return null;
           }
         })}
+        {/* Completed: the provider rates the customer. */}
+        <CustomerRatingCard order={order} userId={userId} />
         <div ref={bottomRef} />
       </div>
 
-      <ProviderOrderComposer order={order} draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} onChooseAction={setOpenModal} />
-      <ProviderOrderModals order={order} userId={userId} openModal={openModal} onClose={() => setOpenModal(null)} />
+      <ProviderOrderComposer order={order} draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} onChooseAction={(kind) => openPanel(order.id, kind)} />
+      <ProviderOrderPanels order={order} userId={userId} />
     </>
   );
 }

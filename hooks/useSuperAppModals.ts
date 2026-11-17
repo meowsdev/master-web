@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useProviderPanelStore } from '@/store/useProviderPanelStore';
 
 export function useSuperAppModals() {
   // Auth Modal
@@ -35,7 +36,10 @@ export function useSuperAppModals() {
 
   // AGENTS.md §9: only one right-hand panel is open at a time. Opening any of them
   // closes the others, otherwise two panels would pile up on the same spot.
-  const closeSidePanels = useCallback(() => {
+  const providerPanelKind = useProviderPanelStore((state) => state.kind);
+  const closeProviderPanel = useProviderPanelStore((state) => state.close);
+
+  const closePanelsExceptProvider = useCallback(() => {
     setIsAuthModalOpen(false);
     setIsSettingsDrawerOpen(false);
     setIsOrdersDrawerOpen(false);
@@ -45,6 +49,20 @@ export function useSuperAppModals() {
     setIsLevelingDrawerOpen(false);
     setIsPlaceOrderOpen(false);
   }, []);
+
+  const closeSidePanels = useCallback(() => {
+    closePanelsExceptProvider();
+    closeProviderPanel();
+  }, [closePanelsExceptProvider, closeProviderPanel]);
+
+  // The provider's job panels open from the message box, outside this hook: when one opens, the others close.
+  useEffect(
+    () =>
+      useProviderPanelStore.subscribe((state, previous) => {
+        if (state.kind && !previous.kind) closePanelsExceptProvider();
+      }),
+    [closePanelsExceptProvider],
+  );
 
   const exclusive = useCallback(
     (setPanelOpen: (isOpen: boolean) => void) => (isOpen: boolean) => {
@@ -92,7 +110,8 @@ export function useSuperAppModals() {
     isServiceDetailsOpen ||
     isTeamManagementOpen ||
     isLevelingDrawerOpen ||
-    isPlaceOrderOpen;
+    isPlaceOrderOpen ||
+    providerPanelKind !== null;
 
   return {
     closeSidePanels,

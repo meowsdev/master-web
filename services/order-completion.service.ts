@@ -5,8 +5,8 @@ export type OnlinePaymentMethod = 'BKASH' | 'NAGAD' | 'CARD';
 
 export const orderCompletionService = {
   /** Provider: the work is done; cash closes the order, online waits for the customer. */
-  complete: async (orderId: string, paymentMode: CompletionPaymentMode) => {
-    const response = await apiClient.post(`/orders/${orderId}/complete`, { paymentMode });
+  complete: async (orderId: string, paymentMode: CompletionPaymentMode, tipAmount?: number) => {
+    const response = await apiClient.post(`/orders/${orderId}/complete`, { paymentMode, tipAmount });
     return response.data;
   },
 

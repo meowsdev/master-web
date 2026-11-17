@@ -5,7 +5,7 @@ import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 import { Attachment01Icon, CallIcon, CheckmarkCircle02Icon, Mic01Icon, PlusSignIcon, SentIcon, UserAdd01Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import { Order, OrderStatus } from '@/types/order.types';
 import { ComingSoonDialog } from './ComingSoonDialog';
-import { ProviderOrderModal } from './ProviderOrderModals';
+import { ProviderPanelKind } from '@/store/useProviderPanelStore';
 
 interface ProviderOrderComposerProps {
   order: Order;
@@ -13,11 +13,11 @@ interface ProviderOrderComposerProps {
   onDraftChange: (text: string) => void;
   onSubmit: () => void;
   canSend: boolean;
-  onChooseAction: (action: Exclude<ProviderOrderModal, null>) => void;
+  onChooseAction: (action: ProviderPanelKind) => void;
 }
 
 interface PlusAction {
-  id: Exclude<ProviderOrderModal, null>;
+  id: ProviderPanelKind;
   label: string;
   icon: IconSvgElement;
   isEnabled: boolean;

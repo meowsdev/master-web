@@ -8,6 +8,7 @@ import { useOrderPayment } from '@/hooks/useOrderPayment';
 import { OnlinePaymentMethod } from '@/services/order-completion.service';
 import { Order } from '@/types/order.types';
 import { PaymentMethodPicker } from './PaymentMethodPicker';
+import { PaymentSummaryCard } from './PaymentSummaryCard';
 
 const TIP_PRESETS = [50, 100];
 /** Same limit the backend enforces (MAX_TIP_AMOUNT). */
@@ -41,62 +42,55 @@ export function CompletionCard({ order, userId }: { order: Order; userId: string
 
   if (!payment) return null;
 
-  const isCash = payment.paymentMode === 'CASH';
   const isAwaitingPayment = payment.paymentMode === 'ONLINE' && payment.confirmationStatus === 'PENDING' && !pay.isSuccess;
   const payableAmount = Number(order.dueAmount) + tipAmount;
 
+  // Settled (cash or online): the same bill / tip / total card the provider sees.
+  if (!isAwaitingPayment) return <PaymentSummaryCard order={order} viewer="CUSTOMER" />;
+
   return (
-    // Unpaid: a card asking the customer to act. Settled: the customer's own mint bubble on the right.
-    <article
-      className={`w-full max-w-[460px] rounded-[16px] p-[16px] text-[#202939] ${
-        isAwaitingPayment ? 'self-center bg-gradient-to-b from-white to-[#eefaf5] shadow-sm' : 'ml-auto bg-[#ade2cf]'
-      }`}
-    >
+    // Unpaid: a card asking the customer to act.
+    <article className="w-full max-w-[460px] self-center rounded-[16px] bg-gradient-to-b from-white to-[#eefaf5] p-[16px] text-[#202939] shadow-sm">
       <h3 className="text-[14px] font-semibold">সার্ভিস সফলভাবে সম্পন্ন হয়েছে!</h3>
 
       <ul className="mt-[14px] flex flex-col gap-[12px]">
         <Line icon={Invoice01Icon}>বিল সামারি: সার্ভিস ও পার্টস খরচ: {formatTaka(order.totalPrice)}</Line>
-        <Line icon={CreditCardIcon}>পেমেন্ট পদ্ধতি: {isCash ? 'ক্যাশ' : 'অনলাইন'}</Line>
-        {isAwaitingPayment && (
-          <li className="flex flex-wrap items-center gap-[8px] text-[14px] font-semibold">
-            <HugeiconsIcon icon={UserIcon} size={18} className="shrink-0" />
-            <span>টেকনিশিয়ানকে টিপস দিন:</span>
-            {TIP_PRESETS.map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => {
-                  setSelectedPreset(selectedPreset === preset ? null : preset);
-                  setCustomTip('');
-                }}
-                aria-pressed={selectedPreset === preset && !customTip}
-                className={`cursor-pointer rounded-[8px] px-[10px] py-[4px] text-[13px] font-semibold ${
-                  selectedPreset === preset && !customTip ? 'bg-[#1daa61] text-white' : 'bg-[#a9e5cf]'
-                }`}
-              >
-                {formatTaka(preset)}
-              </button>
-            ))}
-            <input
-              inputMode="numeric"
-              value={customTip}
-              onChange={(event) => {
-                // Digits only, capped at the backend's tip limit; an empty box falls back to the chip.
-                const digits = event.target.value.replace(/\D/g, '').replace(/^0+/, '');
-                setCustomTip(Number(digits) > MAX_TIP ? String(MAX_TIP) : digits);
-                setSelectedPreset(null);
+        <Line icon={CreditCardIcon}>পেমেন্ট পদ্ধতি: অনলাইন</Line>
+        <li className="flex flex-wrap items-center gap-[8px] text-[14px] font-semibold">
+          <HugeiconsIcon icon={UserIcon} size={18} className="shrink-0" />
+          <span>টেকনিশিয়ানকে টিপস দিন:</span>
+          {TIP_PRESETS.map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => {
+                setSelectedPreset(selectedPreset === preset ? null : preset);
+                setCustomTip('');
               }}
-              placeholder="৳ ২৫০..."
-              className="w-[90px] border-b border-[#202939] bg-transparent text-[13px] outline-none"
-            />
-          </li>
-        )}
-        {!isAwaitingPayment && !isCash && Number(payment.tipAmount) > 0 && (
-          <Line icon={UserIcon}>টিপস: {formatTaka(payment.tipAmount)}</Line>
-        )}
+              aria-pressed={selectedPreset === preset && !customTip}
+              className={`cursor-pointer rounded-[8px] px-[10px] py-[4px] text-[13px] font-semibold ${
+                selectedPreset === preset && !customTip ? 'bg-[#1daa61] text-white' : 'bg-[#a9e5cf]'
+              }`}
+            >
+              {formatTaka(preset)}
+            </button>
+          ))}
+          <input
+            inputMode="numeric"
+            value={customTip}
+            onChange={(event) => {
+              // Digits only, capped at the backend's tip limit; an empty box falls back to the chip.
+              const digits = event.target.value.replace(/\D/g, '').replace(/^0+/, '');
+              setCustomTip(Number(digits) > MAX_TIP ? String(MAX_TIP) : digits);
+              setSelectedPreset(null);
+            }}
+            placeholder="৳ ২৫০..."
+            className="w-[90px] border-b border-[#202939] bg-transparent text-[13px] outline-none"
+          />
+        </li>
       </ul>
 
-      {isAwaitingPayment && isChoosingMethod && (
+      {isChoosingMethod && (
         <div className="mt-[14px]">
           <p className="mb-[8px] text-[13px] font-semibold">পেমেন্ট মাধ্যম বেছে নিন</p>
           <PaymentMethodPicker selected={method} onSelect={setMethod} />
@@ -104,23 +98,17 @@ export function CompletionCard({ order, userId }: { order: Order; userId: string
       )}
 
       <footer className="mt-[16px] flex items-center justify-end gap-[10px]">
-        {isAwaitingPayment ? (
-          <button
-            type="button"
-            disabled={pay.isPending || (isChoosingMethod && !method)}
-            onClick={() => {
-              if (!isChoosingMethod) return setIsChoosingMethod(true);
-              if (method) pay.mutate({ method, tipAmount });
-            }}
-            className="cursor-pointer rounded-[10px] bg-black px-[18px] py-[10px] text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#202939]/30"
-          >
-            {isChoosingMethod ? (pay.isPending ? 'Processing...' : `Pay- ${formatTaka(payableAmount)}`) : `Accept & Pay- ${formatTaka(payableAmount)}`}
-          </button>
-        ) : (
-          <span className="rounded-[10px] bg-white px-[16px] py-[8px] text-[15px] font-semibold text-[#9aa4b2] shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
-            {isCash ? 'Accepted & Completed' : `Paid- ${formatTaka(Number(payment.serviceAmountPaid) + Number(payment.tipAmount))}`}
-          </span>
-        )}
+        <button
+          type="button"
+          disabled={pay.isPending || (isChoosingMethod && !method)}
+          onClick={() => {
+            if (!isChoosingMethod) return setIsChoosingMethod(true);
+            if (method) pay.mutate({ method, tipAmount });
+          }}
+          className="cursor-pointer rounded-[10px] bg-black px-[18px] py-[10px] text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#202939]/30"
+        >
+          {isChoosingMethod ? (pay.isPending ? 'Processing...' : `Pay- ${formatTaka(payableAmount)}`) : `Accept & Pay- ${formatTaka(payableAmount)}`}
+        </button>
       </footer>
     </article>
   );
