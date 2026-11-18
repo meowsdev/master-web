@@ -10,7 +10,6 @@ import { ProfileEditorModal } from '@/components/modals/ProfileEditorModal';
 import { CreateFilterModal } from '@/components/modals/CreateFilterModal';
 import { ServicePreviewPanel } from '@/components/modals/ServicePreviewPanel';
 import { OrdersDrawer } from '@/components/modals/OrdersDrawer';
-import { ProviderSkillsModal } from '@/components/modals/ProviderSkillsModal';
 import { TeamManagementDrawer } from '@/components/modals/TeamManagementDrawer';
 import { ProviderLevelingDrawer } from '@/components/modals/ProviderLevelingDrawer';
 import { ProviderStartChatModal } from '@/components/modals/ProviderStartChatModal';
@@ -50,7 +49,6 @@ interface SuperAppModalsProps {
   onSwitchRole: (role: UserRole) => void;
   onOpenEditProfile: () => void;
   onOpenOrders: () => void;
-  onOpenSkillsModal: () => void;
   onLogout: () => void;
   // Profile Editor
   isProfileEditorOpen: boolean;
@@ -70,9 +68,6 @@ interface SuperAppModalsProps {
   onCloseOrdersDrawer: () => void;
   onSelectServiceById: (id: string) => void;
   onOrderRevisionRequested?: (orderId: string, issue: string) => void;
-  // Skills Modal
-  isSkillsModalOpen: boolean;
-  onCloseSkillsModal: () => void;
   // Provider Specific Drawers & Modals
   isTeamManagementOpen?: boolean;
   onCloseTeamManagement?: () => void;
@@ -109,7 +104,6 @@ export function SuperAppModals({
   onSwitchRole,
   onOpenEditProfile,
   onOpenOrders,
-  onOpenSkillsModal,
   onLogout,
   isProfileEditorOpen,
   onCloseProfileEditor,
@@ -125,8 +119,6 @@ export function SuperAppModals({
   onCloseOrdersDrawer,
   onSelectServiceById,
   onOrderRevisionRequested,
-  isSkillsModalOpen,
-  onCloseSkillsModal,
   isTeamManagementOpen = false,
   onCloseTeamManagement = () => {},
   isLevelingDrawerOpen = false,
@@ -179,7 +171,6 @@ export function SuperAppModals({
         onSwitchRole={onSwitchRole}
         onOpenEditProfile={onOpenEditProfile}
         onOpenOrders={onOpenOrders}
-        onOpenSkillsModal={onOpenSkillsModal}
         onOpenAuth={() => onOpenAuth('LOGIN')}
         onLogout={onLogout}
       />
@@ -221,14 +212,6 @@ export function SuperAppModals({
         isAuthenticated={isAuthenticated}
         isDarkMode={isDarkMode}
       />
-
-      {isSkillsModalOpen && (
-        <ProviderSkillsModal
-          isOpen={isSkillsModalOpen}
-          onClose={onCloseSkillsModal}
-          isDarkMode={isDarkMode}
-        />
-      )}
 
       {/* Provider Team Management Drawer */}
       <TeamManagementDrawer

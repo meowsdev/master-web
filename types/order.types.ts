@@ -175,6 +175,10 @@ export interface Order {
   isAccepted?: boolean;
   /** Provider only: while a new order is offered to them, when their offer runs out. */
   myOfferExpiresAt?: string | null;
+  /** Staff only: pending and nobody holds a live offer, so an admin has to send it to a provider. */
+  needsAttention?: boolean;
+  /** Staff only: how many providers were offered it so far. */
+  offerCount?: number;
   /** Completed, not reviewed yet: the tab stays so the payment result and review card show. */
   isReviewPending?: boolean;
   revisions?: ServiceRevision[];

@@ -3,10 +3,12 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { authService } from '@/services/auth.service';
-import { User as UserType } from '@/types/auth.types';
+import { User as UserType, UserRole } from '@/types/auth.types';
 import { AuthDrawerShell } from '@/components/modals/auth/AuthDrawerShell';
 import { AvatarPicker } from '@/components/modals/auth/AvatarPicker';
 import { CreateAccountForm, ProfileDraft } from '@/components/modals/auth/CreateAccountForm';
+import { ProviderAreasSection } from '@/components/modals/profile/ProviderAreasSection';
+import { ProviderSkillsSection } from '@/components/modals/profile/ProviderSkillsSection';
 
 interface ProfileEditorModalProps {
   isOpen: boolean;
@@ -78,6 +80,14 @@ function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout }: Profil
         onSave={(profile) => void handleSave(profile)}
         hasExtraChanges={photoUrl !== (user.profilePhoto ?? null)}
       />
+
+      {/* A provider also says here what they offer and where. Both save on their own buttons. */}
+      {user.role === UserRole.PROVIDER && (
+        <>
+          <ProviderSkillsSection userId={user.id} />
+          <ProviderAreasSection userId={user.id} />
+        </>
+      )}
 
       {onLogout && (
         <button

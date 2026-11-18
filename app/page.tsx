@@ -314,7 +314,6 @@ export default function SuperAppPage() {
         providerActiveFilter={providerActiveFilter}
         setProviderActiveFilter={setProviderActiveFilter}
         onOpenProfile={() => modals.setIsProfileEditorOpen(true)}
-        onOpenSkillsModal={modals.openSkillsModal}
         onOpenTeamManagement={() => modals.setIsTeamManagementOpen(true)}
         onOpenLeveling={() => modals.setIsLevelingDrawerOpen(true)}
         onOpenStartChat={() => modals.setIsStartChatOpen(true)}
@@ -436,13 +435,10 @@ export default function SuperAppPage() {
         onSwitchRole={setRole}
         onOpenEditProfile={() => modals.setIsProfileEditorOpen(true)}
         onOpenOrders={modals.openOrders}
-        onOpenSkillsModal={modals.openSkillsModal}
         onLogout={handleLogout}
         isProfileEditorOpen={modals.isProfileEditorOpen}
         onCloseProfileEditor={() => modals.setIsProfileEditorOpen(false)}
         onUserUpdated={setUser}
-        isSkillsModalOpen={modals.isSkillsModalOpen}
-        onCloseSkillsModal={() => modals.setIsSkillsModalOpen(false)}
         isFilterModalOpen={isFilterModalOpen}
         onCloseFilterModal={() => setIsFilterModalOpen(false)}
         dbServices={dbServices}

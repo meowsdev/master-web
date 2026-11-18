@@ -18,6 +18,6 @@ export function ProviderOrderPanels({ order, userId }: { order: Order; userId: s
   if (openOrderId !== order.id) return null;
   if (kind === 'extraCharge') return <ExtraChargePanel order={order} userId={userId} onClose={close} />;
   if (kind === 'complete') return <WorkCompletePanel order={order} onClose={close} />;
-  if (kind === 'assign') return <AssignWorkerPanel order={order} onClose={close} />;
+  if (kind === 'assign') return <AssignWorkerPanel order={order} userId={userId} onClose={close} />;
   return null;
 }

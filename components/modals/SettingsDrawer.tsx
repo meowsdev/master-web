@@ -37,7 +37,6 @@ interface SettingsDrawerProps {
   onOpenAuth: () => void;
   onOpenEditProfile?: () => void;
   onOpenOrders?: () => void;
-  onOpenSkillsModal?: () => void;
   onLogout: () => void;
 }
 
@@ -52,7 +51,6 @@ export function SettingsDrawer({
   onOpenAuth,
   onOpenEditProfile,
   onOpenOrders,
-  onOpenSkillsModal,
   onLogout,
 }: SettingsDrawerProps) {
   if (!isOpen) return null;
@@ -238,18 +236,6 @@ export function SettingsDrawer({
                     </p>
                   </div>
 
-                  {currentRole === UserRole.PROVIDER && onOpenSkillsModal && (
-                    <button
-                      onClick={() => {
-                        onClose();
-                        onOpenSkillsModal();
-                      }}
-                      className="w-full py-2.5 px-3 rounded-xl bg-[#008069]/10 hover:bg-[#008069]/20 text-[#008069] dark:text-[#25D366] text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border border-[#008069]/25 shadow-2xs"
-                    >
-                      <Wrench className="w-3.5 h-3.5" />
-                      <span>Manage My Service Skills (স্কিল নির্বাচন)</span>
-                    </button>
-                  )}
                 </div>
 
               ) : (

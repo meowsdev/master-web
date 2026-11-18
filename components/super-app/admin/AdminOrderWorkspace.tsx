@@ -4,7 +4,8 @@ import { useEffect, useRef } from 'react';
 import { useExtraCharges } from '@/hooks/useExtraCharges';
 import { useOrderChat } from '@/hooks/useOrderChat';
 import { useOrderTimeline } from '@/hooks/useOrderTimeline';
-import { Order } from '@/types/order.types';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
+import { Order, OrderStatus } from '@/types/order.types';
 import { ConversationHeader } from '../ConversationHeader';
 import { AdvancePaymentCard } from '../order-chat/AdvancePaymentCard';
 import { ExtraChargeCard } from '../order-chat/ExtraChargeCard';
@@ -26,6 +27,9 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
   const { requests: extraCharges } = useExtraCharges(order.id, userId);
   const timeline = useOrderTimeline(order, messages, extraCharges);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const openPanel = useOrderPanelStore((state) => state.open);
+  // Nobody has taken it yet: the admin can send it to a provider.
+  const isWaitingForProvider = order.orderStatus === OrderStatus.PENDING;
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [timeline.length]);
@@ -40,6 +44,22 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
         onBack={onBack}
         menuItems={[{ label: 'Open full order page', onSelect: () => window.open(`/orders/${order.id}`, '_blank') }]}
       />
+
+      {isWaitingForProvider && (
+        <div className="flex shrink-0 items-center justify-between gap-[12px] border-b border-[#e5e5e5] bg-[#fff4e5] px-[16px] py-[8px]">
+          <p className="min-w-0 text-[13px] font-medium text-[#b7791f]">
+            <span className="font-semibold">{order.needsAttention ? 'Needs a provider' : 'Waiting for a provider'}</span>
+            {order.offerCount ? ` · offered to ${order.offerCount} so far` : ''}
+          </p>
+          <button
+            type="button"
+            onClick={() => openPanel(order.id, 'adminAssign')}
+            className="h-[34px] shrink-0 cursor-pointer rounded-[10px] bg-[#1daa61] px-[14px] text-[13px] font-semibold text-white hover:bg-[#189452]"
+          >
+            Send to a provider
+          </button>
+        </div>
+      )}
 
       <div className="flex min-h-0 flex-1 flex-col gap-[12px] overflow-y-auto bg-[#f7f5f3] p-[16px]">
         {timeline.map((entry) => {

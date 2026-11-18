@@ -6,6 +6,7 @@ import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AdminCategoryPanel } from './panels/AdminCategoryPanel';
 import { AdminAddMemberPanel } from './panels/AdminAddMemberPanel';
+import { AdminAssignOrderPanel } from './panels/AdminAssignOrderPanel';
 import { AdminCreateOrderPanel } from './panels/AdminCreateOrderPanel';
 import { MemberDetailsPanel } from './member/MemberDetailsPanel';
 import { AdminServicePanel } from './panels/AdminServicePanel';
@@ -32,6 +33,8 @@ export function AdminPanels() {
   if (kind === 'adminAddMember' && adminId && (target === 'PROVIDER' || target === 'TECHNICIAN' || target === 'CUSTOMER')) {
     return <AdminAddMemberPanel key={target} adminId={adminId} role={target} onClose={close} />;
   }
+  // One panel per order: another order gets a fresh list and mode.
+  if (kind === 'adminAssign' && target && adminId) return <AdminAssignOrderPanel key={target} adminId={adminId} orderId={target} onClose={close} />;
   if (kind === 'adminOrder' && adminId) return <AdminCreateOrderPanel adminId={adminId} onClose={close} />;
   // One panel per member: a different person gets fresh state.
   if (kind === 'adminMember' && target && adminId) return <MemberDetailsPanel key={target} adminId={adminId} memberId={target} onClose={close} />;

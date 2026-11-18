@@ -55,7 +55,6 @@ interface SuperAppSidebarProps {
   setProviderActiveFilter: (f: ProviderOrderFilter) => void;
   onOpenProfile: () => void;
   onStartNewOrder: () => void;
-  onOpenSkillsModal: () => void;
   onOpenTeamManagement: () => void;
   onOpenLeveling: () => void;
   onOpenStartChat: () => void;
@@ -125,7 +124,6 @@ export function SuperAppSidebar({
   setProviderActiveFilter,
   onOpenProfile,
   onStartNewOrder,
-  onOpenSkillsModal,
   onOpenTeamManagement,
   onOpenLeveling,
   onOpenStartChat,
@@ -209,7 +207,6 @@ export function SuperAppSidebar({
             setMobileView('CHAT');
           }}
           onOpenAuth={() => onOpenAuth('LOGIN')}
-          onOpenSkills={onOpenSkillsModal}
           onOpenSupport={onOpenSupport}
           isSupportOpen={isSupportOpen}
         />

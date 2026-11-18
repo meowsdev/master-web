@@ -24,7 +24,6 @@ export function useSuperAppModals() {
   // Profile, Details & Provider Specific Modals
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
   const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
-  const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
   const [isTeamManagementOpen, setIsTeamManagementOpen] = useState(false);
   const [isLevelingDrawerOpen, setIsLevelingDrawerOpen] = useState(false);
   const [isStartChatOpen, setIsStartChatOpen] = useState(false);
@@ -95,7 +94,6 @@ export function useSuperAppModals() {
     },
     [panelSetters],
   );
-  const openSkillsModal = useCallback(() => setIsSkillsModalOpen(true), []);
 
   const handleOpenAuth = useCallback((mode: 'LOGIN' | 'REGISTER' = 'LOGIN') => {
     setAuthInitialMode(mode);
@@ -140,9 +138,6 @@ export function useSuperAppModals() {
     setIsProfileEditorOpen: panelSetters.setIsProfileEditorOpen,
     isServiceDetailsOpen,
     setIsServiceDetailsOpen: panelSetters.setIsServiceDetailsOpen,
-    isSkillsModalOpen,
-    setIsSkillsModalOpen,
-    openSkillsModal,
     isTeamManagementOpen,
     setIsTeamManagementOpen: panelSetters.setIsTeamManagementOpen,
     isLevelingDrawerOpen,

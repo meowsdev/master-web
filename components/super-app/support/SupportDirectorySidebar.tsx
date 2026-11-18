@@ -11,6 +11,7 @@ import { SupportMemberRole } from '@/types/support-chat.types';
 import { CustomerSidebarTop } from '../CustomerSidebarTop';
 import { AdminProfileHeader } from '../admin/AdminProfileHeader';
 import { SupportAvatar } from './SupportAvatar';
+import { matchesMemberFilter, MEMBER_STATUS_FILTERS, memberStatusLabel } from './member-status';
 
 interface SupportDirectorySidebarProps {
   user: User;
@@ -30,11 +31,14 @@ const ROLE_LABELS: Record<string, string> = { PROVIDER: 'Provider', TECHNICIAN: 
 /* Staff's left list: every provider or customer, people you already talk to first, with an unread badge. */
 export function SupportDirectorySidebar({ user, role, onMemberOpened, onOpenAuth }: SupportDirectorySidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilterChip, setActiveFilterChip] = useState('All');
   const { data: members = [], isLoading } = useSupportDirectory(user.id, role, searchQuery);
   const selected = useSupportChatStore((state) => state.selected);
   const select = useSupportChatStore((state) => state.select);
   const labels = LABELS[role];
   const openPanel = useOrderPanelStore((state) => state.open);
+  const visibleMembers = members.filter((member) => matchesMemberFilter(member, activeFilterChip));
+  const isFiltered = searchQuery.trim() !== '' || activeFilterChip !== 'All';
 
   return (
     <>
@@ -46,9 +50,9 @@ export function SupportDirectorySidebar({ user, role, onMemberOpened, onOpenAuth
         onSearchChange={setSearchQuery}
         onSearchFocus={() => {}}
         onSearchBlur={() => {}}
-        activeFilterChip="All"
-        onSelectFilterChip={() => {}}
-        categoryNames={[]}
+        activeFilterChip={activeFilterChip}
+        onSelectFilterChip={setActiveFilterChip}
+        categoryNames={[...MEMBER_STATUS_FILTERS]}
         isSearchCollapsed={false}
         searchPlaceholder={labels.placeholder}
         profileSlot={
@@ -71,13 +75,13 @@ export function SupportDirectorySidebar({ user, role, onMemberOpened, onOpenAuth
       <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[8px]">
         {!isLoading && (
           <p className="px-[10px] pb-[4px] pt-[8px] text-[13px] font-semibold text-[#697586]">
-            {searchQuery.trim() ? 'Found: ' : 'Total: '}
-            {members.length} {labels.plural}
+            {isFiltered ? `Showing ${visibleMembers.length} of ${members.length} ${labels.plural}` : `Total: ${members.length} ${labels.plural}`}
           </p>
         )}
         {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-[#697586]">Loading {labels.plural}...</p>}
-        {!isLoading && members.length === 0 && <p className="p-[24px] text-center text-[14px] font-medium text-[#697586]">No {labels.plural} found.</p>}
-        {members.map((member) => {
+        {!isLoading && visibleMembers.length === 0 && <p className="p-[24px] text-center text-[14px] font-medium text-[#697586]">No {labels.plural} found.</p>}
+        {visibleMembers.map((member) => {
+          const status = memberStatusLabel(member);
           const displayName = member.name || (member.username ? `@${member.username}` : member.mobileNumber ?? 'Unnamed');
           const isSelected = selected?.id === member.id;
           return (
@@ -91,15 +95,19 @@ export function SupportDirectorySidebar({ user, role, onMemberOpened, onOpenAuth
               className={`flex w-full cursor-pointer items-center gap-[12px] rounded-[12px] p-[10px] text-left transition-colors hover:bg-[#f7f5f3] ${isSelected ? 'bg-[#f7f5f3]' : ''}`}
             >
               <SupportAvatar name={displayName} photo={member.profilePhoto} />
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{displayName}{member.role === 'TECHNICIAN' && <span className="ml-[6px] rounded-full bg-[#f7f5f3] px-[6px] py-[1px] text-[11px] font-semibold text-[#697586]">Technician</span>}{member.status !== 'ACTIVE' && <span className="ml-[6px] rounded-full bg-[#fde8e8] px-[6px] py-[1px] text-[11px] font-semibold text-[#d64545]">{member.status === 'BANNED' ? 'Banned' : 'Blocked'}</span>}{member.isRestricted && <span className="ml-[6px] rounded-full bg-[#fff4e5] px-[6px] py-[1px] text-[11px] font-semibold text-[#b7791f]">Restricted</span>}</span>
-                <span className="truncate text-[13px] font-medium text-[#697586]">
-                  {member.lastMessage?.text ?? member.mobileNumber ?? 'No messages yet'}
+              <span className="flex min-w-0 flex-1 flex-col gap-[2px]">
+                <span className="flex items-center justify-between gap-[8px]">
+                  <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{displayName}</span>
+                  {/* Same place and style as an order's status (Complete, Pending...). */}
+                  <span className={`shrink-0 text-[12px] font-semibold ${status.className}`}>{status.text}</span>
+                </span>
+                <span className="flex items-center justify-between gap-[8px]">
+                  <span className="truncate text-[13px] font-medium text-[#697586]">{member.lastMessage?.text ?? member.mobileNumber ?? 'No messages yet'}</span>
+                  {member.unreadCount > 0 && (
+                    <span className="flex min-w-[20px] shrink-0 items-center justify-center rounded-full bg-[#1daa61] px-[6px] py-[1px] text-[12px] font-semibold text-white">{member.unreadCount}</span>
+                  )}
                 </span>
               </span>
-              {member.unreadCount > 0 && (
-                <span className="flex min-w-[20px] shrink-0 items-center justify-center rounded-full bg-[#1daa61] px-[6px] py-[1px] text-[12px] font-semibold text-white">{member.unreadCount}</span>
-              )}
             </button>
           );
         })}

@@ -6,9 +6,6 @@ import { User } from '@/types/auth.types';
 import { CustomerSidebarTop } from '../CustomerSidebarTop';
 import { OrderHistoryListItem } from '../order-history/OrderHistoryListItem';
 import { SupportChatRow } from '../support/SupportChatRow';
-import { useProviderAreas } from '@/hooks/useProviderAreas';
-import { useOrderPanelStore } from '@/store/useOrderPanelStore';
-import { ProviderAreasPanel } from './panels/ProviderAreasPanel';
 import { CustomerAvatar } from './CustomerAvatar';
 import { ProviderProfileHeader } from './ProviderProfileHeader';
 import { PROVIDER_FILTER_CHIPS, hasOpenRevision, matchesProviderFilter, providerOrderTitle } from './provider-order-filters';
@@ -20,8 +17,6 @@ interface ProviderOrdersSidebarProps {
   activeOrderId: string | null;
   onSelectOrder: (order: Order) => void;
   onOpenAuth: () => void;
-  /** Opens the services this provider offers. New orders only reach providers who enabled the service. */
-  onOpenSkills: () => void;
   /** Opens the pinned Support chat. */
   onOpenSupport: () => void;
   isSupportOpen: boolean;
@@ -31,13 +26,9 @@ interface ProviderOrdersSidebarProps {
  * The provider's landing list: their profile with the due and Pay Now, search, status chips and
  * one row per order (id and customer). Same top section and rows as the customer's list.
  */
-export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, onSelectOrder, onOpenAuth, onOpenSkills, onOpenSupport, isSupportOpen }: ProviderOrdersSidebarProps) {
+export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, onSelectOrder, onOpenAuth, onOpenSupport, isSupportOpen }: ProviderOrdersSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilterChip, setActiveFilterChip] = useState('All');
-  const { data: areas } = useProviderAreas(user.id);
-  const openPanel = useOrderPanelStore((state) => state.open);
-  const closePanel = useOrderPanelStore((state) => state.close);
-  const isAreasPanelOpen = useOrderPanelStore((state) => state.kind === 'providerAreas');
 
   const visibleOrders = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -74,19 +65,6 @@ export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, 
         <div className="pt-[8px]">
           <SupportChatRow userId={user.id} isActive={isSupportOpen} onOpen={onOpenSupport} />
         </div>
-        <button type="button" onClick={onOpenSkills} className="mb-[4px] w-full cursor-pointer rounded-[10px] bg-[#f7f5f3] px-[12px] py-[8px] text-left text-[13px] font-semibold text-[#202939] hover:bg-[#efede9]">
-          Services I offer <span className="font-medium text-[#697586]">— enable a service to receive its orders</span>
-        </button>
-        {/* Orders are offered by area, so a provider with none is told why nothing arrives. */}
-        <button
-          type="button"
-          onClick={() => openPanel(null, 'providerAreas')}
-          className={`mb-[4px] w-full cursor-pointer rounded-[10px] px-[12px] py-[8px] text-left text-[13px] font-semibold ${areas?.length === 0 ? 'bg-[#fff4e5] text-[#b7791f] hover:bg-[#ffecd1]' : 'bg-[#f7f5f3] text-[#202939] hover:bg-[#efede9]'}`}
-        >
-          Areas I serve{' '}
-          <span className="font-medium">{areas?.length === 0 ? '— choose where you take orders, or you will get none' : areas ? `— ${areas.length} upazila(s)` : ''}</span>
-        </button>
-        {isAreasPanelOpen && <ProviderAreasPanel userId={user.id} onClose={closePanel} />}
         {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-[#697586]">Loading orders...</p>}
         {!isLoading && visibleOrders.length === 0 && (
           <p className="p-[24px] text-center text-[14px] font-medium text-[#697586]">{orders.length === 0 ? 'No orders yet.' : 'No orders match.'}</p>

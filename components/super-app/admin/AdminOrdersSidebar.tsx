@@ -97,7 +97,7 @@ export function AdminOrdersSidebar({ user, onOrderOpened, onOpenAuth }: { user: 
             }}
             title={providerOrderTitle(order)}
             avatar={<CustomerAvatar order={order} />}
-            statusOverride={hasOpenRevision(order) ? { text: 'Revision', className: 'text-[#b7791f]' } : undefined}
+            statusOverride={order.needsAttention ? { text: 'Needs provider', className: 'text-[#d64545]' } : hasOpenRevision(order) ? { text: 'Revision', className: 'text-[#b7791f]' } : undefined}
           />
         ))}
       </div>

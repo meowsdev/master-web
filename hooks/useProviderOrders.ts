@@ -90,7 +90,7 @@ export function useProviderOrders({ isProvider, userId, playSound }: UseProvider
     previousPendingIdsRef.current = currentPendingIds;
   }, [orders, isProvider, playSound]);
 
-  useProviderOfferAlerts({ isProvider, userId, pendingCount: orders.filter((o) => o.orderStatus === OrderStatus.PENDING).length });
+  useProviderOfferAlerts({ isProvider, userId, pendingCount: orders.filter((o) => o.orderStatus === OrderStatus.PENDING).length, playSound });
 
   // Update order status mutation
   const updateStatusMutation = useMutation({

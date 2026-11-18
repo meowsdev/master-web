@@ -12,14 +12,13 @@ export function useProviderAreas(userId: string) {
   });
 }
 
-export function useSaveProviderAreas(userId: string, onSaved: () => void) {
+export function useSaveProviderAreas(userId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (areas: ProviderServiceArea[]) => providerAreasService.saveMyAreas(areas),
     onSuccess: (saved) => {
       queryClient.setQueryData(['provider-areas', userId], saved);
       toast.success('Your areas are saved');
-      onSaved();
     },
     onError: (error: unknown) => {
       const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
