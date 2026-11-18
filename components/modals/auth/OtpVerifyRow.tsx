@@ -79,7 +79,7 @@ export function OtpVerifyRow({ otp, isPhoneValid }: OtpVerifyRowProps) {
           title="Click to auto-fill"
         >
           <span>
-            Backend Code: <strong>{otp.serverCode}</strong>
+            Test mode OTP: <strong>{otp.serverCode}</strong>
           </span>
           <span className="text-[12px] underline">Auto-fill</span>
         </div>
