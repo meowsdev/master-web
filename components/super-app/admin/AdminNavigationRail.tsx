@@ -15,12 +15,12 @@ interface AdminNavigationRailProps {
 }
 
 const MANAGEMENT_TABS: Array<{ kind: OrderPanelKind; title: string; icon: IconSvgElement }> = [
-  { kind: 'adminTechnicians', title: 'Technicians', icon: UserGroupIcon },
   { kind: 'adminProviders', title: 'Providers', icon: Store01Icon },
 ];
 
 const SUPPORT_CHAT_TABS: Array<{ tab: RailTab; title: string; icon: IconSvgElement }> = [
   { tab: 'SUPPORT_PROVIDERS', title: 'Chat with providers', icon: CustomerSupportIcon },
+  { tab: 'SUPPORT_TECHNICIANS', title: 'Technicians', icon: UserGroupIcon },
   { tab: 'SUPPORT_CUSTOMERS', title: 'Chat with customers', icon: UserSharingIcon },
 ];
 
@@ -89,22 +89,7 @@ export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOp
           );
         })}
 
-        {MANAGEMENT_TABS.map((tab) => {
-          const isOpen = openKind === tab.kind;
-          return (
-            <button
-              key={tab.kind}
-              type="button"
-              onClick={() => (isOpen ? closePanel() : openPanel(null, tab.kind))}
-              title={tab.title}
-              aria-label={tab.title}
-              aria-pressed={isOpen}
-              className={`flex size-[36px] cursor-pointer items-center justify-center rounded-full transition-colors ${isOpen ? 'bg-[#d7fdd2] text-[#1daa61]' : 'bg-white text-[#202939] hover:bg-[#ebe8e4]'}`}
-            >
-              <HugeiconsIcon icon={tab.icon} size={18} />
-            </button>
-          );
-        })}
+
       </div>
 
       <button type="button" onClick={onOpenAccount} title="Profile" className={`size-[36px] cursor-pointer overflow-hidden rounded-full ${selection === 'ACCOUNT' ? 'ring-2 ring-[#1daa61]' : ''}`}>

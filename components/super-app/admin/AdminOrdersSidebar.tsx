@@ -1,5 +1,8 @@
 'use client';
 
+import { HugeiconsIcon } from '@hugeicons/react';
+import { PlusSignIcon } from '@hugeicons/core-free-icons';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ordersService } from '@/services/orders.service';
@@ -30,6 +33,7 @@ export function AdminOrdersSidebar({ user, onOrderOpened, onOpenAuth }: { user: 
   const { data: orders = [], isLoading } = useAdminOrders(user.id);
   const openOrderId = useOrderHistoryStore(selectOpenOrderId(user.id));
   const selectOrder = useOrderHistoryStore((state) => state.select);
+  const openPanel = useOrderPanelStore((state) => state.open);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilterChip, setActiveFilterChip] = useState('All');
 
@@ -63,7 +67,20 @@ export function AdminOrdersSidebar({ user, onOrderOpened, onOpenAuth }: { user: 
         categoryNames={[...PROVIDER_FILTER_CHIPS]}
         isSearchCollapsed={false}
         searchPlaceholder="Search all orders..."
-        profileSlot={<AdminProfileHeader user={user} />}
+        profileSlot={
+          <div className="flex items-center justify-between">
+            <AdminProfileHeader user={user} />
+            <button
+              type="button"
+              onClick={() => openPanel(null, 'adminOrder')}
+              title="New order"
+              aria-label="New order"
+              className="flex size-[40px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1daa61] text-white transition-transform hover:scale-105"
+            >
+              <HugeiconsIcon icon={PlusSignIcon} size={22} strokeWidth={2.5} />
+            </button>
+          </div>
+        }
       />
 
       <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[8px]">

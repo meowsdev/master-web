@@ -6,7 +6,7 @@ import { Order } from '@/types/order.types';
 import { ServiceAvatar } from './ServiceAvatar';
 import { ProblemSection } from './ProblemSection';
 import { ScheduleSection } from './ScheduleSection';
-import { formatTaka } from './format-taka';
+import { OrderQuoteSummary } from './OrderQuoteSummary';
 
 interface PlaceOrderPanelProps {
   /** The sub-service whose chat is open, if any; otherwise the customer picks from the start. */
@@ -26,20 +26,7 @@ export function PlaceOrderPanel({ initialServiceId, onClose, onPlaced }: PlaceOr
         <ProblemSection state={state} />
         <ScheduleSection state={state} />
 
-        {state.quote && (
-          <div className="mt-[20px] rounded-[12px] border border-[#e5e5e5] bg-[#f7f5f3] p-[14px]">
-            {state.quote.lines.map((line) => (
-              <div key={line.label} className="flex justify-between text-[13px] font-medium text-[#697586]">
-                <span>{line.count > 1 ? `${line.label} × ${line.count}` : line.label}</span>
-                <span>{formatTaka(line.amount)}</span>
-              </div>
-            ))}
-            <div className="mt-[8px] flex justify-between border-t border-[#e5e5e5] pt-[8px] text-[15px] font-semibold text-[#202939]">
-              <span>Total</span>
-              <span>{formatTaka(state.quote.total)}</span>
-            </div>
-          </div>
-        )}
+        {state.quote && <OrderQuoteSummary quote={state.quote} />}
 
         <div className="mt-[28px] flex justify-center">
           <button

@@ -53,9 +53,9 @@ export interface StatusStory {
 // Navigation Rail tab identifiers
 /**
  * SUPPORT: a provider's or customer's chat with the platform staff.
- * SUPPORT_PROVIDERS / SUPPORT_CUSTOMERS: the admin's two direct-chat lists.
+ * SUPPORT_PROVIDERS / SUPPORT_TECHNICIANS / SUPPORT_CUSTOMERS: the admin's three direct-chat lists.
  */
-export type RailTab = 'CHATS' | 'ORDERS' | 'SERVICES' | 'SUPPORT' | 'SUPPORT_PROVIDERS' | 'SUPPORT_CUSTOMERS' | 'PROVIDERS' | 'STATUS' | 'CHANNELS' | 'COMMUNITIES' | 'SETTINGS';
+export type RailTab = 'CHATS' | 'ORDERS' | 'SERVICES' | 'SUPPORT' | 'SUPPORT_PROVIDERS' | 'SUPPORT_TECHNICIANS' | 'SUPPORT_CUSTOMERS' | 'PROVIDERS' | 'STATUS' | 'CHANNELS' | 'COMMUNITIES' | 'SETTINGS';
 
 /** What the rail marks as selected: a tab, or the right-hand panel that is currently open. */
 export type RailSelection = RailTab | 'ACCOUNT';

@@ -11,10 +11,12 @@ import { useLocationOptions } from '@/hooks/useLocationOptions';
 interface UsePlaceOrderFormArgs {
   initialServiceId: string | null;
   onPlaced: (order: Order) => void;
+  /** Another way to place the order (the admin's, for a customer by phone). Defaults to the signed-in customer's. */
+  placeOrder?: (request: PlaceOrderRequest) => Promise<{ order: Order }>;
 }
 
 /** Form state for the Place Order panel. Prices come from the backend; nothing is calculated here. */
-export function usePlaceOrderForm({ initialServiceId, onPlaced }: UsePlaceOrderFormArgs) {
+export function usePlaceOrderForm({ initialServiceId, onPlaced, placeOrder = orderPlacementService.placeOrder }: UsePlaceOrderFormArgs) {
   // null = the customer has not chosen yet, so the opening service (if any) applies.
   const [categoryChoice, setCategoryChoice] = useState<string | null>(null);
   const [subServiceChoice, setSubServiceChoice] = useState<string | null>(null);
@@ -113,7 +115,7 @@ export function usePlaceOrderForm({ initialServiceId, onPlaced }: UsePlaceOrderF
         scheduledDate,
         timeSlot,
       };
-      const { order } = await orderPlacementService.placeOrder(request);
+      const { order } = await placeOrder(request);
       onPlaced(order);
     } catch (error) {
       const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;

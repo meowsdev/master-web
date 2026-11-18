@@ -1,5 +1,5 @@
-/** Who a staff member can write to. Technicians are reached through their provider. */
-export type SupportMemberRole = 'PROVIDER' | 'CUSTOMER';
+/** Who a staff member can write to: one list per kind. */
+export type SupportMemberRole = 'PROVIDER' | 'TECHNICIAN' | 'CUSTOMER';
 
 /** One row of the staff directory: a provider or customer and the state of their support thread. */
 export interface SupportDirectoryEntry {
@@ -11,6 +11,8 @@ export interface SupportDirectoryEntry {
   profilePhoto: string | null;
   /** PROVIDER or TECHNICIAN in the providers list. */
   role: string;
+  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'BANNED';
+  isRestricted: boolean;
   threadId: string | null;
   lastMessage: { text: string; createdAt: string } | null;
   unreadCount: number;

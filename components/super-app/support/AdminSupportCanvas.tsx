@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supportChatService } from '@/services/support-chat.service';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { useSupportChatStore } from '@/store/useSupportChatStore';
 import { SupportMemberRole } from '@/types/support-chat.types';
 import { ChatEmptyHeader } from '../ChatEmptyHeader';
@@ -18,6 +19,7 @@ interface AdminSupportCanvasProps {
 /* Staff's main area on the Providers / Customers chat tabs: the chosen person's thread, or an empty canvas. */
 export function AdminSupportCanvas({ userId, role, onBack, onSwitchAccount }: AdminSupportCanvasProps) {
   const selected = useSupportChatStore((state) => state.selected);
+  const openPanel = useOrderPanelStore((state) => state.open);
   // Only a person of the tab's own role is shown, so switching tabs never keeps the other list's chat open.
   const member = selected && selected.role === role ? selected : null;
 
@@ -33,7 +35,7 @@ export function AdminSupportCanvas({ userId, role, onBack, onSwitchAccount }: Ad
       <>
         <ChatEmptyHeader onSwitchAccount={onSwitchAccount} menuItems={[]} />
         <div className="flex flex-1 items-center justify-center bg-[#f7f5f3] text-[14px] font-medium text-[#697586]">
-          Choose a {role === 'PROVIDER' ? 'provider' : 'customer'} to start chatting.
+          Choose a {role.toLowerCase()} to start chatting.
         </div>
       </>
     );
@@ -49,6 +51,7 @@ export function AdminSupportCanvas({ userId, role, onBack, onSwitchAccount }: Ad
       avatar={<SupportAvatar name={member.name} photo={member.photo} sizeClass="size-[36px]" />}
       isViewerSupport
       onBack={onBack}
+      onOpenProfile={() => openPanel(member.id, 'adminMember')}
       emptyHint="No messages yet. Say hello!"
     />
   );

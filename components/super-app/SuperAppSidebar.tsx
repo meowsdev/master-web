@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { SidebarHeader } from './SidebarHeader';
 import { SupportDirectorySidebar } from './support/SupportDirectorySidebar';
+import { supportRoleForTab } from './support/support-tabs';
 import { ProviderOrderFilter } from './ProviderOrderList';
 import { ProviderOrdersSidebar } from './provider/ProviderOrdersSidebar';
 import { AdminOrdersSidebar } from './admin/AdminOrdersSidebar';
@@ -184,10 +185,10 @@ export function SuperAppSidebar({
       />
       )}
 
-      {isAdmin && user && (activeRailTab === 'SUPPORT_PROVIDERS' || activeRailTab === 'SUPPORT_CUSTOMERS') ? (
+      {isAdmin && user && supportRoleForTab(activeRailTab) ? (
         <SupportDirectorySidebar
           user={user}
-          role={activeRailTab === 'SUPPORT_PROVIDERS' ? 'PROVIDER' : 'CUSTOMER'}
+          role={supportRoleForTab(activeRailTab)!}
           onMemberOpened={() => setMobileView('CHAT')}
           onOpenAuth={() => onOpenAuth('LOGIN')}
         />

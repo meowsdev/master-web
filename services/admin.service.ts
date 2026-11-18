@@ -1,12 +1,5 @@
 import { apiClient } from '@/lib/axios';
 
-export interface AdminTechnician {
-  id: string;
-  providerAgencyId: string | null;
-  user: { id: string; name: string | null; username: string | null; mobileNumber: string; status: string };
-  providerAgency: { id: string; companyName: string | null; user: { name: string | null; username: string | null } } | null;
-}
-
 export interface AdminProvider {
   id: string;
   companyName: string | null;
@@ -40,15 +33,11 @@ export interface AdminServiceInput {
 
 /** Admin-only screens. Every call is checked by the backend's role guard; nothing here grants access. */
 export const adminService = {
-  listTechnicians: async () => (await apiClient.get<AdminTechnician[]>('/technician-profile')).data,
-
   createTechnician: async (dto: { name: string; mobileNumber: string; providerAgencyId?: string }) =>
     (await apiClient.post('/technician-profile', dto)).data,
 
   assignTechnicianAgency: async (technicianId: string, providerAgencyId: string | null) =>
     (await apiClient.patch(`/technician-profile/${technicianId}/agency`, { providerAgencyId })).data,
-
-  deleteTechnician: async (technicianId: string) => (await apiClient.delete(`/technician-profile/${technicianId}`)).data,
 
   listProviders: async () => (await apiClient.get<AdminProvider[]>('/admin/providers')).data,
 

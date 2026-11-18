@@ -3,10 +3,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { servicesService } from '@/services/services.service';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { AdminCategoryPanel } from './panels/AdminCategoryPanel';
+import { AdminAddMemberPanel } from './panels/AdminAddMemberPanel';
+import { AdminCreateOrderPanel } from './panels/AdminCreateOrderPanel';
+import { MemberDetailsPanel } from './member/MemberDetailsPanel';
 import { AdminServicePanel } from './panels/AdminServicePanel';
 import { ProvidersPanel } from './panels/ProvidersPanel';
-import { TechniciansPanel } from './panels/TechniciansPanel';
 
 /* The management panel the admin's rail opened, if any. */
 export function AdminPanels() {
@@ -14,6 +17,7 @@ export function AdminPanels() {
   const target = useOrderPanelStore((state) => state.orderId);
   const { data: services = [] } = useQuery({ queryKey: ['admin-services'], queryFn: () => servicesService.getServices() });
   const close = useOrderPanelStore((state) => state.close);
+  const adminId = useAuthStore((state) => state.user?.id);
 
   if (kind === 'adminService') {
     // 'new' or 'new:<categoryId>' creates; anything else is a service id to edit.
@@ -24,7 +28,12 @@ export function AdminPanels() {
     return <AdminServicePanel key={target} service={service} defaultCategoryId={target?.startsWith('new:') ? target.slice(4) : undefined} onClose={close} />;
   }
   if (kind === 'adminCategory') return <AdminCategoryPanel onClose={close} />;
-  if (kind === 'adminTechnicians') return <TechniciansPanel onClose={close} />;
   if (kind === 'adminProviders') return <ProvidersPanel onClose={close} />;
+  if (kind === 'adminAddMember' && adminId && (target === 'PROVIDER' || target === 'TECHNICIAN' || target === 'CUSTOMER')) {
+    return <AdminAddMemberPanel key={target} adminId={adminId} role={target} onClose={close} />;
+  }
+  if (kind === 'adminOrder' && adminId) return <AdminCreateOrderPanel adminId={adminId} onClose={close} />;
+  // One panel per member: a different person gets fresh state.
+  if (kind === 'adminMember' && target && adminId) return <MemberDetailsPanel key={target} adminId={adminId} memberId={target} onClose={close} />;
   return null;
 }

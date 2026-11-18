@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
-/** assign / extraCharge / complete: the provider's job panels. providerAreas: where the provider takes orders (orderId is null). advance: the customer's Pay Now panel. admin*: the admin's management panels (orderId is null, except adminService where it holds the service id, or 'new' / 'new:<categoryId>' while creating one under a main service). */
-export type OrderPanelKind = 'assign' | 'extraCharge' | 'complete' | 'advance' | 'adminService' | 'adminCategory' | 'adminTechnicians' | 'adminProviders' | 'providerAreas';
+/** assign / extraCharge / complete: the provider's job panels. providerAreas: where the provider takes orders (orderId is null). adminMember: one provider/technician/customer's details (orderId holds the member's user id). adminAddMember: the form that adds one (orderId holds the role: PROVIDER, TECHNICIAN or CUSTOMER). adminOrder: the admin's new-order form (orderId is null). advance: the customer's Pay Now panel. admin*: the admin's management panels (orderId is null, except adminService where it holds the service id, or 'new' / 'new:<categoryId>' while creating one under a main service). */
+export type OrderPanelKind = 'assign' | 'extraCharge' | 'complete' | 'advance' | 'adminService' | 'adminCategory' | 'adminProviders' | 'providerAreas' | 'adminMember' | 'adminAddMember' | 'adminOrder';
 
 interface ProviderPanelState {
   /** Which order the open panel belongs to, so it never shows over another order. */

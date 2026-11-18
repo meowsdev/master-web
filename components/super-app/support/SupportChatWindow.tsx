@@ -18,6 +18,8 @@ interface SupportChatWindowProps {
   /** true when the person looking at the window is platform staff, so "mine" means the support side. */
   isViewerSupport: boolean;
   onBack?: () => void;
+  /** Staff: opens the person's details panel when their name or picture is pressed. */
+  onOpenProfile?: () => void;
   /** Shown above the (empty) message list, e.g. who they are talking to. */
   emptyHint: string;
 }
@@ -35,7 +37,7 @@ function SupportBubble({ message, isMine }: { message: SupportMessage; isMine: b
 }
 
 /* One support conversation: header, messages and the message box. Used by staff and by providers/customers alike. */
-export function SupportChatWindow({ userId, threadId, title, subtitle, avatar, isViewerSupport, onBack, emptyHint }: SupportChatWindowProps) {
+export function SupportChatWindow({ userId, threadId, title, subtitle, avatar, isViewerSupport, onBack, onOpenProfile, emptyHint }: SupportChatWindowProps) {
   const [draft, setDraft] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const { data: messages = [], isLoading } = useSupportMessages(userId, threadId);
@@ -65,11 +67,19 @@ export function SupportChatWindow({ userId, threadId, title, subtitle, avatar, i
             <HugeiconsIcon icon={ArrowLeft01Icon} size={22} className="text-[#202939]" />
           </button>
         )}
-        {avatar}
-        <div className="flex min-w-0 flex-col">
-          <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{title}</span>
-          {subtitle && <span className="truncate text-[12px] font-medium text-[#697586]">{subtitle}</span>}
-        </div>
+        <button
+          type="button"
+          onClick={onOpenProfile}
+          disabled={!onOpenProfile}
+          title={onOpenProfile ? 'View details' : undefined}
+          className="flex min-w-0 cursor-pointer items-center gap-[10px] text-left disabled:cursor-default"
+        >
+          {avatar}
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{title}</span>
+            {subtitle && <span className="truncate text-[12px] font-medium text-[#697586]">{subtitle}</span>}
+          </span>
+        </button>
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col gap-[8px] overflow-y-auto bg-[#f7f5f3] p-[16px]">
