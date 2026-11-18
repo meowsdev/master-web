@@ -14,6 +14,8 @@ interface ProviderOrderComposerProps {
   onSubmit: () => void;
   canSend: boolean;
   onChooseAction: (action: OrderPanelKind) => void;
+  /** Only the provider picks which technician works an order; a technician does not see "Assign Worker". */
+  canAssignWorker?: boolean;
 }
 
 interface PlusAction {
@@ -28,7 +30,7 @@ interface PlusAction {
  * Attach, mic and call are not built yet and say so. The menu only asks; the backend decides what
  * is allowed (status flow, who may act, price limits). Entries that do not fit the order's status are greyed.
  */
-export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, canSend, onChooseAction }: ProviderOrderComposerProps) {
+export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, canSend, onChooseAction, canAssignWorker = true }: ProviderOrderComposerProps) {
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -46,7 +48,7 @@ export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, c
   const isInProgress = order.orderStatus === OrderStatus.IN_PROGRESS;
   const isWaitingForOnlinePayment = order.paymentAndTip?.paymentMode === 'ONLINE' && order.orderStatus !== OrderStatus.COMPLETED;
   const actions: PlusAction[] = [
-    { id: 'assign', label: 'Assign Worker', icon: UserAdd01Icon, isEnabled: isRunning },
+    ...(canAssignWorker ? [{ id: 'assign' as const, label: 'Assign Worker', icon: UserAdd01Icon, isEnabled: isRunning }] : []),
     { id: 'extraCharge', label: 'Extra Charge', icon: Wallet01Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment },
     { id: 'complete', label: isWaitingForOnlinePayment ? 'Waiting for payment...' : 'Work Complete', icon: CheckmarkCircle02Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment },
   ];

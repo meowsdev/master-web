@@ -12,6 +12,7 @@ import { ProviderOrderWorkspace } from './provider/ProviderOrderWorkspace';
 import { ChatEmptyHeader } from './ChatEmptyHeader';
 import { AdminCanvas } from './admin/AdminCanvas';
 import { MemberSupportCanvas } from './support/MemberSupportCanvas';
+import { TechnicianCanvas } from './technician/TechnicianCanvas';
 import { CustomerOrdersCanvas } from './order-history/CustomerOrdersCanvas';
 import { CustomerChatCanvas } from './CustomerChatCanvas';
 import { CounselorChatCanvas } from './CounselorChatCanvas';
@@ -159,6 +160,9 @@ export function MainCanvasArea({
       ) : activeRailTab === 'SUPPORT' && user && (activeRole === 'CUSTOMER' || activeRole === 'PROVIDER' || activeRole === 'TECHNICIAN') ? (
         /* 1a. Provider/customer: direct chat with the platform's support staff */
         <MemberSupportCanvas userId={user.id} onBack={() => setMobileView('LIST')} />
+      ) : activeRole === 'TECHNICIAN' && user ? (
+        /* 1c. Technician: the job they opened and nothing else */
+        <TechnicianCanvas userId={user.id} onBack={() => setMobileView('LIST')} onSwitchAccount={openSettings} onStartCall={handleStartCall} />
       ) : activeRole === 'ADMIN' && user ? (
         /* 1b. Admin: one order's full picture and chat, or the empty landing canvas */
         <AdminCanvas userId={user.id} activeRailTab={activeRailTab} onBack={() => setMobileView('LIST')} onSwitchAccount={openSettings} />

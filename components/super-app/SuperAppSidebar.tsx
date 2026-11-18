@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { SidebarHeader } from './SidebarHeader';
 import { SupportDirectorySidebar } from './support/SupportDirectorySidebar';
 import { supportRoleForTab } from './support/support-tabs';
+import { TechnicianOrdersSidebar } from './technician/TechnicianOrdersSidebar';
 import { ProviderOrderFilter } from './ProviderOrderList';
 import { ProviderOrdersSidebar } from './provider/ProviderOrdersSidebar';
 import { AdminOrdersSidebar } from './admin/AdminOrdersSidebar';
@@ -48,6 +49,8 @@ interface SuperAppSidebarProps {
   setActiveOrderId: (id: string | null) => void;
   /** Opens the pinned Support chat, and whether it is the chat on screen. */
   onOpenSupport: () => void;
+  /** Closes the Support chat when another chat is picked. */
+  onLeaveSupport: () => void;
   isSupportOpen: boolean;
   providerSearchQuery: string;
   setProviderSearchQuery: (q: string) => void;
@@ -117,6 +120,7 @@ export function SuperAppSidebar({
   activeOrderId,
   setActiveOrderId,
   onOpenSupport,
+  onLeaveSupport,
   isSupportOpen,
   providerSearchQuery,
   setProviderSearchQuery,
@@ -157,6 +161,7 @@ export function SuperAppSidebar({
   // Staff roles keep the options-menu header (restyled to Figma); guests/customers get the Join Now header.
   const [isSearchCollapsed, setIsSearchCollapsed] = useState(false);
   const isAdmin = activeRole === 'ADMIN';
+  const isTechnician = activeRole === 'TECHNICIAN';
   const isStaffView = Boolean(activeRole && activeRole !== 'CUSTOMER');
   const bgSidebar = isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]';
 
@@ -167,7 +172,7 @@ export function SuperAppSidebar({
       } flex-col w-full md:w-[380px] lg:w-[420px] border-r shrink-0 h-full relative z-10 ${bgSidebar}`}
       style={{ fontFamily: 'var(--font-manrope), sans-serif' }}
     >
-      {isStaffView && !isProvider && !isAdmin && (
+      {isStaffView && !isProvider && !isAdmin && !isTechnician && (
       <SidebarHeader
         isDarkMode={isDarkMode}
         soundEnabled={soundEnabled}
@@ -195,6 +200,9 @@ export function SuperAppSidebar({
       ) : isAdmin && user ? (
         /* Role: ADMIN - every order on the platform, same list design as the provider */
         <AdminOrdersSidebar user={user} onOrderOpened={() => setMobileView('CHAT')} onOpenAuth={() => onOpenAuth('LOGIN')} />
+      ) : isTechnician && user ? (
+        /* Role: TECHNICIAN - only the jobs their provider put them on */
+        <TechnicianOrdersSidebar user={user} onOrderOpened={() => { onLeaveSupport(); setMobileView('CHAT'); }} onOpenAuth={() => onOpenAuth('LOGIN')} onOpenSupport={onOpenSupport} isSupportOpen={isSupportOpen} />
       ) : isProvider && user ? (
         /* Role: PROVIDER - the Figma landing list: profile with due + Pay Now, search, chips, one row per order */
         <ProviderOrdersSidebar

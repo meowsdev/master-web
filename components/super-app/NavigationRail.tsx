@@ -52,17 +52,19 @@ export function NavigationRail({
   // Guests and customers share the slim Figma rail; staff roles keep the full one.
   const isCustomerView = !activeRole || activeRole === 'CUSTOMER';
   const isProviderView = activeRole === 'PROVIDER';
+  // A technician gets the same slim rail as a provider: chats only, no orders tab and no new-order button.
+  const isTechnicianView = activeRole === 'TECHNICIAN';
   if (activeRole === 'ADMIN') {
     return <AdminNavigationRail selection={activeRailTab} onSelectTab={onSelectTab} profilePhoto={user?.profilePhoto} onOpenAccount={onOpenProfile} />;
   }
-  if (isCustomerView || isProviderView) {
+  if (isCustomerView || isProviderView || isTechnicianView) {
     return (
       <CustomerNavigationRail
         isAuthenticated={Boolean(user)}
         selection={activeRailTab}
         onSelectTab={onSelectTab}
-        onStartNewOrder={isProviderView ? undefined : onStartNewOrder}
-        showOrdersTab={!isProviderView}
+        onStartNewOrder={isProviderView || isTechnicianView ? undefined : onStartNewOrder}
+        showOrdersTab={!isProviderView && !isTechnicianView}
         profilePhoto={user?.profilePhoto}
         onOpenAccount={user ? onOpenProfile : onOpenAuth}
         runningCount={runningCount}

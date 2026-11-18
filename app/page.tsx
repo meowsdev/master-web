@@ -308,6 +308,7 @@ export default function SuperAppPage() {
         activeOrderId={activeOrderId}
         setActiveOrderId={(id) => { if (id) leaveSupportChat(); setActiveOrderId(id); }}
         onOpenSupport={openSupportChat}
+        onLeaveSupport={leaveSupportChat}
         isSupportOpen={activeRailTab === 'SUPPORT'}
         providerSearchQuery={providerSearchQuery}
         setProviderSearchQuery={setProviderSearchQuery}

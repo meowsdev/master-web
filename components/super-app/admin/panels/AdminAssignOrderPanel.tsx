@@ -8,7 +8,7 @@ import { SupportAvatar } from '../../support/SupportAvatar';
 
 const MODES: Array<{ mode: AssignmentMode; title: string; text: string }> = [
   { mode: 'OFFER', title: 'Offer', text: 'The provider can accept or decline. If they do not answer in 15 minutes the order goes back to automatic offers.' },
-  { mode: 'ASSIGN', title: 'Assign directly', text: 'The order is theirs at once, already accepted. Use it for urgent cases.' },
+  { mode: 'ASSIGN', title: 'Assign directly', text: 'The order is theirs at once and the work starts, as if they had accepted it. Use it for urgent cases.' },
 ];
 
 const displayName = (provider: AssignableProvider) => provider.companyName || provider.user.name || provider.user.username || provider.user.mobileNumber;

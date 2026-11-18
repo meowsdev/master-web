@@ -14,11 +14,12 @@ const apiErrorMessage = (error: unknown, fallback: string) => {
 /**
  * The messages of one order's tab, and sending into it, for either side of the chat.
  * The customer opens (or creates) their per-service conversation; the provider opens the same one
- * through their order, and the backend lets them in only for orders they handle. An admin opens the
+ * through their order, and the backend lets them in only for orders they handle (so does a technician put on
+ * the order). An admin opens the
  * existing one for any order.
  * Messages carry the order id, so they never mix with General Chat. Keys carry the user id (rule 7).
  */
-export function useOrderChat(order: Order, userId: string, viewer: 'CUSTOMER' | 'PROVIDER' | 'ADMIN') {
+export function useOrderChat(order: Order, userId: string, viewer: 'CUSTOMER' | 'PROVIDER' | 'TECHNICIAN' | 'ADMIN') {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState('');
   const serviceId = order.service?.id ?? order.serviceId;

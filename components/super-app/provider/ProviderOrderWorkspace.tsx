@@ -27,13 +27,16 @@ interface ProviderOrderWorkspaceProps {
   onUpdateStatus: (status: OrderStatus) => Promise<void>;
   isUpdatingStatus: boolean;
   onStartCall: (type: 'voice' | 'video') => void;
+  /** A technician works the order too, but cannot assign workers or rate the customer. */
+  viewer?: 'PROVIDER' | 'TECHNICIAN';
 }
 
 /*
  * One order for the provider: its full info, the extra charges and payment so far, and the live chat
  * with the customer, all on one timeline (oldest first). Accept / Decline sit on the order card; assign, extra charge and finish are in the + menu of the message box.
  */
-export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, isUpdatingStatus, onStartCall }: ProviderOrderWorkspaceProps) {
+export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, isUpdatingStatus, onStartCall, viewer = 'PROVIDER' }: ProviderOrderWorkspaceProps) {
+  const isProviderViewer = viewer === 'PROVIDER';
   const { messages, draft, setDraft, submit, canSend } = useOrderChat(order, userId, 'PROVIDER');
   const { requests: extraCharges } = useExtraCharges(order.id, userId);
   const timeline = useOrderTimeline(order, messages, extraCharges);
@@ -78,11 +81,11 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
           }
         })}
         {/* Completed: the provider rates the customer. */}
-        <CustomerRatingCard order={order} userId={userId} />
+        {isProviderViewer && <CustomerRatingCard order={order} userId={userId} />}
         <div ref={bottomRef} />
       </div>
 
-      <ProviderOrderComposer order={order} draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} onChooseAction={(kind) => openPanel(order.id, kind)} />
+      <ProviderOrderComposer order={order} draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} onChooseAction={(kind) => openPanel(order.id, kind)} canAssignWorker={isProviderViewer} />
       <ProviderOrderPanels order={order} userId={userId} />
     </>
   );
