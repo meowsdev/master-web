@@ -31,7 +31,7 @@ export function CustomerProfileHeader({ user, onStartNewOrder }: CustomerProfile
   const ratingLabel = storedRating > 0 ? storedRating.toFixed(1) : 'New';
 
   return (
-    <div className="flex h-[56px] items-center justify-between">
+    <div className="flex items-center justify-between">
       <div className="flex min-w-0 items-center gap-[10px]">
         <ProfileAvatar user={user} />
         <div className="flex min-w-0 flex-col">

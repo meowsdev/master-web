@@ -32,7 +32,7 @@ const emptySubscribe = () => () => {};
 export default function SuperAppPage() {
   const queryClient = useQueryClient();
   const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
-  const { user, isAuthenticated, activeRole, setRole, setUser, pendingRegistrationUser } = useAuthStore();
+  const { user, isAuthenticated, activeRole, setRole, setUser } = useAuthStore();
 
   const isProvider = Boolean(isAuthenticated && (activeRole === 'PROVIDER' || user?.role === 'PROVIDER'));
   const isCounselor = Boolean(isAuthenticated && (activeRole === 'COUNSELOR' || user?.role === 'COUNSELOR'));
@@ -266,7 +266,7 @@ export default function SuperAppPage() {
     <div className={`flex h-screen w-screen overflow-hidden font-sans ${bgMain}`}>
       {/* 1. Far-Left Navigation Rail (60px) */}
       <NavigationRail
-        activeRailTab={modals.isOrdersDrawerOpen ? 'ORDERS' : modals.isProfileEditorOpen || modals.isAuthModalOpen || pendingRegistrationUser ? 'ACCOUNT' : activeRailTab}
+        activeRailTab={modals.isOrdersDrawerOpen ? 'ORDERS' : modals.isProfileEditorOpen || modals.isAuthModalOpen ? 'ACCOUNT' : activeRailTab}
         onSelectTab={(tab) => { setActiveRailTab(tab); if (tab === 'CHATS') modals.closeSidePanels(); }}
         isDarkMode={isDarkMode}
         onOpenSettings={modals.openSettings}
@@ -353,7 +353,7 @@ export default function SuperAppPage() {
       {/* 3. Right Main Area: Encapsulated Routing & Canvas Area */}
       <MainCanvasArea
         activeRailTab={activeRailTab}
-        isSidePanelOpen={modals.isAnySidePanelOpen}
+        isSidePanelOpen={modals.isAnySidePanelOpen || previewService !== null}
         mobileView={mobileView}
         setMobileView={setMobileView}
         isProvider={isProvider}
@@ -417,7 +417,7 @@ export default function SuperAppPage() {
         placeOrderServiceId={modals.placeOrderServiceId}
         onOrderPlaced={handleOrderPlacedFromPanel}
         activeService={activeService}
-        isAuthModalOpen={modals.isAuthModalOpen || Boolean(pendingRegistrationUser)}
+        isAuthModalOpen={modals.isAuthModalOpen}
         onCloseAuth={() => { modals.setIsAuthModalOpen(false); cancelContact(); }}
         authInitialMode={modals.authInitialMode}
         onOpenAuth={modals.handleOpenAuth}
@@ -470,7 +470,7 @@ export default function SuperAppPage() {
       />
 
       {!isAuthenticated && (
-        <ServicePreviewPanel service={modals.isAnySidePanelOpen || pendingRegistrationUser ? null : previewService} onClose={closePreview} primaryActionLabel="Contact Now" onPrimaryAction={handleContactNow} />
+        <ServicePreviewPanel service={modals.isAnySidePanelOpen ? null : previewService} onClose={closePreview} primaryActionLabel="Contact Now" onPrimaryAction={handleContactNow} />
       )}
 
       {activeCounselorChat && (

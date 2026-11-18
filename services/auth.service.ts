@@ -14,8 +14,8 @@ export type UsernameAvailability =
   | { available: true }
   | { available: false; reason: 'INVALID' | 'TAKEN' };
 
-export function formatPhoneNumber(phone: string): string {
-  const cleaned = phone.trim().replace(/[\s\-\(\)]/g, '');
+export function formatPhoneNumber(phone?: string | null): string {
+  const cleaned = (phone ?? '').trim().replace(/[\s\-\(\)]/g, '');
   // Already international (any country): the picker produces this form.
   if (cleaned.startsWith('+')) return cleaned;
   if (cleaned.startsWith('880')) return `+${cleaned}`;

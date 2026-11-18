@@ -1,5 +1,6 @@
 'use client';
 
+import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import Image from 'next/image';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PlusSignIcon } from '@hugeicons/core-free-icons';
@@ -41,10 +42,13 @@ export function CustomerNavigationRail({
   const iconState = (isSelected: boolean) => (isSelected ? 'active' : 'inactive');
 
   return (
-    <aside className="z-20 hidden h-full w-[64px] shrink-0 select-none flex-col items-center justify-between overflow-clip bg-[#f7f5f3] px-[8px] pb-[27px] pt-[16px] md:flex">
+    <aside className="z-20 hidden h-full w-[64px] shrink-0 select-none flex-col items-center justify-between overflow-clip bg-[#f7f5f3] px-[8px] pb-[27px] md:flex">
       <div className="flex w-[36px] flex-col gap-[8px]">
         {/* The app logo heads the rail in every role. */}
-        <Image src="/chat-list/brand-logo.svg" alt="Super App" width={36} height={36} priority className="mb-[8px]" />
+        {/* Centred in a bar as tall as the headers beside it, so the logo sits on the same line as their titles. */}
+        <div className={`mb-[5px] flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-center`}>
+          <Image src="/chat-list/brand-logo.svg" alt="Super App" width={36} height={36} priority />
+        </div>
 
         <button
           type="button"

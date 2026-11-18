@@ -57,7 +57,7 @@ function CreateMenu({ onNewService, onNewCategory }: { onNewService: () => void;
       </button>
       {isOpen && (
         <div role="menu" className="absolute right-0 top-[46px] z-30 w-[200px] rounded-[12px] border border-[#e5e5e5] bg-white p-[6px] shadow-lg">
-          <button type="button" role="menuitem" className={itemClass} onClick={() => { setIsOpen(false); onNewCategory(); }}>New main service</button>
+          <button type="button" role="menuitem" className={itemClass} onClick={() => { setIsOpen(false); onNewCategory(); }}>New Category</button>
           <button type="button" role="menuitem" className={itemClass} onClick={() => { setIsOpen(false); onNewService(); }}>New service</button>
         </div>
       )}
@@ -108,7 +108,7 @@ export function AdminServicesSidebar({ user, onServiceOpened, onOpenAuth }: { us
         isSearchCollapsed={false}
         searchPlaceholder="Search services..."
         profileSlot={
-          <div className="flex h-[56px] items-center justify-between">
+          <div className="flex items-center justify-between">
             <span className="text-[18px] font-semibold tracking-[-0.36px] text-[#202939]">Services</span>
             <CreateMenu onNewService={() => open('new')} onNewCategory={() => { openPanel(null, 'adminCategory'); onServiceOpened(); }} />
           </div>

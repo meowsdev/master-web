@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -13,7 +13,8 @@ import { getPostAuthRedirectPath } from '@/lib/safe-redirect';
 import { AuthDrawerShell, AuthPrimaryButton, authLinkClass } from '@/components/modals/auth/AuthDrawerShell';
 import { AuthField } from '@/components/modals/auth/AuthField';
 import { PhoneNumberField } from '@/components/modals/auth/PhoneNumberField';
-import { CreateAccountForm, ProfileDraft, ProfileInitialValues } from '@/components/modals/auth/CreateAccountForm';
+import { CreateAccountForm, ProfileDraft } from '@/components/modals/auth/CreateAccountForm';
+import { LoginOtpForm } from '@/components/modals/auth/LoginOtpForm';
 import { AvatarPicker } from '@/components/modals/auth/AvatarPicker';
 
 interface AuthModalProps {
@@ -41,41 +42,26 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
 function AuthDrawer({ onClose }: { onClose: () => void }) {
   const router = useRouter();
-  const { setAuth, setRole, setUser, setPendingRegistration, pendingRegistrationUser } = useAuthStore();
-  // A number that already passed OTP but never finished sign-up (e.g. the page was reloaded).
-  const isSignUpPending = pendingRegistrationUser !== null;
+  const { setAuth, setRole, setUser } = useAuthStore();
+  // Set right after OTP for a number with no profile yet: the optional "Edit Account" step.
+  const [profileUser, setProfileUser] = useState<User | null>(null);
+  const isProfileStep = profileUser !== null;
   const [isTechLogin, setIsTechLogin] = useState(false);
-  // Set once an already-registered number is verified: their details fill this same form in place.
-  const [returningUser, setReturningUser] = useState<User | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
-  const [phone, setPhone] = useState(pendingRegistrationUser?.mobileNumber ?? '');
+  const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [serverCode, setServerCode] = useState<string | null>(null);
   const [techPassword, setTechPassword] = useState('123456');
 
-  // OTP progress: Save stays disabled until the code has been verified.
   const [isOtpSent, setIsOtpSent] = useState(false);
-  const [isOtpVerified, setIsOtpVerified] = useState(isSignUpPending);
-
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isTechLoggingIn, setIsTechLoggingIn] = useState(false);
   const otpCooldown = useOtpCooldown(formatPhoneNumber(phone));
 
-  const prefill = useMemo<ProfileInitialValues | null>(
-    () =>
-      returningUser && {
-        fullName: returningUser.name ?? '',
-        username: returningUser.username ?? '',
-        districtId: returningUser.districtId ?? null,
-        upazilaId: returningUser.upazilaId ?? null,
-      },
-    [returningUser],
-  );
-
-  // After a finished sign-up/login: close the panel and go back to the page the
+  // After a finished login/sign-up: close the panel and go back to the page the
   // visitor came from (`?next=`), or home.
   const finishAndRedirect = () => {
     onClose();
@@ -90,9 +76,7 @@ function AuthDrawer({ onClose }: { onClose: () => void }) {
     setIsOtpSent(false);
   };
 
-  // 1. Request OTP via Backend
   const requestOtp = async () => {
-    // Guard against double clicks while a request is open.
     if (isSendingOtp) return;
     if (!phone.trim()) {
       toast.error('Please enter a valid mobile number');
@@ -104,7 +88,7 @@ function AuthDrawer({ onClose }: { onClose: () => void }) {
       otpCooldown.startCooldown(res.retryAfterSeconds);
       if (res.code) {
         setServerCode(res.code);
-        setOtp(res.code); // Auto-fill for convenience
+        setOtp(res.code); // dev convenience: the backend only returns it outside production
       }
       toast.success(res.message || 'OTP sent successfully!');
       setIsOtpSent(true);
@@ -121,30 +105,27 @@ function AuthDrawer({ onClose }: { onClose: () => void }) {
     }
   };
 
-  // 2. Verify OTP via Backend (only when the user presses Verify, never on typing)
+  // Verify only on the Verify press, never while typing. The backend sets the
+  // httpOnly session cookies (1-year refresh), so a returning browser never sees this panel again.
   const verifyOtpCode = async (code: string) => {
-    if (isVerifyingOtp || isOtpVerified) return;
+    if (isVerifyingOtp) return;
     setIsVerifyingOtp(true);
     try {
       const res = await authService.verifyOtp({ phoneNumber: phone, code });
-      // Tokens arrive as httpOnly cookies; only the user object is kept in JS.
+      // The verified number alone is a full identity: log in right away.
+      setAuth(res.user);
+      setRole(res.user.role);
+      setPhone(res.user.mobileNumber);
 
-      setIsOtpVerified(true); // phone is now a locked, verified identity in both branches below
-
-      // Strict single role constraint: A mobile number cannot have more than one role.
-      if (res.user.name) {
-        setAuth(res.user);
-        setRole(res.user.role);
-        toast.success(`স্বাগতম, ${res.user.name}! (${res.user.role})`);
-        // Already registered: their saved details fill this same panel in place.
-        setPhotoUrl(res.user.profilePhoto ?? null);
-        setReturningUser(res.user);
-      } else {
-        // Brand new number: NOT logged in yet. The app stays in guest mode and this
-        // panel can't be closed until the profile is saved.
-        setPendingRegistration(res.user);
-        toast.info('নম্বর যাচাই হয়েছে। বাকি তথ্য পূরণ করে Save করুন।');
+      const hasProfile = Boolean(res.user.name && res.user.username);
+      if (hasProfile) {
+        toast.success(`স্বাগতম, ${res.user.name}!`);
+        finishAndRedirect();
+        return;
       }
+      // First visit: offer the profile form, but it is optional and can be closed.
+      setProfileUser(res.user);
+      toast.success('লগইন সফল হয়েছে। চাইলে প্রোফাইল পূরণ করতে পারেন।');
     } catch (err: unknown) {
       toast.error(parseOtpError(err).message);
     } finally {
@@ -152,25 +133,19 @@ function AuthDrawer({ onClose }: { onClose: () => void }) {
     }
   };
 
-  // 3. Complete Profile (validated by the backend: unique username, real district/upazila pair)
+  // Profile step (validated by the backend: unique username, real district/upazila pair)
   const handleSave = async (profile: ProfileDraft) => {
+    if (!profileUser) return;
     setIsSaving(true);
     try {
       const updatedUser = await authService.completeProfile({
         ...profile,
         profilePhoto: photoUrl ?? undefined,
         // A role is only chosen when the account is first created.
-        ...(returningUser ? {} : { role: UserRole.CUSTOMER }),
+        ...(profileUser.name ? {} : { role: UserRole.CUSTOMER }),
       });
-
-      if (returningUser) {
-        setUser(updatedUser);
-        toast.success('Profile updated successfully! ✨');
-      } else {
-        setAuth(updatedUser);
-        setRole(updatedUser.role);
-        toast.success('অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!');
-      }
+      setUser(updatedUser);
+      toast.success('প্রোফাইল সংরক্ষণ হয়েছে!');
       finishAndRedirect();
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, 'Failed to complete profile'));
@@ -179,15 +154,11 @@ function AuthDrawer({ onClose }: { onClose: () => void }) {
     }
   };
 
-  // Direct Technician Login with Password
   const handleTechnicianLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsTechLoggingIn(true);
     try {
-      const res = await authService.technicianLogin({
-        phoneNumber: phone,
-        password: techPassword,
-      });
+      const res = await authService.technicianLogin({ phoneNumber: phone, password: techPassword });
       setAuth(res.user, res.accessToken, res.refreshToken);
       setRole(UserRole.TECHNICIAN);
       toast.success(`Technician logged in: ${res.user.name || res.user.mobileNumber}`);
@@ -199,15 +170,29 @@ function AuthDrawer({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const title = isProfileStep ? 'Edit Account' : isTechLogin ? 'Technician Login' : 'Login';
+
   return (
-    // No close button while a verified number is still unregistered: Save is the only way out.
+    // The profile step is optional: closing it keeps the phone-number login.
     <AuthDrawerShell
-      title={isTechLogin ? 'Technician Login' : returningUser ? 'Edit Profile' : 'Create Account'}
-      onClose={isSignUpPending ? undefined : returningUser ? finishAndRedirect : onClose}
-      blockOutside={isSignUpPending}
-      avatar={isTechLogin ? undefined : <AvatarPicker photoUrl={photoUrl} onChange={setPhotoUrl} />}
+      title={title}
+      onClose={isProfileStep ? finishAndRedirect : onClose}
+      avatar={isProfileStep ? <AvatarPicker photoUrl={photoUrl} onChange={setPhotoUrl} /> : undefined}
     >
-      {isTechLogin ? (
+      {isProfileStep ? (
+        <CreateAccountForm
+          phone={phone}
+          initialValues={{
+            fullName: profileUser.name ?? '',
+            username: profileUser.username ?? '',
+            districtId: profileUser.districtId ?? null,
+            upazilaId: profileUser.upazilaId ?? null,
+          }}
+          hasExtraChanges={photoUrl !== null}
+          isSaving={isSaving}
+          onSave={(profile) => void handleSave(profile)}
+        />
+      ) : isTechLogin ? (
         <form onSubmit={handleTechnicianLogin} className="flex w-full flex-col items-center gap-[48px]">
           <PhoneNumberField value={phone} onChange={setPhone} />
           <div className="w-full space-y-[8px]">
@@ -229,17 +214,14 @@ function AuthDrawer({ onClose }: { onClose: () => void }) {
           </button>
         </form>
       ) : (
-        <CreateAccountForm
-          mode="create"
+        <LoginOtpForm
           phone={phone}
           onPhoneChange={handlePhoneChange}
-          prefill={prefill}
-          hasExtraChanges={photoUrl !== (returningUser?.profilePhoto ?? null)}
+          onTechnicianLogin={() => setIsTechLogin(true)}
           otp={{
             value: otp,
             onChange: setOtp,
             canEnter: isOtpSent || otpCooldown.isCoolingDown,
-            isVerified: isOtpVerified,
             isSending: isSendingOtp,
             isVerifying: isVerifyingOtp,
             secondsLeft: otpCooldown.secondsLeft,
@@ -248,9 +230,6 @@ function AuthDrawer({ onClose }: { onClose: () => void }) {
             serverCode,
             onUseServerCode: () => serverCode && setOtp(serverCode),
           }}
-          isSaving={isSaving}
-          onSave={(profile) => void handleSave(profile)}
-          onTechnicianLogin={isSignUpPending || returningUser ? undefined : () => setIsTechLogin(true)}
         />
       )}
     </AuthDrawerShell>

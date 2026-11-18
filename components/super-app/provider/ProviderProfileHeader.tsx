@@ -18,7 +18,7 @@ export function ProviderProfileHeader({ user }: { user: User }) {
   const rating = Number(user.providerProfile?.rating);
 
   return (
-    <div className="flex h-[56px] items-center justify-between gap-[8px]">
+    <div className="flex items-center justify-between gap-[8px]">
       <div className="flex min-w-0 items-center gap-[10px]">
         {user.profilePhoto ? (
           // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary upload hosts

@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useHorizontalScroll } from '@/hooks/useHorizontalScroll';
 import { FilterChip } from '@/types/super-app.types';
 import { User } from '@/types/auth.types';
+import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import { CustomerProfileHeader } from './CustomerProfileHeader';
 
 
@@ -62,13 +63,16 @@ export function CustomerSidebarTop({
   const arrowClass =
     'absolute top-1/2 z-10 flex size-[28px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[#e5e5e5] bg-white text-[#202939] shadow-md transition-transform hover:scale-110';
   return (
-    <div className={`flex shrink-0 flex-col px-[8px] pb-0 ${showBrandRow ? 'pt-[8px]' : 'pt-0'}`}>
-      {showBrandRow && profileSlot}
+    <div className="flex shrink-0 flex-col px-[8px] pb-0">
+      {/* Same height and divider line as the chat header and the right-hand panel header, so the three line up. */}
+      {showBrandRow && (
+        <div className={`-mx-[8px] flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 flex-col justify-center border-b border-[#e5e5e5] px-[16px]`}>
+      {profileSlot}
       {showBrandRow && !profileSlot && isAuthenticated && user && onStartNewOrder && (
         <CustomerProfileHeader user={user} onStartNewOrder={onStartNewOrder} />
       )}
       {showBrandRow && !profileSlot && !(isAuthenticated && user && onStartNewOrder) && (
-        <div className="flex h-[50px] items-center justify-between">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-[8px]">
             <Image src="/chat-list/brand-logo.svg" alt="" width={36} height={36} />
             <span className="text-[18px] font-semibold tracking-[-0.36px] text-[#202939]">SupeerApp</span>
@@ -92,6 +96,8 @@ export function CustomerSidebarTop({
               </button>
             </div>
           )}
+        </div>
+      )}
         </div>
       )}
 

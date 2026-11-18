@@ -1,5 +1,6 @@
 'use client';
 
+import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import { useRef } from 'react';
 import { useFitScale } from '@/hooks/useFitScale';
 import { MobileAppPromoCard } from './MobileAppPromoCard';
@@ -36,7 +37,7 @@ export function GuestWelcome({ onOpenAuth }: GuestWelcomeProps) {
       className="flex min-w-0 flex-1 flex-col overflow-auto"
       style={{ fontFamily: 'var(--font-manrope), sans-serif' }}
     >
-      <header className="flex shrink-0 items-center justify-end gap-[10px] border-b border-[#e5e5e5] bg-white px-[16px] py-[9px] lg:px-[48px]">
+      <header className={`flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-end gap-[10px] border-b border-[#e5e5e5] bg-white px-[16px] lg:px-[48px]`}>
         <button
           type="button"
           className="cursor-pointer rounded-[12px] bg-white whitespace-nowrap px-[12px] py-[8px] text-[14px] font-semibold tracking-[-0.4px] text-[#697586] lg:px-[16px] lg:text-[16px] xl:text-[20px]"

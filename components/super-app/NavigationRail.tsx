@@ -1,5 +1,6 @@
 'use client';
 
+import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import React from 'react';
 import Image from 'next/image';
 import {
@@ -78,10 +79,13 @@ export function NavigationRail({
   const statusDotClass = 'absolute right-0 top-0 size-[10px] rounded-full bg-[#1daa61] ring-2 ring-[#f7f5f3]';
 
   return (
-    <aside className="z-20 hidden h-full w-[64px] shrink-0 select-none flex-col items-center justify-between overflow-clip bg-[#f7f5f3] px-[8px] pb-[27px] pt-[16px] md:flex">
+    <aside className="z-20 hidden h-full w-[64px] shrink-0 select-none flex-col items-center justify-between overflow-clip bg-[#f7f5f3] px-[8px] pb-[27px] md:flex">
       {/* Top Navigation Tabs */}
       <div className="flex flex-col items-center gap-[8px]">
-        <Image src="/chat-list/brand-logo.svg" alt="Super App" width={36} height={36} priority className="mb-[8px]" />
+        {/* Centred in a bar as tall as the headers beside it, so the logo sits on the same line as their titles. */}
+        <div className={`mb-[5px] flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-center`}>
+          <Image src="/chat-list/brand-logo.svg" alt="Super App" width={36} height={36} priority />
+        </div>
         <button
           onClick={() => onSelectTab('CHATS')}
           className={railButtonClass(activeRailTab === 'CHATS')}

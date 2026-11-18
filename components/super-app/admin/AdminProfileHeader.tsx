@@ -3,7 +3,7 @@ import { User } from '@/types/auth.types';
 /* The admin's header in the sidebar: photo, name and a role badge. No due and no Pay button: admins hold no wallet. */
 export function AdminProfileHeader({ user }: { user: User }) {
   return (
-    <div className="flex h-[56px] items-center gap-[10px]">
+    <div className="flex items-center gap-[10px]">
       {user.profilePhoto ? (
         // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary upload hosts
         <img src={user.profilePhoto} alt="" className="size-[44px] shrink-0 rounded-full object-cover" />

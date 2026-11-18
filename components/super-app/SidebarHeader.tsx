@@ -1,5 +1,6 @@
 'use client';
 
+import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import React, { useState } from 'react';
 import Image from 'next/image';
 import {
@@ -43,7 +44,7 @@ export function SidebarHeader({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-[50px] shrink-0 items-center justify-between px-[8px] pt-[8px] z-10">
+    <div className={`z-10 flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-between border-b border-[#e5e5e5] px-[16px]`}>
       {/* Brand: same mark and wordmark as the customer sidebar */}
       <div className="flex items-center gap-[8px]">
         <Image src="/chat-list/brand-logo.svg" alt="" width={36} height={36} />

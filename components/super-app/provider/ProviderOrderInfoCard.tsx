@@ -32,7 +32,7 @@ export function ProviderOrderInfoCard({ order, actions, showParties = false }: P
       </header>
 
       <ul className="mt-[14px] flex flex-col gap-[10px]">
-        <OrderDetailLine icon={UserIcon}>{customer?.name ?? 'Customer'}</OrderDetailLine>
+        <OrderDetailLine icon={UserIcon}>{customer?.name ?? (customer?.username ? `@${customer.username}` : customer?.maskedPhone) ?? 'Customer'}</OrderDetailLine>
         {showParties && customer?.mobileNumber && <OrderDetailLine icon={Call02Icon}>Customer: {customer.mobileNumber}</OrderDetailLine>}
         {/* Until a provider accepts, the provider on the order is only a stand-in, so nobody is named. */}
         {showParties && !order.isAccepted && <OrderDetailLine icon={Store01Icon}>Provider: waiting for a provider to accept</OrderDetailLine>}

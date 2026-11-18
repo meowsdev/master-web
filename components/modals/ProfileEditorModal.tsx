@@ -67,7 +67,6 @@ function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout }: Profil
       avatar={<AvatarPicker photoUrl={photoUrl} onChange={setPhotoUrl} />}
     >
       <CreateAccountForm
-        mode="edit"
         phone={user.mobileNumber}
         initialValues={{
           fullName: user.name ?? '',

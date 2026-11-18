@@ -42,6 +42,8 @@ export interface OrderUserProfile {
   id: string;
   name?: string | null;
   username?: string | null;
+  /** Set by the backend instead of the phone number when the user has no username, e.g. +8801*****5678. */
+  maskedPhone?: string;
   mobileNumber: string;
   profilePhoto?: string | null;
 }
