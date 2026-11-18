@@ -118,6 +118,9 @@ export interface OrderBookingDetail {
   quantity: number;
   description?: string | null;
   addressDetail: string;
+  /** Where the work is done; the provider sees them as names next to the address. */
+  districtId?: number;
+  upazilaId?: number;
   /** YYYY-MM-DD (ISO date from the backend). */
   scheduledDate: string;
   timeSlot: string;

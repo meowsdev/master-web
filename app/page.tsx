@@ -17,8 +17,8 @@ import { useSuperAppModals } from '@/hooks/useSuperAppModals';
 import { useGuestServicePreview } from '@/hooks/useGuestServicePreview';
 
 // Super App UI Components
-import { useQueryClient } from '@tanstack/react-query';
-import { Order } from '@/types/order.types';
+import { useCustomerOrderTabSelection } from '@/hooks/useCustomerOrderTabSelection';
+import { useSupportChatNavigation } from '@/hooks/useSupportChatNavigation';
 import { useServiceSelectionReadSync } from '@/hooks/useServiceSelectionReadSync';
 import { NavigationRail } from '@/components/super-app/NavigationRail';
 import { SuperAppSidebar } from '@/components/super-app/SuperAppSidebar';
@@ -30,7 +30,6 @@ import { AddCustomerModal, CreateCustomOrderModal, ModifyPriceModal } from '@/co
 const emptySubscribe = () => () => {};
 
 export default function SuperAppPage() {
-  const queryClient = useQueryClient();
   const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const { user, isAuthenticated, activeRole, setRole, setUser } = useAuthStore();
 
@@ -129,7 +128,7 @@ export default function SuperAppPage() {
     setActiveFilter: setProviderActiveFilter,
     handleUpdateStatus,
     isUpdatingStatus,
-  } = useProviderOrders({ isProvider, userId: user?.id });
+  } = useProviderOrders({ isProvider, userId: user?.id, playSound });
 
   const {
     activeTab: counselorActiveTab,
@@ -230,20 +229,19 @@ export default function SuperAppPage() {
     modals.openPlaceOrder(activeService?.id ?? null);
   };
 
-  // Which order tab is open, remembered with its main service so switching service starts on its newest order.
-  const [orderTabSelection, setOrderTabSelection] = useState<{ categoryId: string; orderId: string | null } | null>(null);
-  const selectedOrderId = orderTabSelection?.categoryId === activeService?.categoryId ? orderTabSelection?.orderId ?? null : null;
+  const { selectedOrderId, selectOrderTab, handleOrderPlaced } = useCustomerOrderTabSelection({
+    userId: user?.id,
+    activeService,
+    dbServices,
+    closePlaceOrderPanel: () => modals.setIsPlaceOrderOpen(false),
+    selectService: handleSelectServiceWithReadSync,
+  });
 
-  // A placed order opens as its own tab inside the chat of its main service.
-  const handleOrderPlacedFromPanel = (order: Order) => {
-    const orderedService = dbServices.find((service) => service.id === order.serviceId);
-    modals.setIsPlaceOrderOpen(false);
-    queryClient.invalidateQueries({ queryKey: ['my-orders-drawer', user?.id] });
-    if (!orderedService) return;
-    handleSelectServiceWithReadSync(orderedService);
-    setOrderTabSelection({ categoryId: orderedService.categoryId, orderId: order.id });
-    toast.success(`Order #${order.referenceCode} placed`);
-  };
+  const { openSupportChat, leaveSupportChat } = useSupportChatNavigation({
+    setActiveRailTab,
+    setMobileView,
+    deselectChats: () => { setActiveServiceId(null); setActiveOrderId(null); setCounselorSelectedChatId(null); },
+  });
 
   if (!isMounted) {
     return (
@@ -255,15 +253,6 @@ export default function SuperAppPage() {
 
   const bgMain = isDarkMode ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#f0f2f5] text-[#111b21]';
   // The + buttons open the Place Order panel; the customer picks the service inside it.
-  // Support is a pinned row of the chat list: opening it deselects every other chat, picking another chat closes it.
-  const openSupportChat = () => {
-    setActiveServiceId(null);
-    setActiveOrderId(null);
-    setCounselorSelectedChatId(null);
-    setActiveRailTab('SUPPORT');
-    setMobileView('CHAT');
-  };
-  const leaveSupportChat = () => setActiveRailTab((tab) => (tab === 'SUPPORT' ? 'CHATS' : tab));
   const handleStartNewOrder = () => {
     setActiveRailTab('CHATS');
     if (isAuthenticated) modals.openPlaceOrder(null);
@@ -403,7 +392,7 @@ export default function SuperAppPage() {
         openOrders={modals.openOrders}
         onStartNewOrder={handleStartNewOrder}
         selectedOrderId={selectedOrderId}
-        onSelectOrderTab={(orderId) => activeService && setOrderTabSelection({ categoryId: activeService.categoryId, orderId })}
+        onSelectOrderTab={selectOrderTab}
         openSettings={modals.openSettings}
         handleLogout={handleLogout}
         messagesEndRef={messagesEndRef}
@@ -429,7 +418,7 @@ export default function SuperAppPage() {
         isPlaceOrderOpen={modals.isPlaceOrderOpen}
         onClosePlaceOrder={() => modals.setIsPlaceOrderOpen(false)}
         placeOrderServiceId={modals.placeOrderServiceId}
-        onOrderPlaced={handleOrderPlacedFromPanel}
+        onOrderPlaced={handleOrderPlaced}
         activeService={activeService}
         isAuthModalOpen={modals.isAuthModalOpen}
         onCloseAuth={() => { modals.setIsAuthModalOpen(false); cancelContact(); }}

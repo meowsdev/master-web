@@ -7,7 +7,7 @@ import { useCallback } from 'react';
  * Generates synthetic tones for message sending and receiving without external MP3 dependencies
  */
 export function useSuperAppAudio(soundEnabled: boolean) {
-  const playSound = useCallback((type: 'send' | 'receive') => {
+  const playSound = useCallback((type: 'send' | 'receive' | 'offer') => {
     if (!soundEnabled || typeof window === 'undefined') return;
     try {
       const AudioCtx =
@@ -18,7 +18,17 @@ export function useSuperAppAudio(soundEnabled: boolean) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
-      if (type === 'send') {
+      if (type === 'offer') {
+        // A new order is worth more attention than a chat message: three rising notes, then done.
+        osc.type = 'sine';
+        [660, 880, 1100].forEach((frequency, index) => osc.frequency.setValueAtTime(frequency, ctx.currentTime + index * 0.14));
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.45);
+      } else if (type === 'send') {
         // High-pitch outgoing pop sound
         osc.type = 'sine';
         osc.frequency.setValueAtTime(750, ctx.currentTime);

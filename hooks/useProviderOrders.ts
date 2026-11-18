@@ -6,13 +6,16 @@ import { toast } from 'sonner';
 import { ordersService } from '@/services/orders.service';
 import { Order, OrderStatus } from '@/types/order.types';
 import { ProviderOrderFilter } from '@/components/super-app/ProviderOrderList';
+import { useProviderOfferAlerts } from '@/hooks/useProviderOfferAlerts';
 
 interface UseProviderOrdersProps {
   isProvider: boolean;
   userId?: string | null;
+  /** The app's sound (it already respects the Sound Notifications setting). */
+  playSound: (type: 'offer') => void;
 }
 
-export function useProviderOrders({ isProvider, userId }: UseProviderOrdersProps) {
+export function useProviderOrders({ isProvider, userId, playSound }: UseProviderOrdersProps) {
   const queryClient = useQueryClient();
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,34 +50,6 @@ export function useProviderOrders({ isProvider, userId }: UseProviderOrdersProps
   const previousPendingIdsRef = useRef<Set<string>>(new Set());
   const isFirstLoadRef = useRef(true);
 
-  // Cross-tab real-time dispatch listener
-  useEffect(() => {
-    if (!isProvider || typeof window === 'undefined' || !('BroadcastChannel' in window)) return;
-    const channel = new BroadcastChannel('master_job_dispatch');
-
-    channel.onmessage = (event) => {
-      if (event.data?.type === 'NEW_ORDER_DISPATCHED') {
-        refetch();
-        try {
-          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-          audio.volume = 0.6;
-          audio.play().catch(() => {});
-        } catch {
-          // ignore
-        }
-
-        toast.info(
-          `🔔 New Job Dispatch: "${event.data?.serviceName || 'On-Demand Service'}" arrived! Tap to accept.`,
-          { duration: 7000 }
-        );
-      }
-    };
-
-    return () => {
-      channel.close();
-    };
-  }, [isProvider, refetch]);
-
   useEffect(() => {
     if (!isProvider) return;
     const currentPendingIds = new Set(
@@ -85,13 +60,7 @@ export function useProviderOrders({ isProvider, userId }: UseProviderOrdersProps
       previousPendingIdsRef.current = currentPendingIds;
       isFirstLoadRef.current = false;
       if (currentPendingIds.size > 0) {
-        try {
-          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-          audio.volume = 0.6;
-          audio.play().catch(() => {});
-        } catch {
-          // audio blocked or unavailable
-        }
+        playSound('offer');
 
         toast.info(
           `🔔 You have ${currentPendingIds.size} pending job dispatch(es) waiting! Tap to review & accept.`,
@@ -108,13 +77,7 @@ export function useProviderOrders({ isProvider, userId }: UseProviderOrdersProps
 
     if (newArrivals.length > 0) {
       const newOrder = orders.find((o) => o.id === newArrivals[0]);
-      try {
-        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-        audio.volume = 0.6;
-        audio.play().catch(() => {});
-      } catch {
-        // audio playback blocked or unavailable
-      }
+      playSound('offer');
 
       toast.info(
         `🔔 New Job Dispatch: "${newOrder?.service?.name || 'On-Demand Service'}" (৳${
@@ -125,7 +88,9 @@ export function useProviderOrders({ isProvider, userId }: UseProviderOrdersProps
     }
 
     previousPendingIdsRef.current = currentPendingIds;
-  }, [orders, isProvider]);
+  }, [orders, isProvider, playSound]);
+
+  useProviderOfferAlerts({ isProvider, userId, pendingCount: orders.filter((o) => o.orderStatus === OrderStatus.PENDING).length });
 
   // Update order status mutation
   const updateStatusMutation = useMutation({

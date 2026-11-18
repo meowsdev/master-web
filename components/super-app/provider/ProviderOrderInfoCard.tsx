@@ -1,5 +1,6 @@
 'use client';
 
+import { useServiceAreaLabel } from '@/hooks/useServiceAreaLabel';
 import { Alert02Icon, Calendar03Icon, CreditCardIcon, Call02Icon, Home01Icon, Note01Icon, Store01Icon, ScaleIcon, UserIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { ReactNode } from 'react';
@@ -23,6 +24,7 @@ export function ProviderOrderInfoCard({ order, actions, showParties = false }: P
   const customer = order.customer?.user;
   const status = ORDER_STATUS_LABEL[order.orderStatus];
   const [problemLine, ...surchargeLines] = detail?.priceBreakdown ?? [];
+  const areaLabel = useServiceAreaLabel(detail?.districtId, detail?.upazilaId);
 
   return (
     <article className="w-full max-w-[460px] rounded-[16px] bg-white p-[14px] text-[#202939] shadow-sm">
@@ -57,7 +59,7 @@ export function ProviderOrderInfoCard({ order, actions, showParties = false }: P
             {line.label} ({formatTaka(line.amount)})
           </OrderDetailLine>
         ))}
-        {detail && <OrderDetailLine icon={Home01Icon}>{detail.addressDetail}</OrderDetailLine>}
+        {detail && <OrderDetailLine icon={Home01Icon}>{areaLabel ? `${areaLabel} · ${detail.addressDetail}` : detail.addressDetail}</OrderDetailLine>}
         {detail && (
           <OrderDetailLine icon={Calendar03Icon}>
             {formatScheduleDate(detail.scheduledDate)} | {detail.timeSlot}

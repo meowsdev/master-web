@@ -17,17 +17,6 @@ export interface CreateConversationDto {
   customerProfileId?: string;
 }
 
-export interface InChatBookingDto {
-  conversationId: string;
-  serviceId: string;
-  providerId?: string;
-  customPrice?: number;
-  addressText?: string;
-  preferredTime?: string;
-  notes?: string;
-  paymentMode?: 'CASH' | 'BKASH' | 'NAGAD' | 'CARD' | 'BANK';
-}
-
 export interface CustomOfferDto {
   conversationId: string;
   serviceId?: string;
@@ -82,14 +71,6 @@ export const chatService = {
       payload.orderId = dto.orderId;
     }
     const response = await apiClient.post<Message>('/chat/messages', payload);
-    return response.data;
-  },
-
-  createInChatBooking: async (dto: InChatBookingDto) => {
-    const response = await apiClient.post<{ order: any; message: Message }>(
-      '/chat/orders/in-chat-booking',
-      dto
-    );
     return response.data;
   },
 
