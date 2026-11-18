@@ -20,6 +20,7 @@ interface CustomerNavigationRailProps {
   accountTitle: string;
   /** Providers only have the Messages tab; customers also get Orders. */
   showOrdersTab?: boolean;
+
 }
 
 /*
@@ -40,6 +41,8 @@ export function CustomerNavigationRail({
   showOrdersTab = true,
 }: CustomerNavigationRailProps) {
   const iconState = (isSelected: boolean) => (isSelected ? 'active' : 'inactive');
+  // The Support chat is a row of the chat list, so Chats stays lit while it is open.
+  const isChatsSelected = selection === 'CHATS' || selection === 'SUPPORT';
 
   return (
     <aside className="z-20 hidden h-full w-[64px] shrink-0 select-none flex-col items-center justify-between overflow-clip bg-[#f7f5f3] px-[8px] pb-[27px] md:flex">
@@ -54,10 +57,10 @@ export function CustomerNavigationRail({
           type="button"
           onClick={() => onSelectTab('CHATS')}
           title="Chats & Services"
-          aria-current={selection === 'CHATS' ? 'page' : undefined}
+          aria-current={isChatsSelected ? 'page' : undefined}
           className="size-[36px] cursor-pointer"
         >
-          <Image src={`/rail/chats-${iconState(selection === 'CHATS')}.svg`} alt="Chats" width={36} height={36} />
+          <Image src={`/rail/chats-${iconState(isChatsSelected)}.svg`} alt="Chats" width={36} height={36} />
         </button>
 
         {showOrdersTab && (
@@ -76,6 +79,7 @@ export function CustomerNavigationRail({
           )}
         </button>
         )}
+
       </div>
 
       <div className="flex flex-col items-center gap-[12px]">

@@ -4,6 +4,7 @@ import { broadcastAuthEvent } from '@/lib/auth-channel';
 import { queryClient } from '@/lib/query-client';
 import { disconnectChatSocket } from '@/lib/socket';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useSupportChatStore } from '@/store/useSupportChatStore';
 
 const REFRESH_LOCK_NAME = 'master-auth-refresh';
 
@@ -98,6 +99,7 @@ export function endLocalSession({
   useAuthStore.getState().logout();
   queryClient.clear();
   disconnectChatSocket();
+  useSupportChatStore.getState().reset();
 
   if (previousUserId) {
     try {

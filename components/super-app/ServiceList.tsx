@@ -10,6 +10,7 @@ import { Order } from '@/types/order.types';
 import { ChatSession } from '@/types/chat.types';
 import { ordersService } from '@/services/orders.service';
 import { ServiceListItem } from './ServiceListItem';
+import { SupportChatRow } from './support/SupportChatRow';
 
 interface ServiceListProps {
   services: Service[];
@@ -31,6 +32,9 @@ interface ServiceListProps {
   /** Fired while scrolling so the parent can collapse/restore the search area. */
   onScrollIntent?: (intent: 'collapse' | 'expand') => void;
   isDarkMode: boolean;
+  /** Signed-in (non-admin) users: opens the pinned Support chat. */
+  onOpenSupport?: () => void;
+  isSupportOpen?: boolean;
 }
 
 export function ServiceList({
@@ -51,6 +55,8 @@ export function ServiceList({
   activeFilterChip,
   onScrollIntent,
   isDarkMode,
+  onOpenSupport,
+  isSupportOpen = false,
 }: ServiceListProps) {
   const lastScrollTopRef = useRef(0);
 
@@ -115,6 +121,11 @@ export function ServiceList({
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* Scrollable List Container */}
       <div className="flex-1 overflow-y-auto" onScroll={handleScroll}>
+        {isAuthenticated && user && activeRole !== 'ADMIN' && onOpenSupport && (
+          <div className="px-[8px] pt-[8px]">
+            <SupportChatRow userId={user.id} isActive={isSupportOpen} onOpen={onOpenSupport} />
+          </div>
+        )}
         {isLoading ? (
           <div className="p-6 text-center space-y-3">
             <div className="w-8 h-8 border-2 border-[#25D366] border-t-transparent rounded-full animate-spin mx-auto" />

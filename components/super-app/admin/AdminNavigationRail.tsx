@@ -3,7 +3,7 @@
 import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import Image from 'next/image';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
-import { Store01Icon, UserGroupIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
+import { CustomerSupportIcon, Store01Icon, UserGroupIcon, UserSharingIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
 import { OrderPanelKind, useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { RailSelection, RailTab } from '@/types/super-app.types';
 
@@ -17,6 +17,11 @@ interface AdminNavigationRailProps {
 const MANAGEMENT_TABS: Array<{ kind: OrderPanelKind; title: string; icon: IconSvgElement }> = [
   { kind: 'adminTechnicians', title: 'Technicians', icon: UserGroupIcon },
   { kind: 'adminProviders', title: 'Providers', icon: Store01Icon },
+];
+
+const SUPPORT_CHAT_TABS: Array<{ tab: RailTab; title: string; icon: IconSvgElement }> = [
+  { tab: 'SUPPORT_PROVIDERS', title: 'Chat with providers', icon: CustomerSupportIcon },
+  { tab: 'SUPPORT_CUSTOMERS', title: 'Chat with customers', icon: UserSharingIcon },
 ];
 
 /* The admin's rail: logo, Messages (all orders), Services (a tab), then Technicians and Providers (panels), profile at the bottom. */
@@ -62,6 +67,27 @@ export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOp
         >
           <HugeiconsIcon icon={Wrench01Icon} size={18} />
         </button>
+
+        {/* Direct chat: one icon for providers, one for customers. Each is a tab with its own list. */}
+        {SUPPORT_CHAT_TABS.map((tab) => {
+          const isSelected = selection === tab.tab;
+          return (
+            <button
+              key={tab.tab}
+              type="button"
+              onClick={() => {
+                closePanel();
+                onSelectTab(tab.tab);
+              }}
+              title={tab.title}
+              aria-label={tab.title}
+              aria-current={isSelected ? 'page' : undefined}
+              className={`flex size-[36px] cursor-pointer items-center justify-center rounded-full transition-colors ${isSelected ? 'bg-[#d7fdd2] text-[#1daa61]' : 'bg-white text-[#202939] hover:bg-[#ebe8e4]'}`}
+            >
+              <HugeiconsIcon icon={tab.icon} size={18} />
+            </button>
+          );
+        })}
 
         {MANAGEMENT_TABS.map((tab) => {
           const isOpen = openKind === tab.kind;

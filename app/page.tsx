@@ -230,7 +230,7 @@ export default function SuperAppPage() {
     modals.openPlaceOrder(activeService?.id ?? null);
   };
 
-  // Which order tab is open, remembered with its main service so switching service starts on General Chat.
+  // Which order tab is open, remembered with its main service so switching service starts on its newest order.
   const [orderTabSelection, setOrderTabSelection] = useState<{ categoryId: string; orderId: string | null } | null>(null);
   const selectedOrderId = orderTabSelection?.categoryId === activeService?.categoryId ? orderTabSelection?.orderId ?? null : null;
 
@@ -255,6 +255,15 @@ export default function SuperAppPage() {
 
   const bgMain = isDarkMode ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#f0f2f5] text-[#111b21]';
   // The + buttons open the Place Order panel; the customer picks the service inside it.
+  // Support is a pinned row of the chat list: opening it deselects every other chat, picking another chat closes it.
+  const openSupportChat = () => {
+    setActiveServiceId(null);
+    setActiveOrderId(null);
+    setCounselorSelectedChatId(null);
+    setActiveRailTab('SUPPORT');
+    setMobileView('CHAT');
+  };
+  const leaveSupportChat = () => setActiveRailTab((tab) => (tab === 'SUPPORT' ? 'CHATS' : tab));
   const handleStartNewOrder = () => {
     setActiveRailTab('CHATS');
     if (isAuthenticated) modals.openPlaceOrder(null);
@@ -267,7 +276,10 @@ export default function SuperAppPage() {
       {/* 1. Far-Left Navigation Rail (60px) */}
       <NavigationRail
         activeRailTab={modals.isOrdersDrawerOpen ? 'ORDERS' : modals.isProfileEditorOpen || modals.isAuthModalOpen ? 'ACCOUNT' : activeRailTab}
-        onSelectTab={(tab) => { setActiveRailTab(tab); if (tab === 'CHATS') modals.closeSidePanels(); }}
+        onSelectTab={(tab) => {
+          setActiveRailTab(tab);
+          if (tab === 'CHATS') modals.closeSidePanels();
+        }}
         isDarkMode={isDarkMode}
         onOpenSettings={modals.openSettings}
         onOpenProfile={() => modals.setIsProfileEditorOpen(true)}
@@ -305,7 +317,9 @@ export default function SuperAppPage() {
         isProviderOrdersLoading={isProviderOrdersLoading}
         refetchProviderOrders={refetchProviderOrders}
         activeOrderId={activeOrderId}
-        setActiveOrderId={setActiveOrderId}
+        setActiveOrderId={(id) => { if (id) leaveSupportChat(); setActiveOrderId(id); }}
+        onOpenSupport={openSupportChat}
+        isSupportOpen={activeRailTab === 'SUPPORT'}
         providerSearchQuery={providerSearchQuery}
         setProviderSearchQuery={setProviderSearchQuery}
         providerActiveFilter={providerActiveFilter}
@@ -345,7 +359,7 @@ export default function SuperAppPage() {
         allDbServicesCount={dbServices.length}
         isServicesLoading={isServicesLoading}
         activeServiceId={activeServiceId}
-        onSelectService={(service) => { if (isAuthenticated) return handleSelectServiceWithReadSync(service); modals.closeSidePanels(); openPreview(service); }}
+        onSelectService={(service) => { if (isAuthenticated) { leaveSupportChat(); return handleSelectServiceWithReadSync(service); } modals.closeSidePanels(); openPreview(service); }}
         serviceMessages={serviceMessages}
         conversationByServiceId={conversationByServiceId}
       />

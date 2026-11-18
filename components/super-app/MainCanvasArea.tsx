@@ -11,6 +11,7 @@ import { SIDE_PANEL_RESERVE_CLASS } from '@/components/modals/side-panel';
 import { ProviderOrderWorkspace } from './provider/ProviderOrderWorkspace';
 import { ChatEmptyHeader } from './ChatEmptyHeader';
 import { AdminCanvas } from './admin/AdminCanvas';
+import { MemberSupportCanvas } from './support/MemberSupportCanvas';
 import { CustomerOrdersCanvas } from './order-history/CustomerOrdersCanvas';
 import { CustomerChatCanvas } from './CustomerChatCanvas';
 import { CounselorChatCanvas } from './CounselorChatCanvas';
@@ -155,6 +156,9 @@ export function MainCanvasArea({
           hasRunningOrder={runningServiceIds.length > 0}
           isDarkMode={isDarkMode}
         />
+      ) : activeRailTab === 'SUPPORT' && user && (activeRole === 'CUSTOMER' || activeRole === 'PROVIDER' || activeRole === 'TECHNICIAN') ? (
+        /* 1a. Provider/customer: direct chat with the platform's support staff */
+        <MemberSupportCanvas userId={user.id} onBack={() => setMobileView('LIST')} />
       ) : activeRole === 'ADMIN' && user ? (
         /* 1b. Admin: one order's full picture and chat, or the empty landing canvas */
         <AdminCanvas userId={user.id} activeRailTab={activeRailTab} onBack={() => setMobileView('LIST')} onSwitchAccount={openSettings} />
@@ -196,9 +200,6 @@ export function MainCanvasArea({
           activeServiceId={activeServiceId}
           activeOrder={activeOrder}
           activeOrderMessageId={activeOrderMessageId}
-          currentMessages={currentMessages}
-          inputText={inputText}
-          onInputChange={setInputText}
           onBackMobile={() => setMobileView('LIST')}
           onBackToWelcome={() => setActiveServiceId(null)}
           onOpenBooking={handleOpenBooking}
@@ -211,17 +212,8 @@ export function MainCanvasArea({
             const displayOrderId = msg?.orderCard?.orderId || oId;
             await handleCompleteOrder(msgId, displayOrderId, realId);
           }}
-          onReactToMessage={handleReactToMessage}
-          onSendMessage={() => handleSendMessage(isAuthenticated, () => handleOpenAuth('LOGIN'))}
-          onSendVoiceNote={() => handleSendVoiceNote(isAuthenticated, () => handleOpenAuth('LOGIN'))}
           isAuthenticated={isAuthenticated}
-          onOpenAuth={() => handleOpenAuth('LOGIN')}
           onOpenOrders={openOrders}
-          onPayAdvance={handlePayAdvance}
-          onAcceptPrice={handleAcceptPrice}
-          onRejectPrice={handleRejectPrice}
-          onSatisfactionResponse={handleSatisfactionResponse}
-          messagesEndRef={messagesEndRef}
           isDarkMode={isDarkMode}
           userId={user?.id}
           selectedOrderId={selectedOrderId}

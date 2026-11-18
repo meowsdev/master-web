@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { SidebarHeader } from './SidebarHeader';
+import { SupportDirectorySidebar } from './support/SupportDirectorySidebar';
 import { ProviderOrderFilter } from './ProviderOrderList';
 import { ProviderOrdersSidebar } from './provider/ProviderOrdersSidebar';
 import { AdminOrdersSidebar } from './admin/AdminOrdersSidebar';
@@ -44,6 +45,9 @@ interface SuperAppSidebarProps {
   refetchProviderOrders: () => void;
   activeOrderId: string | null;
   setActiveOrderId: (id: string | null) => void;
+  /** Opens the pinned Support chat, and whether it is the chat on screen. */
+  onOpenSupport: () => void;
+  isSupportOpen: boolean;
   providerSearchQuery: string;
   setProviderSearchQuery: (q: string) => void;
   providerActiveFilter: ProviderOrderFilter;
@@ -112,6 +116,8 @@ export function SuperAppSidebar({
   refetchProviderOrders,
   activeOrderId,
   setActiveOrderId,
+  onOpenSupport,
+  isSupportOpen,
   providerSearchQuery,
   setProviderSearchQuery,
   providerActiveFilter,
@@ -178,7 +184,14 @@ export function SuperAppSidebar({
       />
       )}
 
-      {isAdmin && user && activeRailTab === 'SERVICES' ? (
+      {isAdmin && user && (activeRailTab === 'SUPPORT_PROVIDERS' || activeRailTab === 'SUPPORT_CUSTOMERS') ? (
+        <SupportDirectorySidebar
+          user={user}
+          role={activeRailTab === 'SUPPORT_PROVIDERS' ? 'PROVIDER' : 'CUSTOMER'}
+          onMemberOpened={() => setMobileView('CHAT')}
+          onOpenAuth={() => onOpenAuth('LOGIN')}
+        />
+      ) : isAdmin && user && activeRailTab === 'SERVICES' ? (
         <AdminServicesSidebar user={user} onServiceOpened={() => setMobileView('CHAT')} onOpenAuth={() => onOpenAuth('LOGIN')} />
       ) : isAdmin && user ? (
         /* Role: ADMIN - every order on the platform, same list design as the provider */
@@ -196,6 +209,8 @@ export function SuperAppSidebar({
           }}
           onOpenAuth={() => onOpenAuth('LOGIN')}
           onOpenSkills={onOpenSkillsModal}
+          onOpenSupport={onOpenSupport}
+          isSupportOpen={isSupportOpen}
         />
       ) : isCounselor ? (
         /* Role: COUNSELOR - Shows 4 Control Panel Tabs (Public, Ongoing, Hold, Completed) */
@@ -263,6 +278,8 @@ export function SuperAppSidebar({
             activeFilterChip={activeFilterChip}
             onScrollIntent={(intent) => setIsSearchCollapsed(intent === 'collapse')}
             isDarkMode={isDarkMode}
+            onOpenSupport={onOpenSupport}
+            isSupportOpen={isSupportOpen}
           />
         </>
       )}

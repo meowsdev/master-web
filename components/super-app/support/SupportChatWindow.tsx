@@ -1,0 +1,87 @@
+'use client';
+
+import { ReactNode, useEffect, useRef, useState } from 'react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
+import { toast } from 'sonner';
+import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
+import { useSendSupportMessage, useSupportMessages } from '@/hooks/useSupportChat';
+import { SupportMessage } from '@/types/support-chat.types';
+import { OrderChatComposer } from '../order-chat/OrderChatComposer';
+
+interface SupportChatWindowProps {
+  userId: string;
+  threadId: string | null;
+  title: string;
+  subtitle?: string;
+  avatar: ReactNode;
+  /** true when the person looking at the window is platform staff, so "mine" means the support side. */
+  isViewerSupport: boolean;
+  onBack?: () => void;
+  /** Shown above the (empty) message list, e.g. who they are talking to. */
+  emptyHint: string;
+}
+
+const formatTime = (isoDate: string) =>
+  new Date(isoDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }).replace(':', '.');
+
+function SupportBubble({ message, isMine }: { message: SupportMessage; isMine: boolean }) {
+  return (
+    <div className={`max-w-[75%] rounded-[12px] px-[12px] py-[8px] text-[#202939] ${isMine ? 'ml-auto bg-[#ade2cf]' : 'bg-white'}`}>
+      <p className="whitespace-pre-wrap break-words text-[14px] font-medium">{message.text}</p>
+      <time className="mt-[2px] block text-right text-[11px] font-medium text-[#697586]">{formatTime(message.createdAt)}</time>
+    </div>
+  );
+}
+
+/* One support conversation: header, messages and the message box. Used by staff and by providers/customers alike. */
+export function SupportChatWindow({ userId, threadId, title, subtitle, avatar, isViewerSupport, onBack, emptyHint }: SupportChatWindowProps) {
+  const [draft, setDraft] = useState('');
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const { data: messages = [], isLoading } = useSupportMessages(userId, threadId);
+  const sendMessage = useSendSupportMessage(userId, threadId);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ block: 'end' });
+  }, [messages.length]);
+
+  const handleSend = () => {
+    const text = draft.trim();
+    if (!text || sendMessage.isPending) return;
+    sendMessage.mutate(text, {
+      onSuccess: () => setDraft(''),
+      onError: (error) => {
+        const message = (error as { response?: { data?: { message?: string | string[] } } }).response?.data?.message;
+        toast.error((Array.isArray(message) ? message[0] : message) ?? 'Message could not be sent');
+      },
+    });
+  };
+
+  return (
+    <>
+      <header className={`flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center gap-[10px] border-b border-[#e5e5e5] bg-white px-[16px]`}>
+        {onBack && (
+          <button type="button" onClick={onBack} aria-label="Back" className="cursor-pointer md:hidden">
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={22} className="text-[#202939]" />
+          </button>
+        )}
+        {avatar}
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{title}</span>
+          {subtitle && <span className="truncate text-[12px] font-medium text-[#697586]">{subtitle}</span>}
+        </div>
+      </header>
+
+      <div className="flex min-h-0 flex-1 flex-col gap-[8px] overflow-y-auto bg-[#f7f5f3] p-[16px]">
+        {isLoading && <p className="m-auto text-[14px] font-medium text-[#697586]">Loading messages...</p>}
+        {!isLoading && messages.length === 0 && <p className="m-auto text-center text-[14px] font-medium text-[#697586]">{emptyHint}</p>}
+        {messages.map((message) => (
+          <SupportBubble key={message.id} message={message} isMine={message.fromSupport === isViewerSupport} />
+        ))}
+        <div ref={bottomRef} />
+      </div>
+
+      <OrderChatComposer draft={draft} onDraftChange={setDraft} onSubmit={handleSend} canSend={draft.trim().length > 0 && threadId !== null && !sendMessage.isPending} isDisabled={threadId === null} />
+    </>
+  );
+}

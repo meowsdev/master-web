@@ -1,12 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Clock } from 'lucide-react';
 import { Service } from '@/types/service.types';
-import { ChatMessage, OrderCardData } from '@/types/super-app.types';
+import { OrderCardData } from '@/types/super-app.types';
 import { ChatHeader } from './ChatHeader';
-import { ChatMessages } from './ChatMessages';
-import { ChatComposer } from './ChatComposer';
 import { PlaceOrderEmptyState } from './PlaceOrderEmptyState';
 import { OrderTabsBar } from './order-chat/OrderTabsBar';
 import { OrderChatPanel } from './order-chat/OrderChatPanel';
@@ -17,29 +15,17 @@ interface CustomerChatCanvasProps {
   activeServiceId: string;
   activeOrder: OrderCardData | null;
   activeOrderMessageId: string | null;
-  currentMessages: ChatMessage[];
-  inputText: string;
-  onInputChange: (text: string) => void;
   onBackMobile: () => void;
   onBackToWelcome: () => void;
   onOpenBooking: () => void;
   onClearChat: (serviceId: string) => void;
   onOpenDetails: () => void;
   onCompleteOrder: (messageId: string, orderId: string) => Promise<void> | void;
-  onReactToMessage: (messageId: string, emoji: string) => void;
-  onSendMessage: () => void;
-  onSendVoiceNote: () => void;
   isAuthenticated: boolean;
-  onOpenAuth: () => void;
   onOpenOrders?: () => void;
-  onPayAdvance?: (messageId: string, orderId: string, amount: number) => void;
-  onAcceptPrice?: (messageId: string, orderId: string) => void;
-  onRejectPrice?: (messageId: string, orderId: string) => void;
-  onSatisfactionResponse?: (messageId: string, orderId: string, continueWith: boolean) => void;
-  messagesEndRef: React.RefObject<HTMLDivElement | null>;
   isDarkMode: boolean;
   userId?: string;
-  /** null = General Chat tab */
+  /** The open order tab; null until the customer picks one (the newest is shown meanwhile). */
   selectedOrderId: string | null;
   onSelectOrderTab: (orderId: string | null) => void;
 }
@@ -49,26 +35,14 @@ export function CustomerChatCanvas({
   activeServiceId,
   activeOrder,
   activeOrderMessageId,
-  currentMessages,
-  inputText,
-  onInputChange,
   onBackMobile,
   onBackToWelcome,
   onOpenBooking,
   onClearChat,
   onOpenDetails,
   onCompleteOrder,
-  onReactToMessage,
-  onSendMessage,
-  onSendVoiceNote,
   isAuthenticated,
-  onOpenAuth,
   onOpenOrders,
-  onPayAdvance,
-  onAcceptPrice,
-  onRejectPrice,
-  onSatisfactionResponse,
-  messagesEndRef,
   isDarkMode,
   userId,
   selectedOrderId,
@@ -76,9 +50,9 @@ export function CustomerChatCanvas({
 }: CustomerChatCanvasProps) {
   const [isCompletingBanner, setIsCompletingBanner] = useState(false);
   const orderTabs = useCustomerOrderTabs(userId, activeService.categoryId);
-  const selectedOrder = orderTabs.find((order) => order.id === selectedOrderId);
-  // Orders live in their own tabs now, so General Chat only shows plain conversation.
-  const generalMessages = currentMessages.filter((message) => message.type !== 'order_card');
+  // A chat only exists inside an order: with none picked yet the newest order is shown, with none at all
+  // the customer is asked to place one. (Anything else goes to the Support chat.)
+  const selectedOrder = orderTabs.find((order) => order.id === selectedOrderId) ?? orderTabs[0];
   return (
     <>
       <ChatHeader
@@ -91,7 +65,7 @@ export function CustomerChatCanvas({
         isDarkMode={isDarkMode}
       />
 
-      {isAuthenticated && <OrderTabsBar orders={orderTabs} selectedOrderId={selectedOrder?.id ?? null} onSelect={onSelectOrderTab} />}
+      {isAuthenticated && orderTabs.length > 0 && <OrderTabsBar orders={orderTabs} selectedOrderId={selectedOrder?.id ?? null} onSelect={onSelectOrderTab} />}
 
       {/* Active Order Banner: Shows live status & quick completion action */}
       {activeOrder && (activeOrder.status === 'IN_PROGRESS' || activeOrder.status === 'PENDING' || activeOrder.status === 'ACCEPTED') && activeOrderMessageId && (
@@ -152,40 +126,9 @@ export function CustomerChatCanvas({
       )} */}
 
       {selectedOrder && userId ? (
-        <OrderChatPanel order={selectedOrder} userId={userId} onOpenOrders={onOpenOrders} />
+        <OrderChatPanel key={selectedOrder.id} order={selectedOrder} userId={userId} onOpenOrders={onOpenOrders} />
       ) : (
-        <>
-          {generalMessages.length === 0 && isAuthenticated ? (
-            <PlaceOrderEmptyState onPlaceOrder={onOpenBooking} />
-          ) : (
-      <ChatMessages
-        activeService={activeService}
-        messages={generalMessages}
-        onOpenBooking={onOpenBooking}
-        onReact={onReactToMessage}
-        onCompleteOrder={onCompleteOrder}
-        onOpenOrders={onOpenOrders}
-        onPayAdvance={onPayAdvance}
-        onAcceptPrice={onAcceptPrice}
-        onRejectPrice={onRejectPrice}
-        onSatisfactionResponse={onSatisfactionResponse}
-        messagesEndRef={messagesEndRef}
-        isDarkMode={isDarkMode}
-      />
-
-          )}
-
-      <ChatComposer
-        inputText={inputText}
-        onInputChange={onInputChange}
-        onSendMessage={onSendMessage}
-        onSendVoiceNote={onSendVoiceNote}
-        onOpenBooking={onOpenBooking}
-        isAuthenticated={isAuthenticated}
-        onOpenAuth={onOpenAuth}
-        isDarkMode={isDarkMode}
-      />
-        </>
+        <PlaceOrderEmptyState onPlaceOrder={onOpenBooking} />
       )}
     </>
   );

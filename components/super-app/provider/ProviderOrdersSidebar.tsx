@@ -5,6 +5,7 @@ import { Order } from '@/types/order.types';
 import { User } from '@/types/auth.types';
 import { CustomerSidebarTop } from '../CustomerSidebarTop';
 import { OrderHistoryListItem } from '../order-history/OrderHistoryListItem';
+import { SupportChatRow } from '../support/SupportChatRow';
 import { CustomerAvatar } from './CustomerAvatar';
 import { ProviderProfileHeader } from './ProviderProfileHeader';
 import { PROVIDER_FILTER_CHIPS, hasOpenRevision, matchesProviderFilter, providerOrderTitle } from './provider-order-filters';
@@ -18,13 +19,16 @@ interface ProviderOrdersSidebarProps {
   onOpenAuth: () => void;
   /** Opens the services this provider offers. New orders only reach providers who enabled the service. */
   onOpenSkills: () => void;
+  /** Opens the pinned Support chat. */
+  onOpenSupport: () => void;
+  isSupportOpen: boolean;
 }
 
 /*
  * The provider's landing list: their profile with the due and Pay Now, search, status chips and
  * one row per order (id and customer). Same top section and rows as the customer's list.
  */
-export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, onSelectOrder, onOpenAuth, onOpenSkills }: ProviderOrdersSidebarProps) {
+export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, onSelectOrder, onOpenAuth, onOpenSkills, onOpenSupport, isSupportOpen }: ProviderOrdersSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilterChip, setActiveFilterChip] = useState('All');
 
@@ -60,6 +64,9 @@ export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, 
       />
 
       <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[8px]">
+        <div className="pt-[8px]">
+          <SupportChatRow userId={user.id} isActive={isSupportOpen} onOpen={onOpenSupport} />
+        </div>
         <button type="button" onClick={onOpenSkills} className="mb-[4px] w-full cursor-pointer rounded-[10px] bg-[#f7f5f3] px-[12px] py-[8px] text-left text-[13px] font-semibold text-[#202939] hover:bg-[#efede9]">
           Services I offer <span className="font-medium text-[#697586]">— enable a service to receive its orders</span>
         </button>
