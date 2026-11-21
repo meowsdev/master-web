@@ -90,7 +90,14 @@ export function OrderChatPanel({ order, userId }: OrderChatPanelProps) {
       </div>
 
       <CustomerOrderPanels order={order} userId={userId} />
-      <OrderChatComposer draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} isDisabled={order.isChatOpen === false} />
+      <OrderChatComposer
+        draft={draft}
+        onDraftChange={setDraft}
+        onSubmit={submit}
+        canSend={canSend}
+        isDisabled={order.isChatOpen === false}
+        disabledHint={order.orderStatus === OrderStatus.PENDING ? 'প্রোভাইডার অর্ডার accept করলে চ্যাট চালু হবে' : undefined}
+      />
     </>
   );
 }

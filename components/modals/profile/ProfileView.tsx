@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { AtSign, BadgeCheck, Camera, Check, MapPin, User as UserIcon } from 'lucide-react';
+import { AtSign, BadgeCheck, Camera, Check, Home, MapPin, User as UserIcon } from 'lucide-react';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { AuthField } from '@/components/modals/auth/AuthField';
 import { AuthPrimaryButton } from '@/components/modals/auth/AuthDrawerShell';
@@ -46,6 +46,7 @@ export function ProfileView({ user, onEdit }: { user: User; onEdit: () => void }
   const { districts, upazilas } = useLocationOptions(user.districtId ?? null);
   const districtName = districts.find((district) => district.id === user.districtId)?.bnName ?? '';
   const upazilaName = upazilas.find((upazila) => upazila.id === user.upazilaId)?.bnName ?? '';
+  const savedAddress = user.addresses?.find((address) => address.isDefault)?.addressText ?? '';
 
   return (
     <>
@@ -55,6 +56,8 @@ export function ProfileView({ user, onEdit }: { user: User; onEdit: () => void }
         <PhoneNumberField value={user.mobileNumber} onChange={() => undefined} readOnly trailing={<Check className="size-[24px] shrink-0 text-[#1daa61]" strokeWidth={1.5} />} />
         <AuthField icon={BadgeCheck} type="text" value={districtName} placeholder="জেলা" readOnly />
         <AuthField icon={MapPin} type="text" value={upazilaName} placeholder="উপজেলা" readOnly />
+        {/* Saved from the last order; the Place Order form starts with it. */}
+        <AuthField icon={Home} type="text" value={savedAddress} placeholder="ঠিকানা (প্রথম অর্ডারে সেভ হবে)" readOnly />
 
         <AuthPrimaryButton type="button" onClick={onEdit}>
           Edit Profile

@@ -1,7 +1,9 @@
 'use client';
 
 import { SidePanelShell } from '@/components/modals/SidePanelShell';
-import { usePlaceOrderForm } from '@/hooks/usePlaceOrderForm';
+import { SavedOrderPlace, usePlaceOrderForm } from '@/hooks/usePlaceOrderForm';
+import { authService } from '@/services/auth.service';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Order } from '@/types/order.types';
 import { ServiceAvatar } from './ServiceAvatar';
 import { ProblemSection } from './ProblemSection';
@@ -17,7 +19,30 @@ interface PlaceOrderPanelProps {
 
 /* Right-hand "Place Order" panel (replaces the old booking popup). Mounted only while open, so it always starts fresh. */
 export function PlaceOrderPanel({ initialServiceId, onClose, onPlaced }: PlaceOrderPanelProps) {
-  const state = usePlaceOrderForm({ initialServiceId, onPlaced });
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+
+  // The district, upazila and address of the last order are kept on the profile and fill the form again.
+  const savedPlace: SavedOrderPlace | null = user
+    ? {
+        districtId: user.districtId ?? null,
+        upazilaId: user.upazilaId ?? null,
+        addressDetail: user.addresses?.find((address) => address.isDefault)?.addressText ?? '',
+      }
+    : null;
+
+  const state = usePlaceOrderForm({
+    initialServiceId,
+    savedPlace,
+    onPlaced: (order) => {
+      // The backend saved this place on the profile; reloading the account lets the next form open with it.
+      authService
+        .getMe()
+        .then(setUser)
+        .catch(() => undefined);
+      onPlaced(order);
+    },
+  });
 
   return (
     <SidePanelShell title="Place Order" onClose={onClose}>

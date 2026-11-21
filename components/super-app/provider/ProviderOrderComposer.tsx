@@ -73,7 +73,7 @@ export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, c
           onChange={(event) => onDraftChange(event.target.value)}
           maxLength={1000}
           disabled={order.isChatOpen === false}
-          placeholder="Type a message"
+          placeholder={order.orderStatus === OrderStatus.PENDING ? 'অর্ডার accept করলে চ্যাট চালু হবে' : 'Type a message'}
           className="min-w-0 flex-1 bg-transparent text-[14px] font-medium text-[#202939] outline-none placeholder:text-[#697586]"
         />
 

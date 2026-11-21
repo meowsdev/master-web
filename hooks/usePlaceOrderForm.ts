@@ -13,10 +13,18 @@ interface UsePlaceOrderFormArgs {
   onPlaced: (order: Order) => void;
   /** Another way to place the order (the admin's, for a customer by phone). Defaults to the signed-in customer's. */
   placeOrder?: (request: PlaceOrderRequest) => Promise<{ order: Order }>;
+  /** Where the customer ordered last time (saved on their profile); the form starts filled in with it. */
+  savedPlace?: SavedOrderPlace | null;
+}
+
+export interface SavedOrderPlace {
+  districtId: number | null;
+  upazilaId: number | null;
+  addressDetail: string;
 }
 
 /** Form state for the Place Order panel. Prices come from the backend; nothing is calculated here. */
-export function usePlaceOrderForm({ initialServiceId, onPlaced, placeOrder = orderPlacementService.placeOrder }: UsePlaceOrderFormArgs) {
+export function usePlaceOrderForm({ initialServiceId, onPlaced, placeOrder = orderPlacementService.placeOrder, savedPlace = null }: UsePlaceOrderFormArgs) {
   // null = the customer has not chosen yet, so the opening service (if any) applies.
   const [categoryChoice, setCategoryChoice] = useState<string | null>(null);
   const [subServiceChoice, setSubServiceChoice] = useState<string | null>(null);
@@ -24,9 +32,11 @@ export function usePlaceOrderForm({ initialServiceId, onPlaced, placeOrder = ord
   const [description, setDescription] = useState('');
   // questionId -> chosen option and how many units it applies to
   const [answers, setAnswers] = useState<Record<string, OrderAnswer>>({});
-  const [districtId, setDistrictId] = useState<number | null>(null);
-  const [upazilaId, setUpazilaId] = useState<number | null>(null);
-  const [addressDetail, setAddressDetail] = useState('');
+  // A district without its upazila is half a place, so the saved one is used only when both are there.
+  const hasSavedArea = Boolean(savedPlace?.districtId && savedPlace?.upazilaId);
+  const [districtId, setDistrictId] = useState<number | null>(hasSavedArea ? savedPlace!.districtId : null);
+  const [upazilaId, setUpazilaId] = useState<number | null>(hasSavedArea ? savedPlace!.upazilaId : null);
+  const [addressDetail, setAddressDetail] = useState(savedPlace?.addressDetail ?? '');
   const [scheduledDate, setScheduledDate] = useState('');
   const [timeSlot, setTimeSlot] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

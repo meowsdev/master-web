@@ -10,10 +10,12 @@ interface OrderChatComposerProps {
   canSend: boolean;
   /** A closed order's chat stays readable but cannot take new messages. */
   isDisabled?: boolean;
+  /** Shown in the box while it is disabled, e.g. why the chat has not started yet. */
+  disabledHint?: string;
 }
 
 /* The pill message box of the Figma order chat, shared by customer and provider. */
-export function OrderChatComposer({ draft, onDraftChange, onSubmit, canSend, isDisabled = false }: OrderChatComposerProps) {
+export function OrderChatComposer({ draft, onDraftChange, onSubmit, canSend, isDisabled = false, disabledHint }: OrderChatComposerProps) {
   return (
     <form
       onSubmit={(event) => {
@@ -27,7 +29,7 @@ export function OrderChatComposer({ draft, onDraftChange, onSubmit, canSend, isD
         onChange={(event) => onDraftChange(event.target.value)}
         maxLength={1000}
         disabled={isDisabled}
-        placeholder="Type a message"
+        placeholder={isDisabled && disabledHint ? disabledHint : 'Type a message'}
         className="h-[44px] min-w-0 flex-1 rounded-[22px] bg-white px-[18px] text-[14px] font-medium text-[#202939] outline-none placeholder:text-[#9aa4b2]"
       />
       <button
