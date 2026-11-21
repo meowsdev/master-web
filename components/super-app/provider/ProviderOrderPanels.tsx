@@ -1,21 +1,22 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useOrderDetailsPanel } from '@/hooks/useOrderDetailsPanel';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { Order } from '@/types/order.types';
+import { OrderDetailsPanel } from '../order-chat/OrderDetailsPanel';
 import { AssignWorkerPanel } from './panels/AssignWorkerPanel';
 import { ExtraChargePanel } from './panels/ExtraChargePanel';
 import { WorkCompletePanel } from './panels/WorkCompletePanel';
 
-/* The panel the + menu opened, if it belongs to this order. Moving to another order closes it. */
-export function ProviderOrderPanels({ order, userId }: { order: Order; userId: string }) {
+/* The order's details (open on wide screens), or the panel the + menu opened. Moving to another order closes it. */
+export function ProviderOrderPanels({ order, userId, viewer = 'PROVIDER' }: { order: Order; userId: string; viewer?: 'PROVIDER' | 'TECHNICIAN' }) {
   const kind = useOrderPanelStore((state) => state.kind);
   const openOrderId = useOrderPanelStore((state) => state.orderId);
-  const close = useOrderPanelStore((state) => state.close);
-
-  useEffect(() => close, [order.id, close]);
+  const details = useOrderDetailsPanel(order.id);
+  const close = details.close;
 
   if (openOrderId !== order.id) return null;
+  if (details.isOpen) return <OrderDetailsPanel order={order} viewer={viewer} onClose={close} />;
   if (kind === 'extraCharge') return <ExtraChargePanel order={order} userId={userId} onClose={close} />;
   if (kind === 'complete') return <WorkCompletePanel order={order} onClose={close} />;
   if (kind === 'assign') return <AssignWorkerPanel order={order} userId={userId} onClose={close} />;

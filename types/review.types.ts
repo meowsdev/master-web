@@ -8,10 +8,13 @@ export interface ReceivedReview {
   fromName: string | null;
 }
 
-/** GET /provider-review/me/received: the signed-in person's own average and latest reviews. */
+/** GET /provider-review/me/received: the signed-in person's profile summary. */
 export interface MyReviews {
   /** 0 before the first review. */
   rating: number;
   count: number;
   reviews: ReceivedReview[];
+  completedOrders: number;
+  /** Customer: what they spent on completed orders. Provider and technician: income after the platform's commission. */
+  totalAmount: number;
 }

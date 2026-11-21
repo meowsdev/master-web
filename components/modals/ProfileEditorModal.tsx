@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { authService } from '@/services/auth.service';
 import { User as UserType, UserRole } from '@/types/auth.types';
-import { AuthDrawerShell } from '@/components/modals/auth/AuthDrawerShell';
+import { AuthDrawerShell, authLinkClass } from '@/components/modals/auth/AuthDrawerShell';
+import { ProfilePhoto, ProfileView } from '@/components/modals/profile/ProfileView';
 import { AvatarPicker } from '@/components/modals/auth/AvatarPicker';
 import { CreateAccountForm, ProfileDraft } from '@/components/modals/auth/CreateAccountForm';
 import { ProviderAreasSection } from '@/components/modals/profile/ProviderAreasSection';
@@ -21,7 +22,8 @@ interface ProfileEditorModalProps {
 }
 
 /*
- * Editing a profile uses the exact same panel and form as joining
+ * The signed-in person's profile panel. It opens read-only (ProfileView: details, Edit button, completed
+ * orders, rating, spent or earned, reviews). Editing uses the exact same panel and form as joining
  * (see AuthModal), pre-filled with the signed-in user's details.
  * The content is its own component so every open starts from fresh values.
  */
@@ -40,8 +42,39 @@ interface ProfileEditorContentProps {
 }
 
 function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout }: ProfileEditorContentProps) {
+  // The panel opens on the read-only profile; Edit Profile switches to the form, and saving comes back here.
+  const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [photoUrl, setPhotoUrl] = useState<string | null>(user.profilePhoto ?? null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const logoutLink = onLogout && (
+    <button
+      type="button"
+      onClick={() => {
+        onClose();
+        onLogout();
+      }}
+      className="cursor-pointer text-[14px] font-semibold text-[#d64545] hover:underline"
+    >
+      Log out
+    </button>
+  );
+
+  if (mode === 'view') {
+    return (
+      <AuthDrawerShell title="My Profile" onClose={onClose} avatar={<ProfilePhoto photoUrl={user.profilePhoto ?? null} />}>
+        <ProfileView
+          user={user}
+          onEdit={() => {
+            // Every edit starts from what is saved now.
+            setPhotoUrl(user.profilePhoto ?? null);
+            setMode('edit');
+          }}
+        />
+        {logoutLink}
+      </AuthDrawerShell>
+    );
+  }
 
   const handleSave = async (profile: ProfileDraft) => {
     setIsSaving(true);
@@ -52,7 +85,7 @@ function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout }: Profil
       });
       onUserUpdated(updatedUser);
       toast.success('Profile updated successfully! ✨');
-      onClose();
+      setMode('view');
     } catch (err: unknown) {
       const apiMessage = (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
       const message = Array.isArray(apiMessage) ? apiMessage[0] : apiMessage;
@@ -89,18 +122,9 @@ function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout }: Profil
         </>
       )}
 
-      {onLogout && (
-        <button
-          type="button"
-          onClick={() => {
-            onClose();
-            onLogout();
-          }}
-          className="cursor-pointer text-[14px] font-semibold text-[#d64545] hover:underline"
-        >
-          Log out
-        </button>
-      )}
+      <button type="button" onClick={() => setMode('view')} className={authLinkClass}>
+        ← Back to profile
+      </button>
     </AuthDrawerShell>
   );
 }

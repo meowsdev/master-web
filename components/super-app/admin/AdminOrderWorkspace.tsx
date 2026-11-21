@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import { useExtraCharges } from '@/hooks/useExtraCharges';
+import { useOrderDetailsPanel } from '@/hooks/useOrderDetailsPanel';
+import { OrderDetailsPanel } from '../order-chat/OrderDetailsPanel';
 import { useOrderChat } from '@/hooks/useOrderChat';
 import { useOrderTimeline } from '@/hooks/useOrderTimeline';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
@@ -29,6 +31,8 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
   const timeline = useOrderTimeline(order, messages, extraCharges);
   const bottomRef = useRef<HTMLDivElement>(null);
   const openPanel = useOrderPanelStore((state) => state.open);
+  // Who the customer, provider and technician are, and everything else about the order, on the right.
+  const details = useOrderDetailsPanel(order.id);
   // Nobody has taken it yet: the admin can send it to a provider.
   const isWaitingForProvider = order.orderStatus === OrderStatus.PENDING;
   useEffect(() => {
@@ -43,7 +47,11 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
         ratingLabel={order.isAccepted && Number(order.provider?.rating) > 0 ? Number(order.provider?.rating).toFixed(1) : 'New'}
         backLabel="Back to orders"
         onBack={onBack}
-        menuItems={[{ label: 'Open full order page', onSelect: () => window.open(`/orders/${order.id}`, '_blank') }]}
+        onOpenTitle={details.open}
+        menuItems={[
+          { label: 'Order details', onSelect: details.open },
+          { label: 'Open full order page', onSelect: () => window.open(`/orders/${order.id}`, '_blank') },
+        ]}
       />
 
       {isWaitingForProvider && (
@@ -87,6 +95,7 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
       </div>
 
       <OrderChatComposer draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} isDisabled={order.isChatOpen === false} />
+      {details.isOpen && <OrderDetailsPanel order={order} viewer="ADMIN" onClose={details.close} />}
     </>
   );
 }

@@ -54,7 +54,9 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
         ratingLabel="New"
         backLabel="Back to orders"
         onBack={onBack}
+        onOpenTitle={() => openPanel(order.id, 'orderDetails')}
         menuItems={[
+          { label: 'Order details', onSelect: () => openPanel(order.id, 'orderDetails') },
           { label: 'Voice call', onSelect: () => onStartCall('voice') },
           { label: 'Video call', onSelect: () => onStartCall('video') },
           { label: 'Open full order page', onSelect: () => window.open(`/orders/${order.id}`, '_blank') },
@@ -86,7 +88,7 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
       </div>
 
       <ProviderOrderComposer order={order} draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} onChooseAction={(kind) => openPanel(order.id, kind)} canAssignWorker={isProviderViewer} />
-      <ProviderOrderPanels order={order} userId={userId} />
+      <ProviderOrderPanels order={order} userId={userId} viewer={viewer} />
     </>
   );
 }

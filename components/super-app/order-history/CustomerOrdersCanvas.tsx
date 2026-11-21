@@ -2,6 +2,7 @@
 
 import { useMyOrders } from '@/hooks/useMyOrders';
 import { selectOpenOrderId, useOrderHistoryStore } from '@/store/useOrderHistoryStore';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { ConversationHeader } from '../ConversationHeader';
 import { OrderChatPanel } from '../order-chat/OrderChatPanel';
 import { buildOrderTabLabel } from '../order-chat/order-labels';
@@ -21,6 +22,7 @@ export function CustomerOrdersCanvas({ userId, onBackMobile, onOpenOrdersDrawer 
   const { data: orders = [] } = useMyOrders(userId);
   const openOrderId = useOrderHistoryStore(selectOpenOrderId(userId));
   const selectOrder = useOrderHistoryStore((state) => state.select);
+  const openPanel = useOrderPanelStore((state) => state.open);
   const order = orders.find((item) => item.id === openOrderId);
 
   if (!order) {
@@ -41,8 +43,10 @@ export function CustomerOrdersCanvas({ userId, onBackMobile, onOpenOrdersDrawer 
         ratingLabel={providerRating > 0 ? providerRating.toFixed(1) : 'New'}
         backLabel="Back to orders"
         onBack={onBackMobile}
+        onOpenTitle={() => openPanel(order.id, 'orderDetails')}
         menuItems={[
-          { label: 'Order details', onSelect: onOpenOrdersDrawer },
+          { label: 'Order details', onSelect: () => openPanel(order.id, 'orderDetails') },
+          { label: 'All orders', onSelect: onOpenOrdersDrawer },
           { label: 'Close chat', onSelect: () => selectOrder(userId, null) },
         ]}
       />
