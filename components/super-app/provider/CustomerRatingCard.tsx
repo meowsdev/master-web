@@ -11,8 +11,8 @@ import { Order, OrderStatus } from '@/types/order.types';
 const RATING_STEPS = [1, 2, 3, 4, 5];
 
 /*
- * After a completed order the provider rates the customer, once. The rating is kept by the backend
- * and feeds the customer's average; it is not shown to the customer on this card.
+ * After a completed order the provider rates the customer, once. The rating feeds the customer's
+ * average, and the customer and admins see it on the order (CustomerRatingNote).
  */
 export function CustomerRatingCard({ order, userId }: { order: Order; userId: string }) {
   const queryClient = useQueryClient();

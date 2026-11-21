@@ -58,4 +58,7 @@ export function OrderCounts({ byStatus }: { byStatus: Record<string, number> }) 
   );
 }
 
+/** Same review list the members see on their own profile. */
+export { ReviewList } from '../../reviews/ReviewList';
+
 export const formatDate = (isoDate: string) => new Date(isoDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });

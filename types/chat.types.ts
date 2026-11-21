@@ -31,6 +31,14 @@ export interface Message {
   isSend: boolean;
   createdAt: string;
   updatedAt: string;
+  /** displayName: name, else @username, else a masked number like "017****4585". */
+  sender?: {
+    id: string;
+    name?: string | null;
+    username?: string | null;
+    role?: string;
+    displayName?: string;
+  };
 }
 
 export interface ChatSession {

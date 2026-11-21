@@ -8,6 +8,7 @@ import { CustomerSidebarTop } from '../CustomerSidebarTop';
 import { OrderHistoryListItem } from '../order-history/OrderHistoryListItem';
 import { CustomerAvatar } from '../provider/CustomerAvatar';
 import { PROVIDER_FILTER_CHIPS, matchesProviderFilter, providerOrderTitle } from '../provider/provider-order-filters';
+import { MyRatingButton } from '../reviews/MyRatingButton';
 import { SupportChatRow } from '../support/SupportChatRow';
 
 interface TechnicianOrdersSidebarProps {
@@ -66,7 +67,11 @@ export function TechnicianOrdersSidebar({ user, onOrderOpened, onOpenAuth, onOpe
               <span className="flex size-[44px] shrink-0 items-center justify-center rounded-full bg-[#d7fdd2] text-[18px] font-semibold text-[#205737]">{(user.name || '?').charAt(0).toUpperCase()}</span>
             )}
             <div className="flex min-w-0 flex-col">
-              <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{user.name || 'My account'}</span>
+              <div className="flex items-center gap-[8px]">
+                <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{user.name || 'My account'}</span>
+                {/* Opens "আমার রিভিউ": what customers said about the jobs this technician did. */}
+                <MyRatingButton userId={user.id} role="TECHNICIAN" />
+              </div>
               {/* Their own number: the backend sends a person their own phone, and nobody else's. */}
               <span className="truncate text-[13px] font-medium text-[#697586]">{user.mobileNumber}</span>
               <span className="w-fit rounded-full bg-[#202939] px-[8px] py-[1px] text-[11px] font-semibold text-white">Technician</span>

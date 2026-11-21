@@ -161,6 +161,8 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   providerReview?: ProviderReview | null;
+  /** The provider's (or technician's) rating of the customer after completion; null until given. */
+  customerRating?: { rating: number; comment?: string | null; createdAt: string } | null;
   paymentAndTip?: OrderPaymentAndTip | null;
   /** Early payments (before the final settlement), oldest first. */
   advancePayments?: Array<{

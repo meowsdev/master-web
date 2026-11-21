@@ -55,8 +55,9 @@ export function ServicePreviewPanel({ service, onClose, primaryActionLabel, onPr
 
         {features.length > 0 && (
           <ul className="grid grid-cols-1 gap-x-[24px] gap-y-[20px] sm:grid-cols-2">
-            {features.map((feature) => (
-              <li key={feature} className="flex items-center gap-[8px] text-[14px] font-medium text-[#202939]">
+            {/* Admins type features freely, so two can read the same; the position keeps each key unique. */}
+            {features.map((feature, index) => (
+              <li key={`${index}-${feature}`} className="flex items-center gap-[8px] text-[14px] font-medium text-[#202939]">
                 <ChevronRight className="size-[16px] shrink-0 text-[#202939]" strokeWidth={1.5} />
                 <span>{feature}</span>
               </li>

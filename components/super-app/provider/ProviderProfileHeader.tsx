@@ -1,10 +1,10 @@
 'use client';
 
-import Image from 'next/image';
 import { useState } from 'react';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { useProviderWallet } from '@/hooks/useProviderWallet';
 import { User } from '@/types/auth.types';
+import { MyRatingButton } from '../reviews/MyRatingButton';
 import { ProviderPayDueDialog } from './ProviderPayDueDialog';
 
 /*
@@ -15,7 +15,7 @@ export function ProviderProfileHeader({ user }: { user: User }) {
   const { dueAmount, payDue } = useProviderWallet(user.id);
   const [isPayOpen, setIsPayOpen] = useState(false);
   const hasDue = dueAmount > 0;
-  const rating = Number(user.providerProfile?.rating);
+  const rating = Number(user.providerProfile?.rating) || 0;
 
   return (
     <div className="flex items-center justify-between gap-[8px]">
@@ -31,10 +31,8 @@ export function ProviderProfileHeader({ user }: { user: User }) {
         <div className="flex min-w-0 flex-col">
           <div className="flex items-center gap-[8px]">
             <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{user.name || 'My account'}</span>
-            <span className="flex shrink-0 items-center gap-[3px] text-[13px] font-semibold text-[#202939]">
-              <Image src="/chat-list/star.svg" alt="" width={12} height={11.4} style={{ width: 'auto', height: 'auto' }} />
-              {rating > 0 ? rating.toFixed(1) : 'New'}
-            </span>
+            {/* Opens "আমার রিভিউ": what each customer said about this provider's work. */}
+            <MyRatingButton userId={user.id} role="PROVIDER" storedRating={rating} />
           </div>
           <span className="flex items-center gap-[4px] text-[13px] font-semibold text-[#202939]">
             {hasDue ? (

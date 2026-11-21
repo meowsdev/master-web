@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ordersService } from '@/services/orders.service';
 import { Order, OrderStatus } from '@/types/order.types';
 import { User } from '@/types/auth.types';
+import { MyRatingButton } from './reviews/MyRatingButton';
 
 interface CustomerProfileHeaderProps {
   user: User;
@@ -26,9 +27,8 @@ export function CustomerProfileHeader({ user, onStartNewOrder }: CustomerProfile
   });
 
   const completedCount = orders.filter((order) => order.orderStatus === OrderStatus.COMPLETED).length;
-  // The backend does not rate customers yet; show "New" rather than inventing a number.
-  const storedRating = Number(user.customerProfile?.rating);
-  const ratingLabel = storedRating > 0 ? storedRating.toFixed(1) : 'New';
+  // Average of the ratings providers gave; "New" before the first one rather than inventing a number.
+  const storedRating = Number(user.customerProfile?.rating) || 0;
 
   return (
     <div className="flex items-center justify-between">
@@ -39,10 +39,8 @@ export function CustomerProfileHeader({ user, onStartNewOrder }: CustomerProfile
             <span className="truncate text-[16px] font-semibold tracking-[-0.32px] text-[#202939]">
               {user.name || 'My account'}
             </span>
-            <span className="flex shrink-0 items-center gap-[3px] text-[13px] font-semibold text-[#202939]">
-              <Image src="/chat-list/star.svg" alt="" width={12} height={11.4} />
-              {ratingLabel}
-            </span>
+            {/* Opens "আমার রিভিউ": what each provider said about this customer. */}
+            <MyRatingButton userId={user.id} role="CUSTOMER" storedRating={storedRating} />
           </div>
           <span className="flex items-center gap-[4px] text-[12px] font-medium text-[#697586]">
             <span className="flex size-[16px] items-center justify-center rounded-full bg-[#1daa61]">

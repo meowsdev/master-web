@@ -5,7 +5,7 @@ import { useAdminMember, useModerateMember } from '@/hooks/useAdminMember';
 import { useAuthStore } from '@/store/useAuthStore';
 import { SupportAvatar } from '../../support/SupportAvatar';
 import { CustomerSections } from './CustomerSections';
-import { Fact, Section, StatusBadges, formatDate } from './MemberParts';
+import { Fact, ReviewList, Section, StatusBadges, formatDate } from './MemberParts';
 import { MemberActions } from './MemberActions';
 import { ProviderSections } from './ProviderSections';
 import { TechnicianProviderControl } from './TechnicianProviderControl';
@@ -49,6 +49,11 @@ export function MemberDetailsPanel({ adminId, memberId, onClose }: { adminId: st
 
           {member.provider && <ProviderSections provider={member.provider} />}
           {member.technician && <TechnicianProviderControl adminId={adminId} technician={member.technician} />}
+          {member.technician && (
+            <Section title={`Customer reviews · ${member.technician.reviews.length}`}>
+              <ReviewList reviews={member.technician.reviews} />
+            </Section>
+          )}
           {member.customer && <CustomerSections customer={member.customer} />}
 
           <MemberActions member={member} canBan={isAdmin} isBusy={moderate.isPending} onAct={(action, reason) => moderate.mutate({ action, reason })} />

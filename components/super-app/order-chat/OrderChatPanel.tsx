@@ -13,6 +13,7 @@ import { AdvancePaymentCard } from './AdvancePaymentCard';
 import { AssignmentCard } from './AssignmentCard';
 import { CustomerOrderPanels } from './CustomerOrderPanels';
 import { CompletionCard } from './CompletionCard';
+import { CustomerRatingNote } from './CustomerRatingNote';
 import { ExtraChargeCard } from './ExtraChargeCard';
 import { MessageBubble } from './MessageBubble';
 import { OrderChatComposer } from './OrderChatComposer';
@@ -82,6 +83,8 @@ export function OrderChatPanel({ order, userId }: OrderChatPanelProps) {
               return <MessageBubble key={entry.key} message={entry.message} isMine={entry.message.senderId === userId} />;
           }
         })}
+        {/* Completed: what the provider said about the customer. */}
+        <CustomerRatingNote order={order} viewer="CUSTOMER" />
         {/* Newest at the bottom: the view follows new items like WhatsApp. */}
         <div ref={bottomRef} />
       </div>

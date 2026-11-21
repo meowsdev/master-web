@@ -2,7 +2,7 @@ import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { OrderStatus } from '@/types/order.types';
 import { MemberDetails } from '@/types/admin-member.types';
 import { ORDER_STATUS_LABEL } from '../../order-history/order-status';
-import { Fact, OrderCounts, Section, formatDate } from './MemberParts';
+import { Fact, OrderCounts, ReviewList, Section, formatDate } from './MemberParts';
 
 /* A customer: how much they order, what for, and each recent order. */
 export function CustomerSections({ customer }: { customer: NonNullable<MemberDetails['customer']> }) {
@@ -11,9 +11,14 @@ export function CustomerSections({ customer }: { customer: NonNullable<MemberDet
       <Section title="Orders">
         <Fact label="Total orders">{customer.orderCount}</Fact>
         <Fact label="Spent on completed orders">{formatTaka(customer.totalSpent)}</Fact>
+        <Fact label="Rating">{customer.rating > 0 ? `★ ${customer.rating.toFixed(1)}` : 'New'}</Fact>
         <div className="mt-[6px]">
           <OrderCounts byStatus={customer.ordersByStatus} />
         </div>
+      </Section>
+
+      <Section title={`Ratings from providers · ${customer.ratings.length}`}>
+        <ReviewList reviews={customer.ratings} />
       </Section>
 
       <Section title="Services they use">

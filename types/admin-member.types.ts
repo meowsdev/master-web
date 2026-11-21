@@ -15,6 +15,11 @@ export interface MemberTechnician extends MemberPerson {
   lastLoginAt: string | null;
 }
 
+import { ReceivedReview } from './review.types';
+
+/** One review on a member's profile: who gave it, for which order, and what they said. */
+export type MemberReview = ReceivedReview;
+
 export interface ProviderSection {
   companyName: string | null;
   bio: string | null;
@@ -30,6 +35,8 @@ export interface ProviderSection {
   areas: Array<{ districtId: number; upazilaId: number; name: string | null }>;
   technicians: MemberTechnician[];
   ordersByStatus: Record<string, number>;
+  /** Reviews customers left on this provider's orders. */
+  reviews: MemberReview[];
 }
 
 export interface TechnicianSection {
@@ -38,6 +45,8 @@ export interface TechnicianSection {
   lastLoginAt: string | null;
   orderCount: number;
   provider: { profileId: string | null; name: string | null; mobileNumber: string } | null;
+  /** Reviews customers left on orders this technician did. */
+  reviews: MemberReview[];
 }
 
 export interface CustomerOrderRow {
@@ -54,6 +63,10 @@ export interface CustomerSection {
   orderCount: number;
   ordersByStatus: Record<string, number>;
   totalSpent: number;
+  /** Average rating providers gave this customer; 0 before the first one. */
+  rating: number;
+  /** Ratings providers and technicians gave this customer. */
+  ratings: MemberReview[];
   recentOrders: CustomerOrderRow[];
   services: Array<{ name: string; count: number }>;
 }

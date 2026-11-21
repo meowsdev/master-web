@@ -11,6 +11,7 @@ import { AdvancePaymentCard } from '../order-chat/AdvancePaymentCard';
 import { ExtraChargeCard } from '../order-chat/ExtraChargeCard';
 import { MessageBubble } from '../order-chat/MessageBubble';
 import { OrderChatComposer } from '../order-chat/OrderChatComposer';
+import { CustomerRatingNote } from '../order-chat/CustomerRatingNote';
 import { ReviewCard } from '../order-chat/ReviewCard';
 import { CustomerAvatar } from '../provider/CustomerAvatar';
 import { ProviderOrderInfoCard } from '../provider/ProviderOrderInfoCard';
@@ -80,6 +81,8 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
               return null;
           }
         })}
+        {/* Completed: the provider's rating of the customer. */}
+        <CustomerRatingNote order={order} viewer="ADMIN" />
         <div ref={bottomRef} />
       </div>
 

@@ -1,6 +1,6 @@
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { MemberDetails } from '@/types/admin-member.types';
-import { Fact, OrderCounts, Section, StatusBadges, formatDate } from './MemberParts';
+import { Fact, OrderCounts, ReviewList, Section, StatusBadges, formatDate } from './MemberParts';
 
 /* A provider: business info, standing, areas, and the technicians who work under them. */
 export function ProviderSections({ provider }: { provider: NonNullable<MemberDetails['provider']> }) {
@@ -21,6 +21,10 @@ export function ProviderSections({ provider }: { provider: NonNullable<MemberDet
 
       <Section title={`Orders · ${provider.totalCompletedOrders} completed`}>
         <OrderCounts byStatus={provider.ordersByStatus} />
+      </Section>
+
+      <Section title={`Customer reviews · ${provider.reviews.length}`}>
+        <ReviewList reviews={provider.reviews} />
       </Section>
 
       <Section title="Areas served">
