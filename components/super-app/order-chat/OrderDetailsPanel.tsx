@@ -23,11 +23,10 @@ const PAYMENT_STATUS_TEXT: Record<string, string> = { UNPAID: 'Unpaid', PARTIAL:
  * completed, cancelled): who the customer is, which provider and technician are on it, what was ordered,
  * where and when, the money, and the reviews. Phone numbers are shown to staff only.
  */
-export function OrderDetailsPanel({ order, viewer, onClose }: { order: Order; viewer: OrderDetailsViewer; onClose: () => void }) {
+export function OrderDetailsPanel({ order, onClose }: { order: Order; viewer: OrderDetailsViewer; onClose: () => void }) {
   const detail = order.bookingDetail;
   const status = ORDER_STATUS_LABEL[order.orderStatus];
   const areaLabel = useServiceAreaLabel(detail?.districtId, detail?.upazilaId);
-  const isStaff = viewer === 'ADMIN';
   const customer = order.customer?.user;
   const provider = order.provider;
   const technician = order.technician?.user;
@@ -49,7 +48,7 @@ export function OrderDetailsPanel({ order, viewer, onClose }: { order: Order; vi
       <Section title="Customer">
         <Fact label="Name">{personName(customer)}</Fact>
         {customer?.username && customer.name && <Fact label="Username">@{customer.username}</Fact>}
-        {isStaff && customer?.mobileNumber && <Fact label="Phone">{customer.mobileNumber}</Fact>}
+        {customer?.mobileNumber && <Fact label="Phone">{customer.mobileNumber}</Fact>}
       </Section>
 
       <Section title="Provider">
@@ -61,7 +60,7 @@ export function OrderDetailsPanel({ order, viewer, onClose }: { order: Order; vi
             <Fact label="Name">{provider?.companyName || personName(provider?.user)}</Fact>
             {provider?.user?.username && <Fact label="Username">@{provider.user.username}</Fact>}
             <Fact label="Rating">{providerRating > 0 ? `★ ${providerRating.toFixed(1)}` : 'New'}</Fact>
-            {isStaff && provider?.user?.mobileNumber && <Fact label="Phone">{provider.user.mobileNumber}</Fact>}
+            {provider?.user?.mobileNumber && <Fact label="Phone">{provider.user.mobileNumber}</Fact>}
           </>
         )}
       </Section>
@@ -71,7 +70,7 @@ export function OrderDetailsPanel({ order, viewer, onClose }: { order: Order; vi
           {technician ? (
             <>
               <Fact label="Name">{personName(technician)}</Fact>
-              {isStaff && technician.mobileNumber && <Fact label="Phone">{technician.mobileNumber}</Fact>}
+              {technician.mobileNumber && <Fact label="Phone">{technician.mobileNumber}</Fact>}
             </>
           ) : (
             <p className="text-[14px] font-medium text-[#697586]">The provider is doing the work; no technician assigned.</p>
