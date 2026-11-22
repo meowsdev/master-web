@@ -14,5 +14,9 @@ export interface ExtraChargeRequest {
   /** Order total at the moment of the request. */
   previousTotal: string | number;
   status: ExtraChargeStatus;
+  /** The customer does not use the app: still unanswered at this time, it is approved automatically. */
+  autoApproveAt?: string | null;
+  /** Approved by that timer, not by the customer. */
+  isAutoApproved?: boolean;
   createdAt: string;
 }

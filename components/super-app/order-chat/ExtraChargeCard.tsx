@@ -12,6 +12,9 @@ interface ExtraChargeCardProps {
   onReject: () => void;
 }
 
+/** "৩:৪৫ PM": when an app-less customer's request approves itself. */
+const formatTime = (iso: string) => new Date(iso).toLocaleTimeString('bn-BD', { hour: 'numeric', minute: '2-digit' });
+
 /* The customer's side of an extra-charge request: what was added, the new bill, and Reject / Approve. */
 export function ExtraChargeCard({ request, viewer = 'CUSTOMER', isAnswering, onApprove, onReject }: ExtraChargeCardProps) {
   const previousTotal = Number(request.previousTotal);
@@ -37,10 +40,22 @@ export function ExtraChargeCard({ request, viewer = 'CUSTOMER', isAnswering, onA
         <div className="flex justify-between font-semibold"><dt>সর্বমোট নতুন বিল</dt><dd>{formatTaka(previousTotal + addedTotal)}</dd></div>
       </dl>
 
+      {/* The customer does not use the app (e.g. an admin placed the order): it approves itself after 30 minutes. */}
+      {request.status === 'PENDING' && request.autoApproveAt && (
+        <p className="mt-[10px] rounded-[10px] bg-[#fff4e5] px-[10px] py-[6px] text-[12px] font-medium text-[#b7791f]">
+          কাস্টমার অ্যাপে নেই। {formatTime(request.autoApproveAt)} এর মধ্যে উত্তর না এলে এটি অটো-অ্যাপ্রুভ হবে।
+        </p>
+      )}
+      {request.isAutoApproved && (
+        <p className="mt-[10px] rounded-[10px] bg-[#eefaf5] px-[10px] py-[6px] text-[12px] font-medium text-[#1daa61]">
+          অটো-অ্যাপ্রুভড: কাস্টমার অ্যাপে ছিলেন না, নির্ধারিত সময়ে উত্তর আসেনি।
+        </p>
+      )}
+
       {viewer === 'PROVIDER' ? (
         <footer className="mt-[14px] flex justify-end">
           <span className="rounded-[10px] bg-[#f7f5f3] px-[14px] py-[8px] text-[14px] font-semibold text-[#697586]">
-            {request.status === 'PENDING' ? 'Waiting for the customer' : request.status === 'APPROVED' ? 'Customer approved' : 'Customer rejected'}
+            {request.status === 'PENDING' ? 'Waiting for the customer' : request.status === 'APPROVED' ? (request.isAutoApproved ? 'Auto-approved' : 'Customer approved') : 'Customer rejected'}
           </span>
         </footer>
       ) : (
