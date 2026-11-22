@@ -16,6 +16,45 @@ const OPTIONS: Array<{ mode: CompletionPaymentMode; title: string; hint: string 
   { mode: 'CASH', title: 'ক্যাশ / অফলাইন', hint: 'আপনি ক্যাশ বুঝে নিয়েছেন। অর্ডার সাথে সাথে সম্পন্ন হবে, কাস্টমারকে কিছু করতে হবে না।' },
 ];
 
+/** The backend says no when the customer never verified their number by OTP: they cannot pay in the app. */
+const canPayOnline = (order: Order) => order.canPayOnline !== false;
+
+/*
+ * How the customer pays. Online is greyed out (with the reason) for a customer who has not verified their
+ * number by OTP; the backend refuses it too.
+ */
+function PaymentModePicker({ order, value, onChange }: { order: Order; value: CompletionPaymentMode; onChange: (mode: CompletionPaymentMode) => void }) {
+  const isOnlineAllowed = canPayOnline(order);
+  return (
+    <>
+      <div role="radiogroup" className="mt-[10px] flex flex-col gap-[10px]">
+        {OPTIONS.map((option) => {
+          const isDisabled = option.mode === 'ONLINE' && !isOnlineAllowed;
+          return (
+            <button
+              key={option.mode}
+              type="button"
+              role="radio"
+              aria-checked={value === option.mode}
+              disabled={isDisabled}
+              onClick={() => onChange(option.mode)}
+              className={`w-full cursor-pointer rounded-[12px] border p-[14px] text-left disabled:cursor-not-allowed disabled:opacity-50 ${value === option.mode ? 'border-[#1daa61] bg-[#e7fce3]' : 'border-[#e5e5e5]'}`}
+            >
+              <span className="block text-[14px] font-semibold text-[#202939]">{option.title}</span>
+              <span className="mt-[2px] block text-[12px] font-medium text-[#697586]">{option.hint}</span>
+            </button>
+          );
+        })}
+      </div>
+      {!isOnlineAllowed && (
+        <p className="mt-[8px] rounded-[10px] bg-[#fff4e5] p-[10px] text-[12px] font-medium leading-relaxed text-[#b7791f]">
+          কাস্টমার এখনো OTP দিয়ে নম্বর ভেরিফাই করেননি, তাই অনলাইন পেমেন্ট বন্ধ। ক্যাশ নিন।
+        </p>
+      )}
+    </>
+  );
+}
+
 const apiErrorMessage = (error: unknown) => {
   const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
   return (Array.isArray(message) ? message[0] : message) || 'অর্ডার সম্পন্ন করতে সমস্যা হয়েছে।';
@@ -45,7 +84,7 @@ function RevisionDonePanel({ order, onClose }: { order: Order; onClose: () => vo
   const isMoneyDue = dueAmount > 0;
   const [reason, setReason] = useState('');
   const [wasQualityIssue, setWasQualityIssue] = useState<boolean | null>(null);
-  const [paymentMode, setPaymentMode] = useState<CompletionPaymentMode>('ONLINE');
+  const [paymentMode, setPaymentMode] = useState<CompletionPaymentMode>(canPayOnline(order) ? 'ONLINE' : 'CASH');
 
   const isReasonReady = reason.trim().length >= MIN_REASON_LENGTH;
   const isReady = isReasonReady && wasQualityIssue !== null;
@@ -94,21 +133,7 @@ function RevisionDonePanel({ order, onClose }: { order: Order; onClose: () => vo
             রিভিশনের সময় এক্সট্রা চার্জ যোগ হয়েছে। বাকি: <span className="font-semibold text-[#202939]">{formatTaka(dueAmount)}</span>
           </p>
           <p className="mt-[12px] text-[15px] font-semibold text-[#202939]">কাস্টমার কীভাবে পেমেন্ট করবে?</p>
-          <div role="radiogroup" className="mt-[10px] flex flex-col gap-[10px]">
-            {OPTIONS.map((option) => (
-              <button
-                key={option.mode}
-                type="button"
-                role="radio"
-                aria-checked={paymentMode === option.mode}
-                onClick={() => setPaymentMode(option.mode)}
-                className={`w-full cursor-pointer rounded-[12px] border p-[14px] text-left ${paymentMode === option.mode ? 'border-[#1daa61] bg-[#e7fce3]' : 'border-[#e5e5e5]'}`}
-              >
-                <span className="block text-[14px] font-semibold text-[#202939]">{option.title}</span>
-                <span className="mt-[2px] block text-[12px] font-medium text-[#697586]">{option.hint}</span>
-              </button>
-            ))}
-          </div>
+          <PaymentModePicker order={order} value={paymentMode} onChange={setPaymentMode} />
         </>
       ) : (
         <p className="mt-[20px] text-[13px] font-medium leading-relaxed text-[#697586]">
@@ -139,7 +164,7 @@ function RevisionDonePanel({ order, onClose }: { order: Order; onClose: () => vo
 function PaymentCompletePanel({ order, onClose }: { order: Order; onClose: () => void }) {
   const queryClient = useQueryClient();
   const openPanel = useOrderPanelStore((state) => state.open);
-  const [paymentMode, setPaymentMode] = useState<CompletionPaymentMode>('ONLINE');
+  const [paymentMode, setPaymentMode] = useState<CompletionPaymentMode>(canPayOnline(order) ? 'ONLINE' : 'CASH');
   const [hasCashTip, setHasCashTip] = useState(false);
   const [cashTip, setCashTip] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -176,21 +201,7 @@ function PaymentCompletePanel({ order, onClose }: { order: Order; onClose: () =>
       <p className="text-[13px] font-medium text-[#697586]">মোট বিল: {formatTaka(order.totalPrice)} • বাকি: {formatTaka(order.dueAmount)}</p>
 
       <p className="mt-[20px] text-[15px] font-semibold text-[#202939]">কাস্টমার কীভাবে পেমেন্ট করবে?</p>
-      <div role="radiogroup" className="mt-[10px] flex flex-col gap-[10px]">
-        {OPTIONS.map((option) => (
-          <button
-            key={option.mode}
-            type="button"
-            role="radio"
-            aria-checked={paymentMode === option.mode}
-            onClick={() => setPaymentMode(option.mode)}
-            className={`w-full cursor-pointer rounded-[12px] border p-[14px] text-left ${paymentMode === option.mode ? 'border-[#1daa61] bg-[#e7fce3]' : 'border-[#e5e5e5]'}`}
-          >
-            <span className="block text-[14px] font-semibold text-[#202939]">{option.title}</span>
-            <span className="mt-[2px] block text-[12px] font-medium text-[#697586]">{option.hint}</span>
-          </button>
-        ))}
-      </div>
+      <PaymentModePicker order={order} value={paymentMode} onChange={setPaymentMode} />
 
       {paymentMode === 'CASH' && (
         <div className="mt-[16px] rounded-[12px] border border-[#e5e5e5] p-[14px]">

@@ -6,6 +6,7 @@ import { usePlaceOrderForm } from '@/hooks/usePlaceOrderForm';
 import { CountStepper } from './CountStepper';
 import { OrderField, OrderSelect, fieldControlClass } from './OrderField';
 import { formatTaka } from './format-taka';
+import { FormPart } from './FormPart';
 
 type FormState = ReturnType<typeof usePlaceOrderForm>;
 
@@ -17,7 +18,7 @@ export function ProblemSection({ state }: { state: FormState }) {
   const { catalog, category, subService } = state;
 
   return (
-    <>
+    <FormPart step={1} title="সার্ভিসের তথ্য" hint="কোন সার্ভিস, কী সমস্যা" isDone={Boolean(subService)}>
       <OrderSelect
         icon={Wrench01Icon}
         placeholder="সার্ভিস সিলেক্ট করুন"
@@ -95,6 +96,6 @@ export function ProblemSection({ state }: { state: FormState }) {
             </div>
           );
         })}
-    </>
+    </FormPart>
   );
 }

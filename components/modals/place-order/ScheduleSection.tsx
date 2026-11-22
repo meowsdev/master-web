@@ -1,20 +1,24 @@
 'use client';
 
+import { useState } from 'react';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { Calendar03Icon, CheckmarkCircle02Icon, Clock01Icon, Home01Icon, Location01Icon } from '@hugeicons/core-free-icons';
 import { usePlaceOrderForm } from '@/hooks/usePlaceOrderForm';
 import { OrderField, OrderSelect, fieldControlClass } from './OrderField';
+import { SchedulePickerDialog, shortSlotLabel } from './SchedulePickerDialog';
+import { FormPart } from './FormPart';
 
 type FormState = ReturnType<typeof usePlaceOrderForm>;
 
-/** Dhaka's "today" would be wrong for a visitor on another clock, so the browser's own date is the floor. */
-const todayIso = () => new Date().toLocaleDateString('en-CA');
-
-/* Where (district, upazila, address) and when (date, time slot) the visit should happen. */
+/* Two parts of the form: where (district, upazila, address), then when (date and time slot, via "Tap to Schedule"). */
 export function ScheduleSection({ state }: { state: FormState }) {
   const { locations } = state;
+  const isAddressDone = Boolean(state.districtId && state.upazilaId && state.addressDetail.trim());
+  const isTimeDone = Boolean(state.scheduledDate && state.timeSlot);
 
   return (
     <>
+    <FormPart step={2} title="ঠিকানা" hint="কোথায় আসবে" isDone={isAddressDone}>
       <OrderSelect
         icon={CheckmarkCircle02Icon}
         placeholder="জেলা"
@@ -46,29 +50,61 @@ export function ScheduleSection({ state }: { state: FormState }) {
         />
       </OrderField>
 
-      <div className="flex items-end gap-[16px]">
-        <div className="min-w-0 flex-1">
-          <OrderField icon={Calendar03Icon}>
-            <input
-              type="date"
-              min={todayIso()}
-              value={state.scheduledDate}
-              onChange={(event) => state.setScheduledDate(event.target.value)}
-              aria-label="Booking date"
-              className={`${fieldControlClass} cursor-pointer`}
-            />
-          </OrderField>
-        </div>
-        <div className="min-w-0 flex-1">
-          <OrderSelect
-            icon={Clock01Icon}
-            placeholder="টাইম"
-            value={state.timeSlot}
-            options={(state.catalog?.timeSlots ?? []).map((slot) => ({ value: slot, label: slot }))}
-            onChange={state.setTimeSlot}
-          />
-        </div>
-      </div>
+    </FormPart>
+
+    <FormPart step={3} title="সময়" hint="কবে, কয়টার সময় আসবে" isDone={isTimeDone}>
+      <ScheduleButton state={state} />
+    </FormPart>
+    </>
+  );
+}
+
+/** "2026-11-25" → "Wed, 25 Nov", read as a calendar day (no timezone shift). */
+const formatScheduleDay = (iso: string) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
+
+/*
+ * "Tap to Schedule": opens the date / time dialog. Once confirmed, the button shows the chosen day and
+ * window, and tapping it again changes them.
+ */
+function ScheduleButton({ state }: { state: FormState }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const isScheduled = Boolean(state.scheduledDate && state.timeSlot);
+  const slot = isScheduled ? shortSlotLabel(state.timeSlot) : null;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        className={`mt-[16px] flex h-[52px] w-full cursor-pointer items-center justify-center gap-[10px] rounded-[12px] border-2 px-[16px] text-[15px] font-semibold transition-colors ${
+          isScheduled ? 'border-[#1daa61] bg-[#e7fce3] text-[#205737]' : 'border-dashed border-[#1daa61] text-[#1daa61] hover:bg-[#e7fce3]'
+        }`}
+      >
+        <HugeiconsIcon icon={isScheduled ? Clock01Icon : Calendar03Icon} size={20} />
+        {isScheduled && slot ? (
+          <span className="truncate">
+            {formatScheduleDay(state.scheduledDate)} · {slot.range} {slot.period}
+            <span className="ml-[8px] text-[12px] font-medium text-[#697586] underline">পরিবর্তন</span>
+          </span>
+        ) : (
+          'Tap to Schedule'
+        )}
+      </button>
+
+      {isOpen && (
+        <SchedulePickerDialog
+          timeSlots={state.catalog?.timeSlots ?? []}
+          initialDate={state.scheduledDate}
+          initialTimeSlot={state.timeSlot}
+          onClose={() => setIsOpen(false)}
+          onConfirm={(date, timeSlot) => {
+            state.setScheduledDate(date);
+            state.setTimeSlot(timeSlot);
+            setIsOpen(false);
+          }}
+        />
+      )}
     </>
   );
 }
