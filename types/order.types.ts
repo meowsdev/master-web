@@ -181,6 +181,8 @@ export interface Order {
   needsAttention?: boolean;
   /** Staff only: how many providers were offered it so far. */
   offerCount?: number;
+  /** Staff list: the provider sent the job's costs and an admin has not reviewed them yet. */
+  hasPendingExpenseClaim?: boolean;
   /** Completed, not reviewed yet: the tab stays so the payment result and review card show. */
   isReviewPending?: boolean;
   revisions?: ServiceRevision[];

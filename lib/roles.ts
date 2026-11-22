@@ -23,6 +23,8 @@ export interface StaffPermissions {
   canAssignOrders: boolean;
   /** Send a completed order back for revision within the 7-day warranty (backend: ADMIN or the order's customer). */
   canSendToRevision: boolean;
+  /** Review a job's parts / costs, change the amounts and approve (backend: ADMIN). */
+  canReviewExpenses: boolean;
 }
 
 const NONE: StaffPermissions = {
@@ -35,6 +37,7 @@ const NONE: StaffPermissions = {
   canCreateOrders: false,
   canAssignOrders: false,
   canSendToRevision: false,
+  canReviewExpenses: false,
 };
 
 const MANAGER: StaffPermissions = {
@@ -47,10 +50,11 @@ const MANAGER: StaffPermissions = {
   canCreateOrders: true,
   canAssignOrders: true,
   canSendToRevision: false,
+  canReviewExpenses: false,
 };
 
 const PERMISSIONS_BY_ROLE: Record<string, StaffPermissions> = {
-  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true },
+  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true, canReviewExpenses: true },
   MANAGER,
   // Support chat is open to support staff; member management is not (admin-members is ADMIN/MANAGER).
   SUPPORT: { ...NONE, canChatWithMembers: true },

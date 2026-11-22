@@ -7,6 +7,7 @@ import { OrderDetailsPanel } from '../order-chat/OrderDetailsPanel';
 import { AssignWorkerPanel } from './panels/AssignWorkerPanel';
 import { ExtraChargePanel } from './panels/ExtraChargePanel';
 import { WorkCompletePanel } from './panels/WorkCompletePanel';
+import { ExpenseClaimPanel } from '../order-chat/ExpenseClaimPanel';
 
 /* The order's details (open on wide screens), or the panel the + menu opened. Moving to another order closes it. */
 export function ProviderOrderPanels({ order, userId, viewer = 'PROVIDER' }: { order: Order; userId: string; viewer?: 'PROVIDER' | 'TECHNICIAN' }) {
@@ -20,5 +21,6 @@ export function ProviderOrderPanels({ order, userId, viewer = 'PROVIDER' }: { or
   if (kind === 'extraCharge') return <ExtraChargePanel order={order} userId={userId} onClose={close} />;
   if (kind === 'complete') return <WorkCompletePanel order={order} onClose={close} />;
   if (kind === 'assign') return <AssignWorkerPanel order={order} userId={userId} onClose={close} />;
+  if (kind === 'expenseClaim') return <ExpenseClaimPanel order={order} userId={userId} onClose={close} />;
   return null;
 }
