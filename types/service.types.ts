@@ -24,6 +24,8 @@ export interface ServiceProviderSummary {
   averageRating: number | null;
 }
 
+export type PriceUnit = 'FIXED' | 'PER_UNIT' | 'PER_SQFT';
+
 export interface Service {
   id: string;
   categoryId: string;
@@ -35,6 +37,8 @@ export interface Service {
   features?: string[];
   description?: string | null;
   isFixedPrice: boolean;
+  /** FIXED = not countable; PER_UNIT / PER_SQFT = the customer picks how many. */
+  priceUnit?: PriceUnit;
   isPopular?: boolean;
   isFeatured?: boolean;
   orderCount?: number;

@@ -3,14 +3,21 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Alert02Icon, Note01Icon, Time02Icon, Wallet01Icon, Wrench01Icon } from '@hugeicons/core-free-icons';
+import { Alert02Icon, CalculatorIcon, Note01Icon, Time02Icon, Wallet01Icon, Wrench01Icon } from '@hugeicons/core-free-icons';
 import { SidePanelShell } from '@/components/modals/SidePanelShell';
 import { OrderField, OrderSelect, fieldControlClass } from '@/components/modals/place-order/OrderField';
 import { PicturePicker } from '../PicturePicker';
 import { AdminServiceInput, adminService } from '@/services/admin.service';
 import { servicesService } from '@/services/services.service';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
-import { Service } from '@/types/service.types';
+import { PriceUnit, Service } from '@/types/service.types';
+
+/** Countable services let the customer pick how many (2 ACs = 2 x base price) when ordering. */
+const PRICE_UNIT_OPTIONS: Array<{ value: PriceUnit; label: string }> = [
+  { value: 'FIXED', label: 'Not countable (one fixed job)' },
+  { value: 'PER_UNIT', label: 'Countable: per unit' },
+  { value: 'PER_SQFT', label: 'Countable: per sq ft' },
+];
 
 const apiErrorMessage = (error: unknown) => {
   const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
@@ -52,6 +59,7 @@ export function AdminServicePanel({ service, defaultCategoryId, onClose }: Admin
   const [imageUrl, setImageUrl] = useState(service?.imageUrl ?? '');
   const [featuresText, setFeaturesText] = useState((service?.features ?? []).join('\n'));
   const [isFixedPrice, setIsFixedPrice] = useState(service?.isFixedPrice ?? false);
+  const [priceUnit, setPriceUnit] = useState<PriceUnit>(service?.priceUnit ?? 'FIXED');
   const [isPopular, setIsPopular] = useState(service?.isPopular ?? false);
   const [isFeatured, setIsFeatured] = useState(service?.isFeatured ?? false);
 
@@ -71,6 +79,7 @@ export function AdminServicePanel({ service, defaultCategoryId, onClose }: Admin
         imageUrl: imageUrl.trim() || (service?.imageUrl ? null : undefined),
         features: featuresText.split('\n').map((line) => line.trim()).filter(Boolean),
         isFixedPrice,
+        priceUnit,
         isPopular,
         isFeatured,
       };
@@ -119,6 +128,8 @@ export function AdminServicePanel({ service, defaultCategoryId, onClose }: Admin
               </OrderField>
             </div>
           </div>
+
+          <OrderSelect icon={CalculatorIcon} placeholder="Countable?" value={priceUnit} options={PRICE_UNIT_OPTIONS} onChange={(value) => value && setPriceUnit(value as PriceUnit)} />
 
           <PicturePicker value={imageUrl} onChange={setImageUrl} />
           <OrderField icon={Note01Icon}>

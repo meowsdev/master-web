@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/axios';
+import { PriceUnit } from '@/types/service.types';
 
 export interface AdminProvider {
   id: string;
@@ -27,6 +28,8 @@ export interface AdminServiceInput {
   imageUrl?: string | null;
   features?: string[];
   isFixedPrice?: boolean;
+  /** FIXED = not countable; PER_UNIT / PER_SQFT = countable. */
+  priceUnit?: PriceUnit;
   isPopular?: boolean;
   isFeatured?: boolean;
 }
