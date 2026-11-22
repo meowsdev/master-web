@@ -1,10 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Add01Icon } from '@hugeicons/core-free-icons';
 import { SidePanelShell } from '@/components/modals/SidePanelShell';
 import { useOrderTechnicians, useSetOrderTechnician } from '@/hooks/useOrderTechnician';
+import { useAuthStore } from '@/store/useAuthStore';
+import { UserRole } from '@/types/auth.types';
 import { Order } from '@/types/order.types';
 import { SupportAvatar } from '../../support/SupportAvatar';
+import { AddTechnicianForm } from '../team/AddTechnicianForm';
 
 /*
  * Assign Worker: the provider picks one of THEIR OWN technicians for this order (or takes the worker off).
@@ -15,6 +20,9 @@ export function AssignWorkerPanel({ order, userId, onClose }: { order: Order; us
   const change = useSetOrderTechnician(userId, order.id, onClose);
   // null = nothing picked yet, so the saved worker is shown selected.
   const [choice, setChoice] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+  // Only a provider adds to their own team here; an admin adds technicians from the admin screens.
+  const canAddWorker = useAuthStore((state) => state.activeRole) === UserRole.PROVIDER;
 
   const currentId = data?.currentTechnicianId ?? null;
   const selectedId = choice ?? currentId;
@@ -27,9 +35,29 @@ export function AssignWorkerPanel({ order, userId, onClose }: { order: Order; us
 
       {isLoading && <p className="text-[14px] font-medium text-[#697586]">Loading your technicians...</p>}
       {isError && <p className="text-[14px] font-medium text-[#d64545]">Could not load your technicians.</p>}
-      {data && technicians.length === 0 && (
+      {/* A new technician can be added right here; once added they appear in the list below to be assigned. */}
+      {canAddWorker && (
+        <div className="mb-[8px]">
+          {isAdding ? (
+            <AddTechnicianForm userId={userId} onDone={() => setIsAdding(false)} onCancel={() => setIsAdding(false)} />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsAdding(true)}
+              className="flex w-full cursor-pointer items-center gap-[12px] rounded-[12px] border border-dashed border-[#1daa61] p-[10px] text-left hover:bg-[#e7fce3]"
+            >
+              <span className="flex size-[40px] items-center justify-center rounded-full bg-[#e7fce3] text-[#1daa61]">
+                <HugeiconsIcon icon={Add01Icon} size={20} />
+              </span>
+              <span className="text-[14px] font-semibold text-[#1daa61]">Add worker</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {data && technicians.length === 0 && !isAdding && (
         <p className="rounded-[12px] border border-[#e5e5e5] bg-[#f7f5f3] p-[14px] text-[13px] font-medium text-[#697586]">
-          You have no technicians yet. Ask support to add technicians under your account.
+          {canAddWorker ? 'এখনো কোনো টেকনিশিয়ান নেই। উপরের "Add worker" দিয়ে যোগ করুন।' : 'This provider has no technicians yet.'}
         </p>
       )}
 

@@ -72,9 +72,8 @@ export function TechnicianOrdersSidebar({ user, onOrderOpened, onOpenAuth, onOpe
                 {/* Opens "আমার রিভিউ": what customers said about the jobs this technician did. */}
                 <MyRatingButton userId={user.id} role="TECHNICIAN" />
               </div>
-              {/* Their own number: the backend sends a person their own phone, and nobody else's. */}
-              <span className="truncate text-[13px] font-medium text-[#697586]">{user.mobileNumber}</span>
-              <span className="w-fit rounded-full bg-[#202939] px-[8px] py-[1px] text-[11px] font-semibold text-white">Technician</span>
+              {/* Name and role only: the phone number is not shown in the technician's header. */}
+              <span className="mt-[2px] w-fit rounded-full bg-[#202939] px-[8px] py-[1px] text-[11px] font-semibold text-white">Technician</span>
             </div>
           </div>
         }

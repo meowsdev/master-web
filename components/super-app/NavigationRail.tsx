@@ -6,6 +6,7 @@ import { User } from '@/types/auth.types';
 import { isStaffRole } from '@/lib/roles';
 import { CustomerNavigationRail } from './CustomerNavigationRail';
 import { AdminNavigationRail } from './admin/AdminNavigationRail';
+import { TeamButton } from './provider/team/TeamButton';
 
 interface NavigationRailProps {
   /** The selected tab, or ORDERS / ACCOUNT while that right-hand panel is open. */
@@ -38,6 +39,7 @@ export function NavigationRail({ activeRailTab, onSelectTab, onOpenProfile, onOp
       onOpenAccount={user ? onOpenProfile : onOpenAuth}
       runningCount={runningCount}
       accountTitle={user ? `${user.name} (${activeRole})` : 'Profile / Login'}
+      teamSlot={user && activeRole === 'PROVIDER' ? <TeamButton userId={user.id} variant="rail" /> : undefined}
     />
   );
 }

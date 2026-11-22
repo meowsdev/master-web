@@ -11,8 +11,9 @@ import { Order, OrderStatus } from '@/types/order.types';
 const RATING_STEPS = [1, 2, 3, 4, 5];
 
 /*
- * After a completed order the provider rates the customer, once. The rating feeds the customer's
- * average, and the customer and admins see it on the order (CustomerRatingNote).
+ * After a completed order the provider side rates the customer, once: the provider or the technician, whoever
+ * goes first. The other one then sees it sent, and by whom. The rating feeds the customer's average, and the
+ * customer and admins see it on the order (CustomerRatingNote).
  */
 export function CustomerRatingCard({ order, userId }: { order: Order; userId: string }) {
   const queryClient = useQueryClient();
@@ -35,6 +36,8 @@ export function CustomerRatingCard({ order, userId }: { order: Order; userId: st
     onError: (error) => {
       const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
       toast.error((Array.isArray(message) ? message[0] : message) || 'Rating could not be saved');
+      // The provider or technician may have rated a moment ago: show theirs.
+      queryClient.invalidateQueries({ queryKey: key });
     },
   });
 
@@ -45,6 +48,11 @@ export function CustomerRatingCard({ order, userId }: { order: Order; userId: st
   return (
     <article className="w-full max-w-[460px] self-center rounded-[16px] bg-gradient-to-b from-white to-[#eefaf5] p-[16px] text-[#202939]">
       <h3 className="text-[13px] font-semibold">কাস্টমারকে রেটিং দিন</h3>
+      <p className="mt-[2px] text-[12px] font-medium text-[#697586]">
+        {isRated && saved.ratedBy && !saved.ratedBy.isMe
+          ? `${saved.ratedBy.name ?? (saved.ratedBy.role === 'TECHNICIAN' ? 'আপনার টেকনিশিয়ান' : 'প্রোভাইডার')} রেটিং দিয়েছেন।`
+          : 'প্রোভাইডার বা টেকনিশিয়ান, যেকোনো একজন দিলেই হবে।'}
+      </p>
 
       <div role="radiogroup" aria-label="Customer rating" className="mt-[10px] flex justify-center gap-[6px]">
         {RATING_STEPS.map((step) => (

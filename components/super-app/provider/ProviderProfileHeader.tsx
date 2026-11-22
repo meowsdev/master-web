@@ -6,6 +6,7 @@ import { useProviderWallet } from '@/hooks/useProviderWallet';
 import { User } from '@/types/auth.types';
 import { MyRatingButton } from '../reviews/MyRatingButton';
 import { ProviderPayDueDialog } from './ProviderPayDueDialog';
+import { TeamButton } from './team/TeamButton';
 
 /*
  * The provider's header in the sidebar: photo, name, rating, and what they owe the platform
@@ -46,14 +47,18 @@ export function ProviderProfileHeader({ user }: { user: User }) {
         </div>
       </div>
 
-      <button
-        type="button"
-        disabled={!hasDue}
-        onClick={() => setIsPayOpen(true)}
-        className="shrink-0 cursor-pointer rounded-[10px] bg-[#202939] px-[16px] py-[10px] text-[14px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-30"
-      >
-        Pay Now
-      </button>
+      <div className="flex shrink-0 items-center gap-[6px]">
+        {/* Phones only: the left rail (where "আমার টিম" lives on wide screens) is hidden there. */}
+        <TeamButton userId={user.id} variant="header" />
+        <button
+          type="button"
+          disabled={!hasDue}
+          onClick={() => setIsPayOpen(true)}
+          className="shrink-0 cursor-pointer rounded-[10px] bg-[#202939] px-[16px] py-[10px] text-[14px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          Pay Now
+        </button>
+      </div>
 
       {isPayOpen && (
         <ProviderPayDueDialog

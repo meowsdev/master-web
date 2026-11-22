@@ -11,6 +11,7 @@ import { useServicesFilter } from '@/hooks/useServicesFilter';
 import { useSuperAppAudio } from '@/hooks/useSuperAppAudio';
 import { useSuperAppChat } from '@/hooks/useSuperAppChat';
 import { useProviderOrders } from '@/hooks/useProviderOrders';
+import { useTechnicianJobAlerts } from '@/hooks/useTechnicianJobAlerts';
 import { useSuperAppModals } from '@/hooks/useSuperAppModals';
 import { useGuestServicePreview } from '@/hooks/useGuestServicePreview';
 import { useCustomerOrderTabSelection } from '@/hooks/useCustomerOrderTabSelection';
@@ -96,6 +97,9 @@ export default function SuperAppPage() {
     handleUpdateStatus,
     isUpdatingStatus,
   } = useProviderOrders({ isProvider, userId: user?.id, playSound });
+
+  // A technician hears at once when their provider gives them a job or takes one off them.
+  useTechnicianJobAlerts({ isTechnician: Boolean(isAuthenticated && activeRole === 'TECHNICIAN'), userId: user?.id, playSound });
 
   const activeService = useMemo(() => {
     if (!activeServiceId) return null;

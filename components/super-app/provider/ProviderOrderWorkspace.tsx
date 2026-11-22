@@ -88,7 +88,8 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
           }
         })}
         {/* Completed: the provider rates the customer. */}
-        {isProviderViewer && <CustomerRatingCard order={order} userId={userId} />}
+        {/* Provider or technician: whoever rates first, once per order. */}
+        <CustomerRatingCard order={order} userId={userId} />
         {/* 7-day warranty: what the customer sent back. Finished with "Revision Done" in the + menu. */}
         <RevisionCard order={order} canRequest={false} />
         {/* After the job: parts / costs for the admin to review (commission is then taken on total - costs). */}

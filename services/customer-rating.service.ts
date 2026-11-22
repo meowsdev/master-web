@@ -4,6 +4,8 @@ export interface CustomerRatingRecord {
   /** null when the provider has not rated this customer yet. */
   rating: number | null;
   comment?: string | null;
+  /** Who of the provider side sent it (provider or technician); one rating per order. */
+  ratedBy?: { name: string | null; role: string | null; isMe: boolean };
 }
 
 export const customerRatingService = {

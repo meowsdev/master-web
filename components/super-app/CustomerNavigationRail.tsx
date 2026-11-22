@@ -2,6 +2,7 @@
 
 import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import Image from 'next/image';
+import { ReactNode } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import { RailSelection, RailTab } from '@/types/super-app.types';
@@ -20,7 +21,8 @@ interface CustomerNavigationRailProps {
   accountTitle: string;
   /** Providers only have the Messages tab; customers also get Orders. */
   showOrdersTab?: boolean;
-
+  /** Providers: the team button, drawn right above the profile picture. */
+  teamSlot?: ReactNode;
 }
 
 /*
@@ -39,6 +41,7 @@ export function CustomerNavigationRail({
   runningCount = 0,
   accountTitle,
   showOrdersTab = true,
+  teamSlot,
 }: CustomerNavigationRailProps) {
   const iconState = (isSelected: boolean) => (isSelected ? 'active' : 'inactive');
   // The Support chat is a row of the chat list, so Chats stays lit while it is open.
@@ -83,6 +86,8 @@ export function CustomerNavigationRail({
       </div>
 
       <div className="flex flex-col items-center gap-[12px]">
+        {/* Provider only: "আমার টিম", right above the profile picture. */}
+        {isAuthenticated && teamSlot}
         {isAuthenticated && onStartNewOrder && (
           <button
             type="button"
