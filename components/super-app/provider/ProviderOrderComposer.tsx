@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
-import { Attachment01Icon, CallIcon, CheckmarkCircle02Icon, Mic01Icon, PlusSignIcon, SentIcon, UserAdd01Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
+import { Attachment01Icon, CallIcon, CheckmarkCircle02Icon, Invoice01Icon, Mic01Icon, PlusSignIcon, SentIcon, UserAdd01Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import { Order, OrderStatus } from '@/types/order.types';
 import { openRevision } from '@/lib/revision';
 import { ComingSoonDialog } from './ComingSoonDialog';
@@ -54,6 +54,8 @@ export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, c
     ...(canAssignWorker ? [{ id: 'assign' as const, label: 'Assign Worker', icon: UserAdd01Icon, isEnabled: isRunning }] : []),
     { id: 'extraCharge', label: 'Extra Charge', icon: Wallet01Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment && !isInRevision },
     { id: 'complete', label: isInRevision ? 'Revision Done' : isWaitingForOnlinePayment ? 'Waiting for payment...' : 'Work Complete', icon: CheckmarkCircle02Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment },
+    // After the job: parts bought and other costs, for the admin to review (the backend refuses a second claim).
+    { id: 'expenseClaim', label: 'পার্টস / খরচ', icon: Invoice01Icon, isEnabled: Boolean(order.completedAt) },
   ];
 
   const comingSoonButton = 'flex size-[32px] shrink-0 cursor-pointer items-center justify-center text-[#202939]';

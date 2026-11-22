@@ -9,6 +9,7 @@ import { CompletionPaymentMode, orderCompletionService } from '@/services/order-
 import { Order } from '@/types/order.types';
 import { useOrderRevision } from '@/hooks/useOrderRevision';
 import { openRevision } from '@/lib/revision';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 
 const OPTIONS: Array<{ mode: CompletionPaymentMode; title: string; hint: string }> = [
   { mode: 'ONLINE', title: 'অনলাইন পেমেন্ট', hint: 'কাস্টমারের কাছে পেমেন্ট কার্ড যাবে। সে "Accept & Pay" করলে অর্ডার সম্পন্ন হবে।' },
@@ -60,6 +61,7 @@ function RevisionDonePanel({ order, onClose }: { order: Order; onClose: () => vo
 /* The first completion: how the customer pays and, for cash, whether they gave a tip. */
 function PaymentCompletePanel({ order, onClose }: { order: Order; onClose: () => void }) {
   const queryClient = useQueryClient();
+  const openPanel = useOrderPanelStore((state) => state.open);
   const [paymentMode, setPaymentMode] = useState<CompletionPaymentMode>('ONLINE');
   const [hasCashTip, setHasCashTip] = useState(false);
   const [cashTip, setCashTip] = useState('');
@@ -81,7 +83,10 @@ function PaymentCompletePanel({ order, onClose }: { order: Order; onClose: () =>
         // A cash job adds the platform's share to the provider's due, shown in the sidebar header.
         queryClient.invalidateQueries({ queryKey: ['provider-wallet'] }),
       ]);
-      onClose();
+      // Cash closes the order now: offer the parts / costs form straight away (it can be closed).
+      // Online closes when the customer pays; the costs card then appears on the order.
+      if (paymentMode === 'CASH') openPanel(order.id, 'expenseClaim');
+      else onClose();
     } catch (error) {
       toast.error(apiErrorMessage(error));
     } finally {
