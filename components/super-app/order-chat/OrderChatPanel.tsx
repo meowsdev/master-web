@@ -16,6 +16,7 @@ import { CompletionCard } from './CompletionCard';
 import { RevisionCard } from './RevisionCard';
 import { CustomerRatingNote } from './CustomerRatingNote';
 import { ExtraChargeCard } from './ExtraChargeCard';
+import { QuoteCard } from './QuoteCard';
 import { MessageBubble } from './MessageBubble';
 import { OrderChatComposer } from './OrderChatComposer';
 import { ReviewCard } from './ReviewCard';
@@ -84,6 +85,8 @@ export function OrderChatPanel({ order, userId }: OrderChatPanelProps) {
               return <MessageBubble key={entry.key} message={entry.message} isMine={entry.message.senderId === userId} />;
           }
         })}
+        {/* Custom order: the provider's price after the visit, with Accept / Reject. */}
+        <QuoteCard order={order} userId={userId} viewer="CUSTOMER" />
         {/* Completed: what the provider said about the customer. */}
         <CustomerRatingNote order={order} viewer="CUSTOMER" />
         {/* 7-day warranty: send it back for revision, or see the one that is running. */}

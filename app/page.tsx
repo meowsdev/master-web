@@ -24,6 +24,7 @@ import { SuperAppSidebar } from '@/components/super-app/SuperAppSidebar';
 import { MainCanvasArea } from '@/components/super-app/MainCanvasArea';
 import { ServicePreviewPanel } from '@/components/modals/ServicePreviewPanel';
 import { SuperAppModals } from '@/components/super-app/SuperAppModals';
+import { CatalogPanels } from '@/components/modals/catalog/CatalogPanels';
 
 const emptySubscribe = () => () => {};
 
@@ -145,7 +146,7 @@ export default function SuperAppPage() {
   });
 
   // Logged-out visitors see a service's public page; Contact Now leads through login to its chat.
-  const { previewService, openPreview, closePreview, handleContactNow, cancelContact } = useGuestServicePreview({
+  const { previewService, closePreview, handleContactNow, cancelContact } = useGuestServicePreview({
     isAuthenticated,
     onOpenAuth: () => modals.handleOpenAuth('LOGIN'),
     onOpenChat: (service) => {
@@ -246,7 +247,8 @@ export default function SuperAppPage() {
         allDbServicesCount={dbServices.length}
         isServicesLoading={isServicesLoading}
         activeServiceId={activeServiceId}
-        onSelectService={(service) => { if (isAuthenticated) { leaveSupportChat(); return handleSelectServiceWithReadSync(service); } modals.closeSidePanels(); openPreview(service); }}
+        // Everyone opens the main service's chat: guests see its Services tab (cards, details, cart) and log in to order.
+        onSelectService={(service) => { leaveSupportChat(); if (isAuthenticated) return handleSelectServiceWithReadSync(service); modals.closeSidePanels(); handleSelectService(service); }}
         serviceMessages={serviceMessages}
         conversationByServiceId={conversationByServiceId}
       />
@@ -322,6 +324,9 @@ export default function SuperAppPage() {
         onOrderRevisionRequested={handleReopenOrderRevision}
         onSelectServiceById={(id) => { const target = dbServices.find((s) => s.id === id); if (target) handleSelectServiceWithReadSync(target); }}
       />
+
+      {/* 5. The Services tab's right-hand panels (sub-service details, cart checkout, custom request) */}
+      <CatalogPanels onOrderPlaced={handleOrderPlaced} />
 
       {!isAuthenticated && (
         <ServicePreviewPanel service={modals.isAnySidePanelOpen ? null : previewService} onClose={closePreview} primaryActionLabel="Contact Now" onPrimaryAction={handleContactNow} />

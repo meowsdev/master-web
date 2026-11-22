@@ -28,7 +28,7 @@ function ServiceAvatar({ service }: { service: Service }) {
 }
 
 /* The + of the Services list: a new main service (category) or a new service under one. */
-function CreateMenu({ onNewService, onNewCategory }: { onNewService: () => void; onNewCategory: () => void }) {
+function CreateMenu({ onNewService, onNewCategory, onOpenCatalog }: { onNewService: () => void; onNewCategory: () => void; onOpenCatalog: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -57,8 +57,9 @@ function CreateMenu({ onNewService, onNewCategory }: { onNewService: () => void;
       </button>
       {isOpen && (
         <div role="menu" className="absolute right-0 top-[46px] z-30 w-[200px] rounded-[12px] border border-[#e5e5e5] bg-white p-[6px] shadow-lg">
-          <button type="button" role="menuitem" className={itemClass} onClick={() => { setIsOpen(false); onNewCategory(); }}>New Category</button>
+          <button type="button" role="menuitem" className={itemClass} onClick={() => { setIsOpen(false); onNewCategory(); }}>New main service</button>
           <button type="button" role="menuitem" className={itemClass} onClick={() => { setIsOpen(false); onNewService(); }}>New service</button>
+          <button type="button" role="menuitem" className={itemClass} onClick={() => { setIsOpen(false); onOpenCatalog(); }}>Catalog editor</button>
         </div>
       )}
     </div>
@@ -110,7 +111,7 @@ export function AdminServicesSidebar({ user, onServiceOpened, onOpenAuth }: { us
         profileSlot={
           <div className="flex items-center justify-between">
             <span className="text-[18px] font-semibold tracking-[-0.36px] text-[#202939]">Services</span>
-            <CreateMenu onNewService={() => open('new')} onNewCategory={() => { openPanel(null, 'adminCategory'); onServiceOpened(); }} />
+            <CreateMenu onNewService={() => open('new')} onNewCategory={() => { openPanel(null, 'adminCategory'); onServiceOpened(); }} onOpenCatalog={() => { openPanel(null, 'adminCatalog'); onServiceOpened(); }} />
           </div>
         }
       />

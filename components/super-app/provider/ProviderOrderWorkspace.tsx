@@ -13,6 +13,7 @@ import { ReviewCard } from '../order-chat/ReviewCard';
 import { CustomerAvatar } from './CustomerAvatar';
 import { CustomerRatingCard } from './CustomerRatingCard';
 import { ProviderOrderComposer } from './ProviderOrderComposer';
+import { QuoteCard } from '../order-chat/QuoteCard';
 import { ProviderOrderPanels } from './ProviderOrderPanels';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { ProviderPendingActions } from './ProviderPendingActions';
@@ -91,6 +92,7 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
         {/* Provider or technician: whoever rates first, once per order. */}
         <CustomerRatingCard order={order} userId={userId} />
         {/* 7-day warranty: what the customer sent back. Finished with "Revision Done" in the + menu. */}
+        <QuoteCard order={order} userId={userId} viewer="PROVIDER" />
         <RevisionCard order={order} canRequest={false} />
         {/* After the job: parts / costs for the admin to review (commission is then taken on total - costs). */}
         <ExpenseClaimsCard order={order} userId={userId} viewer="WORKER" />

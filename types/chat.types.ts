@@ -48,6 +48,8 @@ export interface ChatSession {
   providerId?: string | null;
   customerProfileId: string;
   serviceId: string;
+  /** The main service: one chat per customer per main service. */
+  categoryId?: string;
   tabCategory: ChatTabCategory;
   flowType: ChatFlowType;
   assignedAt?: string | null;

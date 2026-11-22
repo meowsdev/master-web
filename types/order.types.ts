@@ -149,6 +149,10 @@ export interface Order {
   customerId: string;
   technicianId?: string | null;
   serviceId: string;
+  /** The main service (chat) this order is a tab of. */
+  categoryId?: string | null;
+  /** A custom order waiting for the customer to accept the provider's price. */
+  isPricePending?: boolean;
   service?: Service;
   customer?: OrderCustomer;
   provider?: OrderProvider;

@@ -12,6 +12,8 @@ interface ServiceListItemProps {
   onSelect: (service: Service) => void;
   isRunning?: boolean;
   runningOrderId?: string | null;
+  /** How many of this main service's orders are running (each is a tab in its chat). */
+  runningCount?: number;
   hasActiveRevision?: boolean;
   revisionIssue?: string;
   lastMessage?: ChatMessage | null;
@@ -34,6 +36,7 @@ export function ServiceListItem({
   onSelect,
   isRunning = false,
   runningOrderId,
+  runningCount = 0,
   hasActiveRevision = false,
   revisionIssue,
   lastMessage,
@@ -44,6 +47,12 @@ export function ServiceListItem({
   const providerNames = service.providerSummary?.providerNames ?? [];
   const averageRating = service.providerSummary?.averageRating ?? null;
   const completedCount = service.orderCount ?? 0;
+  const startsFrom = Number(service.basePrice);
+  const fallbackText = service.isMainService
+    ? startsFrom > 0
+      ? `Starts from ৳${startsFrom.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+      : service.description
+    : null;
   const showOnlineDot = hasActiveRevision || isRunning || isOnline;
 
   return (
@@ -98,6 +107,8 @@ export function ServiceListItem({
             runningOrderId={runningOrderId}
             lastMessage={lastMessage}
             providerNames={providerNames}
+            fallbackText={fallbackText}
+            runningCount={runningCount}
           />
 
           {unreadCount > 0 ? (
@@ -130,6 +141,9 @@ interface PreviewLineProps {
   runningOrderId?: string | null;
   lastMessage?: ChatMessage | null;
   providerNames: string[];
+  /** Shown when nothing else is: a main service's "Starts from" price or its short description. */
+  fallbackText?: string | null;
+  runningCount?: number;
 }
 
 function PreviewLine({
@@ -139,6 +153,8 @@ function PreviewLine({
   runningOrderId,
   lastMessage,
   providerNames,
+  fallbackText,
+  runningCount = 0,
 }: PreviewLineProps) {
   const baseClass = 'flex min-w-0 items-center gap-[4px] text-[14px] font-medium';
 
@@ -161,7 +177,11 @@ function PreviewLine({
       <div className={`${baseClass} text-amber-600`}>
         <span className="size-[8px] shrink-0 rounded-full bg-amber-500" />
         <span className="truncate">
-          {runningOrderId ? `Order #${runningOrderId} in progress` : 'Order in progress • Tech dispatched'}
+          {runningCount > 1
+            ? `${runningCount} orders running`
+            : runningOrderId
+            ? `Order #${runningOrderId} in progress`
+            : 'Order in progress • Tech dispatched'}
         </span>
       </div>
     );
@@ -180,7 +200,7 @@ function PreviewLine({
     <div className={`${baseClass} text-[#697586]`}>
       <Image src="/chat-list/provider.svg" alt="" width={20} height={20} className="shrink-0" />
       <span className="truncate">
-        {providerNames.length > 0 ? providerNames.join(', ') : 'Providers coming soon'}
+        {providerNames.length > 0 ? providerNames.join(', ') : fallbackText || 'Providers coming soon'}
       </span>
     </div>
   );

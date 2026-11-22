@@ -53,12 +53,17 @@ export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, c
   // In revision: the job was already paid, so "Work Complete" becomes "Revision Done". The warranty covers the
   // service only, so parts or a bigger problem found during a revision can still be billed as an Extra Charge.
   const isInRevision = Boolean(openRevision(order));
+  // A customer's custom order has no price yet: the provider sends one after the visit, and the job cannot be
+  // completed until the customer accepts it.
+  const isPricePending = Boolean(order.isPricePending);
   const actions: PlusAction[] = [
+    ...(isPricePending ? [{ id: 'quote' as const, label: 'দাম পাঠান', icon: Invoice01Icon, isEnabled: isRunning }] : []),
     ...(canAssignWorker ? [{ id: 'assign' as const, label: 'Assign Worker', icon: UserAdd01Icon, isEnabled: isRunning }] : []),
     { id: 'extraCharge', label: 'Extra Charge', icon: Wallet01Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment },
-    { id: 'complete', label: isWaitingForOnlinePayment ? 'Waiting for payment...' : isInRevision ? 'Revision Done' : 'Work Complete', icon: CheckmarkCircle02Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment },
+    { id: 'complete', label: isWaitingForOnlinePayment ? 'Waiting for payment...' : isInRevision ? 'Revision Done' : 'Work Complete', icon: CheckmarkCircle02Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment && !isPricePending },
     // After the job: parts bought and other costs, for the admin to review (the backend refuses a second claim).
-    { id: 'expenseClaim', label: 'পার্টস / খরচ', icon: Invoice01Icon, isEnabled: Boolean(order.completedAt) && canSendCosts },
+    // Off while a revision is open: parts found then are billed to the customer as an Extra Charge.
+    { id: 'expenseClaim', label: 'পার্টস / খরচ', icon: Invoice01Icon, isEnabled: Boolean(order.completedAt) && canSendCosts && !isInRevision },
   ];
 
   const comingSoonButton = 'flex size-[32px] shrink-0 cursor-pointer items-center justify-center text-[#202939]';

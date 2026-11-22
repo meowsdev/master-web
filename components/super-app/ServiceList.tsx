@@ -9,6 +9,7 @@ import { User } from '@/types/auth.types';
 import { Order } from '@/types/order.types';
 import { ChatSession } from '@/types/chat.types';
 import { ordersService } from '@/services/orders.service';
+import { orderMainServiceId } from '@/lib/main-service';
 import { ServiceListItem } from './ServiceListItem';
 import { SupportChatRow } from './support/SupportChatRow';
 
@@ -93,7 +94,7 @@ export function ServiceList({
         ) ||
         customerOrders.some(
           (o) =>
-            o.serviceId === a.id &&
+            orderMainServiceId(o) === a.id &&
             o.revisions?.some(
               (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
             )
@@ -106,7 +107,7 @@ export function ServiceList({
         ) ||
         customerOrders.some(
           (o) =>
-            o.serviceId === b.id &&
+            orderMainServiceId(o) === b.id &&
             o.revisions?.some(
               (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
             )
@@ -183,7 +184,7 @@ export function ServiceList({
             // DB order revision check
             const dbOrderWithRev = customerOrders.find(
               (o) =>
-                o.serviceId === service.id &&
+                orderMainServiceId(o) === service.id &&
                 o.revisions?.some(
                   (r) => r.revisionStatus !== 'COMPLETED' // Only check for non-completed revisions
                 )
@@ -201,11 +202,13 @@ export function ServiceList({
               undefined;
 
             // Active running order check
-            const activeDbRunningOrder = customerOrders.find(
+            // Several orders of one main service can run at once; each is its own tab in the chat.
+            const runningDbOrders = customerOrders.filter(
               (o) =>
-                o.serviceId === service.id &&
-                ['ACCEPTED', 'ASSIGNED', 'IN_PROGRESS', 'CONFIRMED'].includes(o.orderStatus)
+                orderMainServiceId(o) === service.id &&
+                ['PENDING', 'ACCEPTED', 'ASSIGNED', 'IN_PROGRESS', 'CONFIRMED'].includes(o.orderStatus)
             );
+            const activeDbRunningOrder = runningDbOrders[runningDbOrders.length - 1];
 
             const isRunning =
               hasActiveRevision ||
@@ -215,7 +218,7 @@ export function ServiceList({
             const runningOrderId =
               (hasActiveRevision && (dbOrderWithRev?.id ? dbOrderWithRev.id.slice(0, 8).toUpperCase() : inChatOrderCard?.orderId)) ||
               inChatOrderCard?.orderId ||
-              (activeDbRunningOrder?.id ? activeDbRunningOrder.id.slice(0, 8).toUpperCase() : null);
+              (activeDbRunningOrder ? activeDbRunningOrder.referenceCode ?? activeDbRunningOrder.id.slice(0, 8).toUpperCase() : null);
 
             const conv = conversationByServiceId?.get(service.id);
             const unreadCount = conv?.unreadCount ?? 0;
@@ -227,6 +230,7 @@ export function ServiceList({
                 isSelected={service.id === activeServiceId}
                 isRunning={isRunning}
                 runningOrderId={runningOrderId}
+                runningCount={runningDbOrders.length}
                 hasActiveRevision={hasActiveRevision}
                 revisionIssue={revisionIssue}
                 lastMessage={lastMsg}

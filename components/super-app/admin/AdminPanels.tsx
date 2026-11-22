@@ -5,6 +5,7 @@ import { servicesService } from '@/services/services.service';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AdminCategoryPanel } from './panels/AdminCategoryPanel';
+import { AdminCatalogPanel } from './panels/AdminCatalogPanel';
 import { AdminAddMemberPanel } from './panels/AdminAddMemberPanel';
 import { AdminAssignOrderPanel } from './panels/AdminAssignOrderPanel';
 import { AdminCreateOrderPanel } from './panels/AdminCreateOrderPanel';
@@ -30,6 +31,7 @@ export function AdminPanels() {
     return <AdminServicePanel key={target} service={service} defaultCategoryId={target?.startsWith('new:') ? target.slice(4) : undefined} onClose={close} />;
   }
   if (kind === 'adminCategory') return <AdminCategoryPanel onClose={close} />;
+  if (kind === 'adminCatalog') return <AdminCatalogPanel onClose={close} />;
   if (kind === 'adminProviders') return <ProvidersPanel onClose={close} />;
   if (kind === 'adminAddMember' && adminId && (target === 'PROVIDER' || target === 'TECHNICIAN' || target === 'CUSTOMER')) {
     return <AdminAddMemberPanel key={target} adminId={adminId} role={target} onClose={close} />;

@@ -145,6 +145,7 @@ export function MainCanvasArea({
           userId={user?.id}
           selectedOrderId={selectedOrderId}
           onSelectOrderTab={onSelectOrderTab}
+          onRequireAuth={() => handleOpenAuth('LOGIN')}
         />
       ) : (
         /* 4. WhatsApp Web Default Welcome Screen */

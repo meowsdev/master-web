@@ -6,6 +6,7 @@ import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { ExpenseClaim, ExpenseItem } from '@/types/expense-claim.types';
 import { Order } from '@/types/order.types';
+import { openRevision } from '@/lib/revision';
 
 const STATUS_LABEL: Record<ExpenseClaim['status'], { text: string; className: string }> = {
   PENDING: { text: 'এডমিন রিভিউয়ের অপেক্ষায়', className: 'text-[#b7791f]' },
@@ -58,7 +59,8 @@ export function ExpenseClaimsCard({ order, userId, viewer }: { order: Order; use
   const { canReviewExpenses } = useStaffPermissions();
   const openPanel = useOrderPanelStore((state) => state.open);
   const pending = claims.find((claim) => claim.status === 'PENDING');
-  const canSend = viewer === 'WORKER' && canSubmit && Boolean(order.completedAt);
+  // Closed while a revision is open: parts found then are billed to the customer as an Extra Charge.
+  const canSend = viewer === 'WORKER' && canSubmit && Boolean(order.completedAt) && !openRevision(order);
 
   if (claims.length === 0 && !canSend) return null;
 

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
+import { useCatalogPanelStore } from '@/store/useCatalogPanelStore';
 
 export function useSuperAppModals() {
   // Auth Modal
@@ -30,6 +31,9 @@ export function useSuperAppModals() {
   // closes the others, otherwise two panels would pile up on the same spot.
   const providerPanelKind = useOrderPanelStore((state) => state.kind);
   const closeProviderPanel = useOrderPanelStore((state) => state.close);
+  // The Services tab's panels (sub-service details, checkout, custom request) join the same rule.
+  const catalogPanelKind = useCatalogPanelStore((state) => state.kind);
+  const closeCatalogPanel = useCatalogPanelStore((state) => state.close);
 
   const closePanelsExceptProvider = useCallback(() => {
     setIsAuthModalOpen(false);
@@ -43,15 +47,29 @@ export function useSuperAppModals() {
   const closeSidePanels = useCallback(() => {
     closePanelsExceptProvider();
     closeProviderPanel();
-  }, [closePanelsExceptProvider, closeProviderPanel]);
+    closeCatalogPanel();
+  }, [closePanelsExceptProvider, closeProviderPanel, closeCatalogPanel]);
 
   // The provider's job panels open from the message box, outside this hook: when one opens, the others close.
   useEffect(
     () =>
       useOrderPanelStore.subscribe((state, previous) => {
-        if (state.kind && !previous.kind) closePanelsExceptProvider();
+        if (state.kind && !previous.kind) {
+          closePanelsExceptProvider();
+          useCatalogPanelStore.getState().close();
+        }
       }),
     [closePanelsExceptProvider],
+  );
+  useEffect(
+    () =>
+      useCatalogPanelStore.subscribe((state, previous) => {
+        if (state.kind && !previous.kind) {
+          closePanelsExceptProvider();
+          closeProviderPanel();
+        }
+      }),
+    [closePanelsExceptProvider, closeProviderPanel],
   );
 
   const exclusive = useCallback(
@@ -96,7 +114,8 @@ export function useSuperAppModals() {
     isProfileEditorOpen ||
     isServiceDetailsOpen ||
     isPlaceOrderOpen ||
-    providerPanelKind !== null;
+    providerPanelKind !== null ||
+    catalogPanelKind !== null;
 
   return {
     closeSidePanels,

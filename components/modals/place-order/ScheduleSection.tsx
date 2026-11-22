@@ -8,7 +8,22 @@ import { OrderField, OrderSelect, fieldControlClass } from './OrderField';
 import { SchedulePickerDialog, shortSlotLabel } from './SchedulePickerDialog';
 import { FormPart } from './FormPart';
 
-type FormState = ReturnType<typeof usePlaceOrderForm>;
+/** Only the "where and when" part of a form: the Place Order form, the cart checkout and the Custom request share it. */
+export type ScheduleFormState = Pick<
+  ReturnType<typeof usePlaceOrderForm>,
+  | 'locations'
+  | 'districtId'
+  | 'selectDistrict'
+  | 'upazilaId'
+  | 'setUpazilaId'
+  | 'addressDetail'
+  | 'setAddressDetail'
+  | 'scheduledDate'
+  | 'setScheduledDate'
+  | 'timeSlot'
+  | 'setTimeSlot'
+> & { catalog?: { timeSlots: string[] } };
+type FormState = ScheduleFormState;
 
 /* Two parts of the form: where (district, upazila, address), then when (date and time slot, via "Tap to Schedule"). */
 export function ScheduleSection({ state }: { state: FormState }) {

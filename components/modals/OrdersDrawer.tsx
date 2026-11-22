@@ -392,7 +392,7 @@ export function OrdersDrawer({
                     <button
                       onClick={() => {
                         onClose();
-                        onSelectServiceById(order.serviceId);
+                        onSelectServiceById(order.categoryId ?? order.service?.categoryId ?? order.serviceId);
                       }}
                       className="flex-1 py-2 px-3 rounded-xl bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
                     >
