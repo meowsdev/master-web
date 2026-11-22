@@ -3,8 +3,9 @@
 import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import Image from 'next/image';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
-import { CustomerSupportIcon, Store01Icon, UserGroupIcon, UserSharingIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
-import { OrderPanelKind, useOrderPanelStore } from '@/store/useOrderPanelStore';
+import { CustomerSupportIcon, UserGroupIcon, UserSharingIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
+import { useStaffPermissions } from '@/hooks/useStaffPermissions';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { RailSelection, RailTab } from '@/types/super-app.types';
 
 interface AdminNavigationRailProps {
@@ -14,20 +15,16 @@ interface AdminNavigationRailProps {
   onOpenAccount: () => void;
 }
 
-const MANAGEMENT_TABS: Array<{ kind: OrderPanelKind; title: string; icon: IconSvgElement }> = [
-  { kind: 'adminProviders', title: 'Providers', icon: Store01Icon },
-];
-
 const SUPPORT_CHAT_TABS: Array<{ tab: RailTab; title: string; icon: IconSvgElement }> = [
   { tab: 'SUPPORT_PROVIDERS', title: 'Chat with providers', icon: CustomerSupportIcon },
   { tab: 'SUPPORT_TECHNICIANS', title: 'Technicians', icon: UserGroupIcon },
   { tab: 'SUPPORT_CUSTOMERS', title: 'Chat with customers', icon: UserSharingIcon },
 ];
 
-/* The admin's rail: logo, Messages (all orders), Services (a tab), then Technicians and Providers (panels), profile at the bottom. */
+/* The staff rail: logo, Messages (all orders), then Services and the member chats when the role may use them, profile at the bottom. */
 export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOpenAccount }: AdminNavigationRailProps) {
+  const { canManageServices, canChatWithMembers } = useStaffPermissions();
   const openKind = useOrderPanelStore((state) => state.kind);
-  const openPanel = useOrderPanelStore((state) => state.open);
   const closePanel = useOrderPanelStore((state) => state.close);
   const isMessagesSelected = selection === 'CHATS' && !openKind?.startsWith('admin');
   // The service form is a panel of the Services tab itself, so it keeps the tab highlighted.
@@ -54,6 +51,7 @@ export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOp
         </button>
 
         {/* Services: a tab of its own. The list takes the left side and the editor the right. */}
+        {canManageServices && (
         <button
           type="button"
           onClick={() => {
@@ -67,9 +65,10 @@ export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOp
         >
           <HugeiconsIcon icon={Wrench01Icon} size={18} />
         </button>
+        )}
 
         {/* Direct chat: one icon for providers, one for customers. Each is a tab with its own list. */}
-        {SUPPORT_CHAT_TABS.map((tab) => {
+        {canChatWithMembers && SUPPORT_CHAT_TABS.map((tab) => {
           const isSelected = selection === tab.tab;
           return (
             <button

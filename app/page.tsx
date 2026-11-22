@@ -11,30 +11,30 @@ import { useServicesFilter } from '@/hooks/useServicesFilter';
 import { useSuperAppAudio } from '@/hooks/useSuperAppAudio';
 import { useSuperAppChat } from '@/hooks/useSuperAppChat';
 import { useProviderOrders } from '@/hooks/useProviderOrders';
-import { useOrderNegotiation } from '@/hooks/useOrderNegotiation';
-import { useCounselorWorkspace } from '@/hooks/useCounselorWorkspace';
 import { useSuperAppModals } from '@/hooks/useSuperAppModals';
 import { useGuestServicePreview } from '@/hooks/useGuestServicePreview';
-
-// Super App UI Components
 import { useCustomerOrderTabSelection } from '@/hooks/useCustomerOrderTabSelection';
 import { useSupportChatNavigation } from '@/hooks/useSupportChatNavigation';
 import { useServiceSelectionReadSync } from '@/hooks/useServiceSelectionReadSync';
+
+// Super App UI Components
 import { NavigationRail } from '@/components/super-app/NavigationRail';
 import { SuperAppSidebar } from '@/components/super-app/SuperAppSidebar';
 import { MainCanvasArea } from '@/components/super-app/MainCanvasArea';
 import { ServicePreviewPanel } from '@/components/modals/ServicePreviewPanel';
 import { SuperAppModals } from '@/components/super-app/SuperAppModals';
-import { AddCustomerModal, CreateCustomOrderModal, ModifyPriceModal } from '@/components/modals/CounselorActionModals';
 
 const emptySubscribe = () => () => {};
 
+/*
+ * The one WhatsApp-style app for every role: rail, list, canvas. What each part shows is decided by the role
+ * (customer, provider, technician) or, for staff, by their permissions (lib/roles.ts).
+ */
 export default function SuperAppPage() {
   const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const { user, isAuthenticated, activeRole, setRole, setUser } = useAuthStore();
 
   const isProvider = Boolean(isAuthenticated && (activeRole === 'PROVIDER' || user?.role === 'PROVIDER'));
-  const isCounselor = Boolean(isAuthenticated && (activeRole === 'COUNSELOR' || user?.role === 'COUNSELOR'));
 
   // The app ships light-only for now; every component still receives the flag so a dark theme can return later.
   const isDarkMode = false;
@@ -61,17 +61,9 @@ export default function SuperAppPage() {
     activeServiceId,
     setActiveServiceId,
     serviceMessages,
-    setServiceMessages,
-    inputText,
-    setInputText,
     mobileView,
     setMobileView,
-    messagesEndRef,
-    scrollToBottom,
     handleSelectService,
-    handleSendMessage,
-    handleSendVoiceNote,
-    handleReactToMessage,
     handleCompleteOrder,
     handleReopenOrderRevision,
     handleClearChat,
@@ -83,33 +75,13 @@ export default function SuperAppPage() {
   } = useSuperAppChat({ playSound, userId: user?.id });
 
   const {
-    handlePayAdvance,
-    handleAcceptPrice,
-    handleRejectPrice,
-    handleSatisfactionResponse,
-  } = useOrderNegotiation({
-    activeServiceId,
-    setServiceMessages,
-    playWhatsAppChime: () => playSound('receive'),
-    userId: user?.id,
-  });
-
-  const {
     dbServices,
     isServicesLoading,
     searchQuery,
     setSearchQuery,
-    isSearchFocused,
     setIsSearchFocused,
     activeFilterChip,
     setActiveFilterChip,
-    customFilters,
-    createCustomFilter,
-    deleteCustomFilter,
-    toggleSaveService,
-    isServiceSaved,
-    isFilterModalOpen,
-    setIsFilterModalOpen,
     filteredServices,
     categoryNames,
     conversationByServiceId,
@@ -118,37 +90,12 @@ export default function SuperAppPage() {
   const {
     orders: providerOrders,
     isLoading: isProviderOrdersLoading,
-    refetch: refetchProviderOrders,
     activeOrderId,
     setActiveOrderId,
     activeOrder: activeProviderOrder,
-    searchQuery: providerSearchQuery,
-    setSearchQuery: setProviderSearchQuery,
-    activeFilter: providerActiveFilter,
-    setActiveFilter: setProviderActiveFilter,
     handleUpdateStatus,
     isUpdatingStatus,
   } = useProviderOrders({ isProvider, userId: user?.id, playSound });
-
-  const {
-    activeTab: counselorActiveTab,
-    setActiveTab: setCounselorActiveTab,
-    searchQuery: counselorSearchQuery,
-    setSearchQuery: setCounselorSearchQuery,
-    selectedChatId: counselorSelectedChatId,
-    setSelectedChatId: setCounselorSelectedChatId,
-    activeChatItem: activeCounselorChat,
-    filteredChatItems: counselorChatItems,
-    tabCounts: counselorTabCounts,
-    isOrdersLoading: isCounselorOrdersLoading,
-    isOnline: isCounselorOnline,
-    handleToggleOnlineStatus,
-    handleCreateManualLead,
-    handleCreateCustomOrder,
-    handleModifyPrice,
-    handleSendDueReminder,
-    handleHoldProvider,
-  } = useCounselorWorkspace({ isCounselor, userId: user?.id });
 
   const activeService = useMemo(() => {
     if (!activeServiceId) return null;
@@ -165,10 +112,6 @@ export default function SuperAppPage() {
       document.documentElement.classList.toggle('dark', isDarkMode);
     }
   }, [isDarkMode]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [currentMessages, scrollToBottom]);
 
   const handleLogout = useCallback(() => {
     // Revokes the server session, clears cookies, wipes caches and tells the
@@ -190,16 +133,6 @@ export default function SuperAppPage() {
     },
     [isAuthenticated, modals]
   );
-
-  const handleToggleSave = useCallback(() => {
-    if (!activeService) return;
-    if (!isAuthenticated) {
-      toast.info('Please log in with your phone number to save services.');
-      modals.handleOpenAuth();
-      return;
-    }
-    toggleSaveService(activeService.id);
-  }, [activeService, isAuthenticated, modals, toggleSaveService]);
 
   const handleSelectServiceWithReadSync = useServiceSelectionReadSync({
     userId: user?.id,
@@ -240,7 +173,7 @@ export default function SuperAppPage() {
   const { openSupportChat, leaveSupportChat } = useSupportChatNavigation({
     setActiveRailTab,
     setMobileView,
-    deselectChats: () => { setActiveServiceId(null); setActiveOrderId(null); setCounselorSelectedChatId(null); },
+    deselectChats: () => { setActiveServiceId(null); setActiveOrderId(null); },
   });
 
   if (!isMounted) {
@@ -258,90 +191,51 @@ export default function SuperAppPage() {
     if (isAuthenticated) modals.openPlaceOrder(null);
     else modals.handleOpenAuth('LOGIN');
   };
-  const runningBadgeCount = isProvider ? providerOrders.length : isCounselor ? counselorTabCounts.ongoing : runningServiceIds.length;
+  const runningBadgeCount = isProvider ? providerOrders.length : runningServiceIds.length;
 
   return (
     <div className={`flex h-screen w-screen overflow-hidden font-sans ${bgMain}`}>
-      {/* 1. Far-Left Navigation Rail (60px) */}
+      {/* 1. Far-left navigation rail */}
       <NavigationRail
         activeRailTab={modals.isOrdersDrawerOpen ? 'ORDERS' : modals.isProfileEditorOpen || modals.isAuthModalOpen ? 'ACCOUNT' : activeRailTab}
         onSelectTab={(tab) => {
           setActiveRailTab(tab);
           if (tab === 'CHATS') modals.closeSidePanels();
         }}
-        isDarkMode={isDarkMode}
-        onOpenSettings={modals.openSettings}
         onOpenProfile={() => modals.setIsProfileEditorOpen(true)}
         onOpenAuth={() => modals.handleOpenAuth('LOGIN')}
-        onOpenStatus={() => modals.setIsStatusViewerOpen(true)}
-        onOpenOrders={modals.openOrders}
         onStartNewOrder={handleStartNewOrder}
         user={user}
         activeRole={activeRole}
         runningCount={runningBadgeCount}
       />
 
-      {/* 2. Middle Column: Role-Based Dynamic WhatsApp List */}
+      {/* 2. Middle column: the list for this role */}
       <SuperAppSidebar
         activeRailTab={activeRailTab}
         mobileView={mobileView}
         setMobileView={setMobileView}
         isDarkMode={isDarkMode}
-        soundEnabled={soundEnabled}
-        onToggleSound={toggleSound}
-        runningCount={runningBadgeCount}
-        onSelectWelcome={() => { setActiveServiceId(null); setActiveOrderId(null); setCounselorSelectedChatId(null); }}
-        onOpenSettings={modals.openSettings}
         onOpenOrders={modals.openOrders}
         onStartNewOrder={handleStartNewOrder}
         onOpenAuth={modals.handleOpenAuth}
         isAuthenticated={isAuthenticated}
-        userName={user?.name}
-        onLogout={handleLogout}
         isProvider={isProvider}
-        isCounselor={isCounselor}
         user={user}
         activeRole={activeRole}
         providerOrders={providerOrders}
         isProviderOrdersLoading={isProviderOrdersLoading}
-        refetchProviderOrders={refetchProviderOrders}
         activeOrderId={activeOrderId}
         setActiveOrderId={(id) => { if (id) leaveSupportChat(); setActiveOrderId(id); }}
         onOpenSupport={openSupportChat}
         onLeaveSupport={leaveSupportChat}
         isSupportOpen={activeRailTab === 'SUPPORT'}
-        providerSearchQuery={providerSearchQuery}
-        setProviderSearchQuery={setProviderSearchQuery}
-        providerActiveFilter={providerActiveFilter}
-        setProviderActiveFilter={setProviderActiveFilter}
         onOpenProfile={() => modals.setIsProfileEditorOpen(true)}
-        onOpenTeamManagement={() => modals.setIsTeamManagementOpen(true)}
-        onOpenLeveling={() => modals.setIsLevelingDrawerOpen(true)}
-        onOpenStartChat={() => modals.setIsStartChatOpen(true)}
-        counselorChatItems={counselorChatItems}
-        isCounselorOrdersLoading={isCounselorOrdersLoading}
-        counselorActiveTab={counselorActiveTab}
-        setCounselorActiveTab={setCounselorActiveTab}
-        counselorSearchQuery={counselorSearchQuery}
-        setCounselorSearchQuery={setCounselorSearchQuery}
-        counselorSelectedChatId={counselorSelectedChatId}
-        onSelectCounselorChat={(item) => { setCounselorSelectedChatId(item.id); setMobileView('CHAT'); }}
-        counselorTabCounts={counselorTabCounts}
-        isCounselorOnline={isCounselorOnline}
-        onToggleCounselorOnline={handleToggleOnlineStatus}
-        onOpenAddCustomer={() => modals.setIsAddCustomerModalOpen(true)}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        isSearchFocused={isSearchFocused}
         setIsSearchFocused={setIsSearchFocused}
         activeFilterChip={activeFilterChip}
         setActiveFilterChip={setActiveFilterChip}
-        customFilters={customFilters}
-        onOpenCreateFilter={() => {
-          if (!isAuthenticated) { toast.info('Please log in with your phone number to create custom filter lists.'); modals.handleOpenAuth('LOGIN'); return; }
-          setIsFilterModalOpen(true);
-        }}
-        onDeleteCustomFilter={deleteCustomFilter}
         runningServiceIds={runningServiceIds}
         filteredServices={filteredServices}
         categoryNames={categoryNames}
@@ -353,7 +247,7 @@ export default function SuperAppPage() {
         conversationByServiceId={conversationByServiceId}
       />
 
-      {/* 3. Right Main Area: Encapsulated Routing & Canvas Area */}
+      {/* 3. Right: the open chat / order for this role */}
       <MainCanvasArea
         activeRailTab={activeRailTab}
         isSidePanelOpen={modals.isAnySidePanelOpen || previewService !== null}
@@ -363,30 +257,17 @@ export default function SuperAppPage() {
         activeProviderOrder={activeProviderOrder}
         handleUpdateStatus={handleUpdateStatus}
         isUpdatingStatus={isUpdatingStatus}
-        isCounselor={isCounselor}
-        activeCounselorChat={activeCounselorChat}
-        onOpenCounselorCreateOrder={() => modals.setIsCreateCustomOrderModalOpen(true)}
-        onOpenCounselorModifyPrice={() => modals.setIsModifyPriceModalOpen(true)}
-        onCounselorSendDueReminder={handleSendDueReminder}
-        onCounselorHoldProvider={handleHoldProvider}
         activeService={activeService}
         activeServiceId={activeServiceId}
         setActiveServiceId={setActiveServiceId}
         activeOrder={activeOrder}
         activeOrderMessageId={activeOrderMessageId}
         currentMessages={currentMessages}
-        inputText={inputText}
-        setInputText={setInputText}
         handleOpenBooking={handleOpenBooking}
         handleStartCall={handleStartCall}
         handleClearChat={handleClearChat}
-        isServiceSaved={isServiceSaved}
-        handleToggleSave={handleToggleSave}
         setIsServiceDetailsOpen={modals.setIsServiceDetailsOpen}
         handleCompleteOrder={handleCompleteOrder}
-        handleReactToMessage={handleReactToMessage}
-        handleSendMessage={handleSendMessage}
-        handleSendVoiceNote={handleSendVoiceNote}
         isAuthenticated={isAuthenticated}
         handleOpenAuth={modals.handleOpenAuth}
         openOrders={modals.openOrders}
@@ -395,21 +276,12 @@ export default function SuperAppPage() {
         onSelectOrderTab={selectOrderTab}
         openSettings={modals.openSettings}
         handleLogout={handleLogout}
-        messagesEndRef={messagesEndRef}
         isDarkMode={isDarkMode}
         user={user}
         activeRole={activeRole}
-        runningServiceIds={runningServiceIds}
-        dbServices={dbServices}
-        handleSelectService={handleSelectService}
-        setActiveRailTab={setActiveRailTab}
-        handlePayAdvance={handlePayAdvance}
-        handleAcceptPrice={handleAcceptPrice}
-        handleRejectPrice={handleRejectPrice}
-        handleSatisfactionResponse={handleSatisfactionResponse}
       />
 
-      {/* 4. Global Drawers & Modals */}
+      {/* 4. Global drawers & modals */}
       <SuperAppModals
         isDarkMode={isDarkMode}
         user={user}
@@ -427,8 +299,6 @@ export default function SuperAppPage() {
         isCallingModalOpen={modals.isCallingModalOpen}
         onCloseCalling={() => modals.setIsCallingModalOpen(false)}
         callType={modals.callType}
-        isStatusViewerOpen={modals.isStatusViewerOpen}
-        onCloseStatusViewer={() => modals.setIsStatusViewerOpen(false)}
         isSettingsDrawerOpen={modals.isSettingsDrawerOpen}
         onCloseSettings={() => modals.setIsSettingsDrawerOpen(false)}
         soundEnabled={soundEnabled}
@@ -440,10 +310,6 @@ export default function SuperAppPage() {
         isProfileEditorOpen={modals.isProfileEditorOpen}
         onCloseProfileEditor={() => modals.setIsProfileEditorOpen(false)}
         onUserUpdated={setUser}
-        isFilterModalOpen={isFilterModalOpen}
-        onCloseFilterModal={() => setIsFilterModalOpen(false)}
-        dbServices={dbServices}
-        createCustomFilter={createCustomFilter}
         isServiceDetailsOpen={modals.isServiceDetailsOpen}
         onCloseServiceDetails={() => modals.setIsServiceDetailsOpen(false)}
         onOpenBooking={handleOpenBooking}
@@ -451,46 +317,10 @@ export default function SuperAppPage() {
         onCloseOrdersDrawer={() => modals.setIsOrdersDrawerOpen(false)}
         onOrderRevisionRequested={handleReopenOrderRevision}
         onSelectServiceById={(id) => { const target = dbServices.find((s) => s.id === id); if (target) handleSelectServiceWithReadSync(target); }}
-        isTeamManagementOpen={modals.isTeamManagementOpen}
-        onCloseTeamManagement={() => modals.setIsTeamManagementOpen(false)}
-        isLevelingDrawerOpen={modals.isLevelingDrawerOpen}
-        onCloseLevelingDrawer={() => modals.setIsLevelingDrawerOpen(false)}
-        isStartChatOpen={modals.isStartChatOpen}
-        onCloseStartChat={() => modals.setIsStartChatOpen(false)}
-        onProviderStartChat={(id) => { const target = dbServices.find((s) => s.id === id); if (target) handleSelectServiceWithReadSync(target); }}
-      />
-
-      {/* 5. Counselor Action Modals (Flow B Manual Lead, Custom Order & Price Modification) */}
-      <AddCustomerModal
-        isOpen={modals.isAddCustomerModalOpen}
-        onClose={() => modals.setIsAddCustomerModalOpen(false)}
-        services={dbServices}
-        onSubmit={handleCreateManualLead}
-        isDarkMode={isDarkMode}
       />
 
       {!isAuthenticated && (
         <ServicePreviewPanel service={modals.isAnySidePanelOpen ? null : previewService} onClose={closePreview} primaryActionLabel="Contact Now" onPrimaryAction={handleContactNow} />
-      )}
-
-      {activeCounselorChat && (
-        <>
-          <CreateCustomOrderModal
-            isOpen={modals.isCreateCustomOrderModalOpen}
-            onClose={() => modals.setIsCreateCustomOrderModalOpen(false)}
-            chatItem={activeCounselorChat}
-            onSubmit={(dto) => handleCreateCustomOrder(dto, activeCounselorChat.id)}
-            isDarkMode={isDarkMode}
-          />
-
-          <ModifyPriceModal
-            isOpen={modals.isModifyPriceModalOpen}
-            onClose={() => modals.setIsModifyPriceModalOpen(false)}
-            chatItem={activeCounselorChat}
-            onSubmit={handleModifyPrice}
-            isDarkMode={isDarkMode}
-          />
-        </>
       )}
     </div>
   );

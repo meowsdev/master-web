@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ordersService } from '@/services/orders.service';
 import { Order, OrderStatus } from '@/types/order.types';
-import { ProviderOrderFilter } from '@/components/super-app/ProviderOrderList';
 import { useProviderOfferAlerts } from '@/hooks/useProviderOfferAlerts';
 
 interface UseProviderOrdersProps {
@@ -18,8 +17,6 @@ interface UseProviderOrdersProps {
 export function useProviderOrders({ isProvider, userId, playSound }: UseProviderOrdersProps) {
   const queryClient = useQueryClient();
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<ProviderOrderFilter>('ALL');
 
   // Reset active order when userId changes
   useEffect(() => {
@@ -121,10 +118,6 @@ export function useProviderOrders({ isProvider, userId, playSound }: UseProvider
     activeOrderId,
     setActiveOrderId,
     activeOrder,
-    searchQuery,
-    setSearchQuery,
-    activeFilter,
-    setActiveFilter,
     handleUpdateStatus,
     isUpdatingStatus: updateStatusMutation.isPending,
   };

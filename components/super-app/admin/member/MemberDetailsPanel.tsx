@@ -2,7 +2,7 @@
 
 import { SidePanelShell } from '@/components/modals/SidePanelShell';
 import { useAdminMember, useModerateMember } from '@/hooks/useAdminMember';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 import { SupportAvatar } from '../../support/SupportAvatar';
 import { CustomerSections } from './CustomerSections';
 import { Fact, ReviewList, Section, StatusBadges, formatDate } from './MemberParts';
@@ -19,7 +19,7 @@ const ROLE_LABEL = { PROVIDER: 'Provider', TECHNICIAN: 'Technician', CUSTOMER: '
 export function MemberDetailsPanel({ adminId, memberId, onClose }: { adminId: string; memberId: string; onClose: () => void }) {
   const { data: member, isLoading, isError } = useAdminMember(adminId, memberId);
   const moderate = useModerateMember(adminId, memberId);
-  const isAdmin = useAuthStore((state) => state.user?.role === 'ADMIN');
+  const { canBanMembers, canManageTechnicians } = useStaffPermissions();
 
   return (
     <SidePanelShell title={member ? ROLE_LABEL[member.role] : 'Details'} onClose={onClose}>
@@ -48,7 +48,7 @@ export function MemberDetailsPanel({ adminId, memberId, onClose }: { adminId: st
           </Section>
 
           {member.provider && <ProviderSections provider={member.provider} />}
-          {member.technician && <TechnicianProviderControl adminId={adminId} technician={member.technician} />}
+          {member.technician && <TechnicianProviderControl adminId={adminId} technician={member.technician} canChange={canManageTechnicians} />}
           {member.technician && (
             <Section title={`Customer reviews · ${member.technician.reviews.length}`}>
               <ReviewList reviews={member.technician.reviews} />
@@ -56,7 +56,7 @@ export function MemberDetailsPanel({ adminId, memberId, onClose }: { adminId: st
           )}
           {member.customer && <CustomerSections customer={member.customer} />}
 
-          <MemberActions member={member} canBan={isAdmin} isBusy={moderate.isPending} onAct={(action, reason) => moderate.mutate({ action, reason })} />
+          <MemberActions member={member} canBan={canBanMembers} isBusy={moderate.isPending} onAct={(action, reason) => moderate.mutate({ action, reason })} />
 
           {member.moderationLog.length > 0 && (
             <Section title="History">

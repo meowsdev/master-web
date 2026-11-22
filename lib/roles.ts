@@ -1,0 +1,61 @@
+/*
+ * Which roles see which parts of the one staff workspace. These only choose what to show; the backend's role
+ * guards decide what is allowed, and each entry below mirrors one of them.
+ */
+
+/** What a staff member may do in the workspace. Every staff role sees all orders and can chat in them. */
+export interface StaffPermissions {
+  /** Services tab: create and edit services and main services. */
+  canManageServices: boolean;
+  /** Providers / Technicians / Customers tabs: direct support chat with members. */
+  canChatWithMembers: boolean;
+  /** Open a member's details panel (orders, reviews, restrict). */
+  canViewMemberDetails: boolean;
+  /** The + that adds a provider or customer. */
+  canAddMembers: boolean;
+  /** Ban or unban a member. */
+  canBanMembers: boolean;
+  /** Add a technician or move one to another provider (backend: TECHNICIAN_MANAGER_ROLES). */
+  canManageTechnicians: boolean;
+  /** The + that places an order for a customer. */
+  canCreateOrders: boolean;
+  /** "Send to a provider" on an order nobody has taken. */
+  canAssignOrders: boolean;
+}
+
+const NONE: StaffPermissions = {
+  canManageServices: false,
+  canChatWithMembers: false,
+  canViewMemberDetails: false,
+  canAddMembers: false,
+  canBanMembers: false,
+  canManageTechnicians: false,
+  canCreateOrders: false,
+  canAssignOrders: false,
+};
+
+const MANAGER: StaffPermissions = {
+  canManageServices: true,
+  canChatWithMembers: true,
+  canViewMemberDetails: true,
+  canAddMembers: true,
+  canBanMembers: false,
+  canManageTechnicians: false,
+  canCreateOrders: true,
+  canAssignOrders: true,
+};
+
+const PERMISSIONS_BY_ROLE: Record<string, StaffPermissions> = {
+  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true },
+  MANAGER,
+  // Support chat is open to support staff; member management is not (admin-members is ADMIN/MANAGER).
+  SUPPORT: { ...NONE, canChatWithMembers: true },
+  // HR and counselors: every order and its chat, nothing else.
+  HR: NONE,
+  COUNSELOR: NONE,
+};
+
+/** Staff roles share one workspace (orders, chat, and whatever their permissions add). */
+export const isStaffRole = (role?: string | null): boolean => Boolean(role && role in PERMISSIONS_BY_ROLE);
+
+export const staffPermissions = (role?: string | null): StaffPermissions => (role && PERMISSIONS_BY_ROLE[role]) || NONE;

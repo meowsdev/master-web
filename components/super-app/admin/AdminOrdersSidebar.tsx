@@ -6,6 +6,7 @@ import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ordersService } from '@/services/orders.service';
+import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 import { selectOpenOrderId, useOrderHistoryStore } from '@/store/useOrderHistoryStore';
 import { User } from '@/types/auth.types';
 import { Order } from '@/types/order.types';
@@ -34,6 +35,7 @@ export function AdminOrdersSidebar({ user, onOrderOpened, onOpenAuth }: { user: 
   const openOrderId = useOrderHistoryStore(selectOpenOrderId(user.id));
   const selectOrder = useOrderHistoryStore((state) => state.select);
   const openPanel = useOrderPanelStore((state) => state.open);
+  const { canCreateOrders } = useStaffPermissions();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilterChip, setActiveFilterChip] = useState('All');
 
@@ -70,6 +72,7 @@ export function AdminOrdersSidebar({ user, onOrderOpened, onOpenAuth }: { user: 
         profileSlot={
           <div className="flex items-center justify-between">
             <AdminProfileHeader user={user} />
+            {canCreateOrders && (
             <button
               type="button"
               onClick={() => openPanel(null, 'adminOrder')}
@@ -79,6 +82,7 @@ export function AdminOrdersSidebar({ user, onOrderOpened, onOpenAuth }: { user: 
             >
               <HugeiconsIcon icon={PlusSignIcon} size={22} strokeWidth={2.5} />
             </button>
+            )}
           </div>
         }
       />

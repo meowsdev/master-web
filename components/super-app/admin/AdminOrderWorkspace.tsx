@@ -6,6 +6,7 @@ import { useOrderDetailsPanel } from '@/hooks/useOrderDetailsPanel';
 import { OrderDetailsPanel } from '../order-chat/OrderDetailsPanel';
 import { useOrderChat } from '@/hooks/useOrderChat';
 import { useOrderTimeline } from '@/hooks/useOrderTimeline';
+import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { Order, OrderStatus } from '@/types/order.types';
 import { ConversationHeader } from '../ConversationHeader';
@@ -33,8 +34,9 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
   const openPanel = useOrderPanelStore((state) => state.open);
   // Who the customer, provider and technician are, and everything else about the order, on the right.
   const details = useOrderDetailsPanel(order.id);
-  // Nobody has taken it yet: the admin can send it to a provider.
+  // Nobody has taken it yet: staff who may assign can send it to a provider.
   const isWaitingForProvider = order.orderStatus === OrderStatus.PENDING;
+  const { canAssignOrders } = useStaffPermissions();
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [timeline.length]);
@@ -60,6 +62,7 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
             <span className="font-semibold">{order.needsAttention ? 'Needs a provider' : 'Waiting for a provider'}</span>
             {order.offerCount ? ` · offered to ${order.offerCount} so far` : ''}
           </p>
+          {canAssignOrders && (
           <button
             type="button"
             onClick={() => openPanel(order.id, 'adminAssign')}
@@ -67,6 +70,7 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
           >
             Send to a provider
           </button>
+          )}
         </div>
       )}
 

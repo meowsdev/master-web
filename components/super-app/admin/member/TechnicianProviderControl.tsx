@@ -10,8 +10,8 @@ import { Fact, Section, formatDate } from './MemberParts';
 const selectClass = 'h-[40px] w-full cursor-pointer rounded-[8px] border border-[#cecece] bg-white px-[10px] text-[14px] font-medium text-[#202939] outline-none focus:border-[#1daa61]';
 
 /* Which provider a technician works under, and a way to move them to another one or to none. */
-export function TechnicianProviderControl({ adminId, technician }: { adminId: string; technician: TechnicianSection }) {
-  const { data: providers = [] } = useQuery({ queryKey: ['admin-providers'], queryFn: adminService.listProviders });
+export function TechnicianProviderControl({ adminId, technician, canChange }: { adminId: string; technician: TechnicianSection; canChange: boolean }) {
+  const { data: providers = [] } = useQuery({ queryKey: ['admin-providers'], queryFn: adminService.listProviders, enabled: canChange });
   const change = useChangeTechnicianProvider(adminId);
   const currentProviderId = technician.provider?.profileId ?? '';
   // null = no edit yet, so the select shows the saved provider.
@@ -24,6 +24,9 @@ export function TechnicianProviderControl({ adminId, technician }: { adminId: st
       <Fact label="Orders">{technician.orderCount}</Fact>
       <Fact label="Last login">{technician.lastLoginAt ? formatDate(technician.lastLoginAt) : 'never'}</Fact>
 
+      {/* Only an admin may move a technician to another provider; a manager sees who they work for. */}
+      {canChange && (
+      <>
       <p className="mb-[6px] mt-[14px] text-[13px] font-semibold text-[#202939]">Change provider</p>
       <select value={selected} onChange={(event) => setChoice(event.target.value)} className={selectClass} aria-label="Provider">
         <option value="">No provider</option>
@@ -41,6 +44,8 @@ export function TechnicianProviderControl({ adminId, technician }: { adminId: st
       >
         {change.isPending ? 'Saving...' : 'Save provider'}
       </button>
+      </>
+      )}
     </Section>
   );
 }

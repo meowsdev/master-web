@@ -6,7 +6,6 @@ import { Service } from '@/types/service.types';
 import { Order, OrderStatus } from '@/types/order.types';
 import { User } from '@/types/auth.types';
 import { ChatMessage, OrderCardData } from '@/types/super-app.types';
-import { CounselorChatItem } from '@/types/counselor.types';
 import { SIDE_PANEL_RESERVE_CLASS } from '@/components/modals/side-panel';
 import { ProviderOrderWorkspace } from './provider/ProviderOrderWorkspace';
 import { ChatEmptyHeader } from './ChatEmptyHeader';
@@ -15,9 +14,8 @@ import { MemberSupportCanvas } from './support/MemberSupportCanvas';
 import { TechnicianCanvas } from './technician/TechnicianCanvas';
 import { CustomerOrdersCanvas } from './order-history/CustomerOrdersCanvas';
 import { CustomerChatCanvas } from './CustomerChatCanvas';
-import { CounselorChatCanvas } from './CounselorChatCanvas';
 import { WelcomeScreen } from './WelcomeScreen';
-import { ProviderDirectory, ProviderItem } from './ProviderDirectory';
+import { isStaffRole } from '@/lib/roles';
 
 interface MainCanvasAreaProps {
   activeRailTab: RailTab;
@@ -30,13 +28,6 @@ interface MainCanvasAreaProps {
   activeProviderOrder: Order | null;
   handleUpdateStatus: (status: OrderStatus) => Promise<void>;
   isUpdatingStatus: boolean;
-  // Counselor states
-  isCounselor?: boolean;
-  activeCounselorChat?: CounselorChatItem | null;
-  onOpenCounselorCreateOrder?: () => void;
-  onOpenCounselorModifyPrice?: () => void;
-  onCounselorSendDueReminder?: (orderId: string, dueAmount: number, phone: string) => void;
-  onCounselorHoldProvider?: (orderId: string, remarks: string) => void;
   // Customer states
   activeService: Service | null;
   activeServiceId: string | null;
@@ -44,18 +35,11 @@ interface MainCanvasAreaProps {
   activeOrder: OrderCardData | null;
   activeOrderMessageId: string | null;
   currentMessages: ChatMessage[];
-  inputText: string;
-  setInputText: (text: string) => void;
   handleOpenBooking: () => void;
   handleStartCall: (type: 'voice' | 'video') => void;
   handleClearChat: (serviceId: string) => void;
-  isServiceSaved: (id: string) => boolean;
-  handleToggleSave: () => void;
   setIsServiceDetailsOpen: (open: boolean) => void;
   handleCompleteOrder: (msgId: string, orderId: string, realId?: string) => Promise<void> | void;
-  handleReactToMessage: (msgId: string, emoji: string) => void;
-  handleSendMessage: (isAuth: boolean, onAuth: () => void) => void;
-  handleSendVoiceNote: (isAuth: boolean, onAuth: () => void) => void;
   isAuthenticated: boolean;
   handleOpenAuth: (mode?: 'LOGIN' | 'REGISTER') => void;
   openOrders: () => void;
@@ -65,19 +49,9 @@ interface MainCanvasAreaProps {
   onSelectOrderTab: (orderId: string | null) => void;
   openSettings: () => void;
   handleLogout: () => void;
-  messagesEndRef: React.RefObject<HTMLDivElement | null>;
   isDarkMode: boolean;
   user: User | null;
   activeRole: string | null;
-  runningServiceIds: string[];
-  dbServices: Service[];
-  handleSelectService: (service: Service) => void;
-  setActiveRailTab: (tab: RailTab) => void;
-  // Order negotiation handlers
-  handlePayAdvance?: (messageId: string, orderId: string, amount: number) => void;
-  handleAcceptPrice?: (messageId: string, orderId: string) => void;
-  handleRejectPrice?: (messageId: string, orderId: string) => void;
-  handleSatisfactionResponse?: (messageId: string, orderId: string, continueWith: boolean) => void;
 }
 
 export function MainCanvasArea({
@@ -89,30 +63,17 @@ export function MainCanvasArea({
   activeProviderOrder,
   handleUpdateStatus,
   isUpdatingStatus,
-  isCounselor,
-  activeCounselorChat,
-  onOpenCounselorCreateOrder,
-  onOpenCounselorModifyPrice,
-  onCounselorSendDueReminder,
-  onCounselorHoldProvider,
   activeService,
   activeServiceId,
   setActiveServiceId,
   activeOrder,
   activeOrderMessageId,
   currentMessages,
-  inputText,
-  setInputText,
   handleOpenBooking,
   handleStartCall,
   handleClearChat,
-  isServiceSaved,
-  handleToggleSave,
   setIsServiceDetailsOpen,
   handleCompleteOrder,
-  handleReactToMessage,
-  handleSendMessage,
-  handleSendVoiceNote,
   isAuthenticated,
   handleOpenAuth,
   openOrders,
@@ -121,18 +82,9 @@ export function MainCanvasArea({
   onSelectOrderTab,
   openSettings,
   handleLogout,
-  messagesEndRef,
   isDarkMode,
   user,
   activeRole,
-  runningServiceIds,
-  dbServices,
-  handleSelectService,
-  setActiveRailTab,
-  handlePayAdvance,
-  handleAcceptPrice,
-  handleRejectPrice,
-  handleSatisfactionResponse,
 }: MainCanvasAreaProps) {
   return (
     <main
@@ -140,31 +92,14 @@ export function MainCanvasArea({
         mobileView === 'CHAT' ? 'flex' : 'hidden md:flex'
       } flex-col flex-1 h-full relative z-0 min-w-0 transition-[padding] duration-200 ${isSidePanelOpen ? SIDE_PANEL_RESERVE_CLASS : ''}`}
     >
-      {/* 1. Global Provider Directory (When PROVIDERS Rail Tab is selected) */}
-      {activeRailTab === 'PROVIDERS' ? (
-        <ProviderDirectory
-          onSelectProviderChat={(provider: ProviderItem, serviceName: string) => {
-            const matchingService =
-              dbServices.find((s) => s.name.toLowerCase().includes(serviceName.toLowerCase())) ||
-              dbServices[0];
-            if (matchingService) {
-              handleSelectService(matchingService);
-              setActiveRailTab('CHATS');
-              setMobileView('CHAT');
-            }
-          }}
-          activeConnectedProviderName={activeService ? 'Super App Verified Partner' : null}
-          hasRunningOrder={runningServiceIds.length > 0}
-          isDarkMode={isDarkMode}
-        />
-      ) : activeRailTab === 'SUPPORT' && user && (activeRole === 'CUSTOMER' || activeRole === 'PROVIDER' || activeRole === 'TECHNICIAN') ? (
+      {activeRailTab === 'SUPPORT' && user && (activeRole === 'CUSTOMER' || activeRole === 'PROVIDER' || activeRole === 'TECHNICIAN') ? (
         /* 1a. Provider/customer: direct chat with the platform's support staff */
         <MemberSupportCanvas userId={user.id} onBack={() => setMobileView('LIST')} />
       ) : activeRole === 'TECHNICIAN' && user ? (
         /* 1c. Technician: the job they opened and nothing else */
         <TechnicianCanvas userId={user.id} onBack={() => setMobileView('LIST')} onSwitchAccount={openSettings} onStartCall={handleStartCall} />
-      ) : activeRole === 'ADMIN' && user ? (
-        /* 1b. Admin: one order's full picture and chat, or the empty landing canvas */
+      ) : isStaffRole(activeRole) && user ? (
+        /* 1b. Staff: one order's full picture and chat, or the empty landing canvas; tabs by permission */
         <AdminCanvas userId={user.id} activeRailTab={activeRailTab} onBack={() => setMobileView('LIST')} onSwitchAccount={openSettings} />
       ) : isProvider && activeProviderOrder && user ? (
         /* 2. Provider Order Workspace: full order info + live chat with the customer */
@@ -182,22 +117,10 @@ export function MainCanvasArea({
           <ChatEmptyHeader onSwitchAccount={openSettings} menuItems={[]} />
           <div className="flex-1 bg-[#f7f5f3]" />
         </>
-      ) : isCounselor && activeCounselorChat ? (
-        /* 2.5 Counselor Chat Workspace */
-        <CounselorChatCanvas
-          chatItem={activeCounselorChat}
-          onBack={() => setMobileView('LIST')}
-          onOpenCreateOrder={onOpenCounselorCreateOrder || (() => {})}
-          onOpenModifyPrice={onOpenCounselorModifyPrice || (() => {})}
-          onSendDueReminder={onCounselorSendDueReminder || (() => {})}
-          onHoldProvider={onCounselorHoldProvider || (() => {})}
-          onStartCall={handleStartCall}
-          isDarkMode={isDarkMode}
-        />
-      ) : activeRailTab === 'ORDERS' && !isProvider && !isCounselor && user ? (
+      ) : activeRailTab === 'ORDERS' && !isProvider && user ? (
         /* 3a. Customer Orders view: one order's full chat history */
         <CustomerOrdersCanvas userId={user.id} onBackMobile={() => setMobileView('LIST')} onOpenOrdersDrawer={openOrders} />
-      ) : !isProvider && !isCounselor && activeService && activeServiceId ? (
+      ) : !isProvider && activeService && activeServiceId ? (
         /* 3. Customer Service Chat Canvas */
         <CustomerChatCanvas
           activeService={activeService}

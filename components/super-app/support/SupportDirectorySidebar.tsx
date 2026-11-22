@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import { useSupportDirectory } from '@/hooks/useSupportChat';
+import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { useSupportChatStore } from '@/store/useSupportChatStore';
 import { User } from '@/types/auth.types';
@@ -37,6 +38,7 @@ export function SupportDirectorySidebar({ user, role, onMemberOpened, onOpenAuth
   const select = useSupportChatStore((state) => state.select);
   const labels = LABELS[role];
   const openPanel = useOrderPanelStore((state) => state.open);
+  const { canAddMembers, canManageTechnicians } = useStaffPermissions();
   const visibleMembers = members.filter((member) => matchesMemberFilter(member, activeFilterChip));
   const isFiltered = searchQuery.trim() !== '' || activeFilterChip !== 'All';
 
@@ -58,7 +60,8 @@ export function SupportDirectorySidebar({ user, role, onMemberOpened, onOpenAuth
         profileSlot={
           <div className="flex items-center justify-between">
             <AdminProfileHeader user={user} />
-            {/* Same + as the Services and Orders lists: adds one person of this kind. */}
+            {/* Same + as the Services and Orders lists: adds one person of this kind. Only an admin may add a technician. */}
+            {(role === 'TECHNICIAN' ? canManageTechnicians : canAddMembers) && (
             <button
               type="button"
               onClick={() => openPanel(role, 'adminAddMember')}
@@ -68,6 +71,7 @@ export function SupportDirectorySidebar({ user, role, onMemberOpened, onOpenAuth
             >
               <HugeiconsIcon icon={PlusSignIcon} size={22} strokeWidth={2.5} />
             </button>
+            )}
           </div>
         }
       />

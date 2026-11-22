@@ -121,7 +121,7 @@ export function ServiceList({
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* Scrollable List Container */}
       <div className="flex-1 overflow-y-auto" onScroll={handleScroll}>
-        {isAuthenticated && user && activeRole !== 'ADMIN' && onOpenSupport && (
+        {isAuthenticated && user && onOpenSupport && (
           <div className="px-[8px] pt-[8px]">
             <SupportChatRow userId={user.id} isActive={isSupportOpen} onOpen={onOpenSupport} />
           </div>
