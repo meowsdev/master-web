@@ -13,6 +13,7 @@ import { AdvancePaymentCard } from './AdvancePaymentCard';
 import { AssignmentCard } from './AssignmentCard';
 import { CustomerOrderPanels } from './CustomerOrderPanels';
 import { CompletionCard } from './CompletionCard';
+import { RevisionCard } from './RevisionCard';
 import { CustomerRatingNote } from './CustomerRatingNote';
 import { ExtraChargeCard } from './ExtraChargeCard';
 import { MessageBubble } from './MessageBubble';
@@ -85,6 +86,8 @@ export function OrderChatPanel({ order, userId }: OrderChatPanelProps) {
         })}
         {/* Completed: what the provider said about the customer. */}
         <CustomerRatingNote order={order} viewer="CUSTOMER" />
+        {/* 7-day warranty: send it back for revision, or see the one that is running. */}
+        <RevisionCard order={order} canRequest />
         {/* Newest at the bottom: the view follows new items like WhatsApp. */}
         <div ref={bottomRef} />
       </div>

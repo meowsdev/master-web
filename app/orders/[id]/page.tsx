@@ -82,7 +82,7 @@ export default function OrderDetailPage() {
         issueDescription: revisionDesc,
       }),
     onSuccess: () => {
-      toast.success('3-Day Free Warranty Revision requested!');
+      toast.success('7-Day Free Warranty Revision requested!');
       setIsRevisionModalOpen(false);
       setRevisionDesc('');
       queryClient.invalidateQueries({ queryKey: ['order', id] });
@@ -360,7 +360,7 @@ export default function OrderDetailPage() {
           </div>
         )}
 
-        {/* 3-Day Free Warranty Revision & Review Section */}
+        {/* 7-Day Free Warranty Revision & Review Section */}
         {isCompleted && (
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
@@ -368,7 +368,7 @@ export default function OrderDetailPage() {
                 <Clock className="w-5 h-5 text-emerald-600" />
                 <div>
                   <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
-                    3-Day Free Warranty Guarantee
+                    7-Day Free Warranty Guarantee
                   </h3>
                   <p className="text-[11px] text-zinc-500">
                     Free issue resolution covered by Master Services

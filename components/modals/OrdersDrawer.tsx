@@ -18,6 +18,7 @@ import { revisionService } from '@/services/revision.service';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Order, OrderStatus } from '@/types/order.types';
 import { OrderRevisionModal } from './OrderRevisionModal';
+import { revisionDaysLeft } from '@/lib/revision';
 import { SIDE_PANEL_CLASS, SIDE_PANEL_OVERLAY_CLASS } from '@/components/modals/side-panel';
 
 interface OrdersDrawerProps {
@@ -88,7 +89,7 @@ export function OrdersDrawer({
     },
   });
 
-  // 3-Day Warranty Revision State & Mutation
+  // 7-Day Warranty Revision State & Mutation
   const [revisionOrderId, setRevisionOrderId] = useState<string | null>(null);
   const [issueDescription, setIssueDescription] = useState('');
 
@@ -99,7 +100,7 @@ export function OrdersDrawer({
       queryClient.invalidateQueries({ queryKey: ['my-orders-drawer'] });
       queryClient.invalidateQueries({ queryKey: ['provider-assigned-orders'] });
       toast.success(
-        `3-Day Free Revision requested for Order #${vars.orderId.slice(0, 8).toUpperCase()}! Switched to Running orders.`
+        `7-Day Free Revision requested for Order #${vars.orderId.slice(0, 8).toUpperCase()}! Switched to Running orders.`
       );
       setRevisionOrderId(null);
       setIssueDescription('');
@@ -367,7 +368,7 @@ export function OrdersDrawer({
                     <div className="p-2.5 rounded-xl bg-amber-100/80 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-xs space-y-1">
                       <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-300 text-[11px]">
                         <RotateCcw className="w-3 h-3 text-amber-600 animate-spin" />
-                        <span>3-Day Free Warranty Revision Active</span>
+                        <span>7-Day Free Warranty Revision Active</span>
                       </div>
                       <p className="text-[11px] text-amber-950 dark:text-amber-200 italic pl-4">
                         &ldquo;{activeRevision.issueDescription}&rdquo;
@@ -423,20 +424,15 @@ export function OrdersDrawer({
                     )}
 
                     {isCompleted && (() => {
-                      const completedAt = new Date(order.updatedAt).getTime();
-                      const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
-                      const isWithin3Days = Date.now() - completedAt <= threeDaysMs;
-                      const daysLeft = Math.max(
-                        1,
-                        Math.ceil((completedAt + threeDaysMs - Date.now()) / (24 * 60 * 60 * 1000))
-                      );
+                      // Same 7-day warranty rule as the order chat (lib/revision.ts); the backend has the final say.
+                      const daysLeft = revisionDaysLeft(order);
 
-                      if (isWithin3Days) {
+                      if (daysLeft !== null) {
                         return (
                           <button
                             onClick={() => setRevisionOrderId(order.id)}
                             className="py-2 px-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
-                            title="Request Free 3-Day Warranty Revision"
+                            title="Request Free 7-Day Warranty Revision"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
                             <span>Revision ({daysLeft}d left)</span>
@@ -452,7 +448,7 @@ export function OrdersDrawer({
           )}
         </div>
 
-        {/* 3-Day Warranty Revision Dialog */}
+        {/* 7-Day Warranty Revision Dialog */}
         <OrderRevisionModal
           isOpen={!!revisionOrderId}
           orderId={revisionOrderId}

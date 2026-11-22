@@ -341,7 +341,7 @@ export function useSuperAppChat({ playSound, userId }: UseSuperAppChatProps) {
         const revisionNotice: ChatMessage = {
           id: 'rev-notice-' + Date.now(),
           sender: 'them',
-          text: `🔄 3-Day Warranty Revision requested for Order #${shortId}. Re-opened in Running status for rework. Problem: "${issue}"`,
+          text: `🔄 7-Day Warranty Revision requested for Order #${shortId}. Re-opened in Running status for rework. Problem: "${issue}"`,
           time: currentTime,
           status: 'read',
         };

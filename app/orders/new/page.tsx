@@ -107,7 +107,7 @@ function NewOrderContent() {
                 </div>
                 <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>3-Day Warranty</span>
+                  <span>7-Day Warranty</span>
                 </div>
                 <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 col-span-2 sm:col-span-1">
                   <Sparkles className="w-4 h-4 text-emerald-600" />

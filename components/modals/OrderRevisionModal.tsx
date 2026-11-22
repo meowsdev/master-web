@@ -48,7 +48,7 @@ export function OrderRevisionModal({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-[#008069] dark:text-[#25D366] font-bold text-sm">
             <RotateCcw className="w-4 h-4" />
-            <span>3-Day Warranty Revision</span>
+            <span>7-Day Warranty Revision</span>
           </div>
           <button
             onClick={onClose}

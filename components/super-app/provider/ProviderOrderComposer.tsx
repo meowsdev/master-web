@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 import { Attachment01Icon, CallIcon, CheckmarkCircle02Icon, Mic01Icon, PlusSignIcon, SentIcon, UserAdd01Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import { Order, OrderStatus } from '@/types/order.types';
+import { openRevision } from '@/lib/revision';
 import { ComingSoonDialog } from './ComingSoonDialog';
 import { OrderPanelKind } from '@/store/useOrderPanelStore';
 
@@ -47,10 +48,12 @@ export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, c
   const isRunning = order.orderStatus === OrderStatus.ACCEPTED || order.orderStatus === OrderStatus.IN_PROGRESS;
   const isInProgress = order.orderStatus === OrderStatus.IN_PROGRESS;
   const isWaitingForOnlinePayment = order.paymentAndTip?.paymentMode === 'ONLINE' && order.orderStatus !== OrderStatus.COMPLETED;
+  // In revision: the job was already paid, so "Work Complete" becomes "Revision Done" (no payment step).
+  const isInRevision = Boolean(openRevision(order));
   const actions: PlusAction[] = [
     ...(canAssignWorker ? [{ id: 'assign' as const, label: 'Assign Worker', icon: UserAdd01Icon, isEnabled: isRunning }] : []),
-    { id: 'extraCharge', label: 'Extra Charge', icon: Wallet01Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment },
-    { id: 'complete', label: isWaitingForOnlinePayment ? 'Waiting for payment...' : 'Work Complete', icon: CheckmarkCircle02Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment },
+    { id: 'extraCharge', label: 'Extra Charge', icon: Wallet01Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment && !isInRevision },
+    { id: 'complete', label: isInRevision ? 'Revision Done' : isWaitingForOnlinePayment ? 'Waiting for payment...' : 'Work Complete', icon: CheckmarkCircle02Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment },
   ];
 
   const comingSoonButton = 'flex size-[32px] shrink-0 cursor-pointer items-center justify-center text-[#202939]';

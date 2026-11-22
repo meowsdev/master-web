@@ -184,5 +184,7 @@ export interface Order {
   /** Completed, not reviewed yet: the tab stays so the payment result and review card show. */
   isReviewPending?: boolean;
   revisions?: ServiceRevision[];
+  /** Last moment a revision may be requested (7-day warranty from completion); null if never completed. */
+  revisionDeadline?: string | null;
 }
 

@@ -10,6 +10,12 @@ export const orderCompletionService = {
     return response.data;
   },
 
+  /** Provider: the revision (re-work) is done. The order closes again with no new payment. */
+  finishRevision: async (orderId: string) => {
+    const response = await apiClient.post(`/orders/${orderId}/finish-revision`);
+    return response.data;
+  },
+
   /** Customer: pay part of the bill early. The backend checks the amount against what is due. */
   payAdvance: async (orderId: string, amount: number, method: OnlinePaymentMethod) => {
     const response = await apiClient.post<{ advancePaid: number; dueAmount: number }>(`/orders/${orderId}/advance-payment`, { amount, method });

@@ -147,7 +147,7 @@ function PreviewLine({
       ? `Revision: "${revisionIssue}"`
       : runningOrderId
       ? `Order #${runningOrderId} • Revision Running`
-      : '3-Day Warranty Revision in progress';
+      : '7-Day Warranty Revision in progress';
     return (
       <div className={`${baseClass} text-amber-700`}>
         <RotateCcw className="size-[14px] shrink-0 text-amber-500" />

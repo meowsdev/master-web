@@ -15,6 +15,8 @@ import { ExtraChargeCard } from '../order-chat/ExtraChargeCard';
 import { MessageBubble } from '../order-chat/MessageBubble';
 import { OrderChatComposer } from '../order-chat/OrderChatComposer';
 import { CustomerRatingNote } from '../order-chat/CustomerRatingNote';
+import { RevisionCard } from '../order-chat/RevisionCard';
+import { RevisionRequestPanel } from '../order-chat/RevisionRequestPanel';
 import { ReviewCard } from '../order-chat/ReviewCard';
 import { CustomerAvatar } from '../provider/CustomerAvatar';
 import { ProviderOrderInfoCard } from '../provider/ProviderOrderInfoCard';
@@ -36,7 +38,10 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
   const details = useOrderDetailsPanel(order.id);
   // Nobody has taken it yet: staff who may assign can send it to a provider.
   const isWaitingForProvider = order.orderStatus === OrderStatus.PENDING;
-  const { canAssignOrders } = useStaffPermissions();
+  const { canAssignOrders, canSendToRevision } = useStaffPermissions();
+  const panelKind = useOrderPanelStore((state) => state.kind);
+  const panelOrderId = useOrderPanelStore((state) => state.orderId);
+  const closePanel = useOrderPanelStore((state) => state.close);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [timeline.length]);
@@ -95,11 +100,14 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
         })}
         {/* Completed: the provider's rating of the customer. */}
         <CustomerRatingNote order={order} viewer="ADMIN" />
+        {/* 7-day warranty: staff who may (admin) can send it back for revision. */}
+        <RevisionCard order={order} canRequest={canSendToRevision} />
         <div ref={bottomRef} />
       </div>
 
       <OrderChatComposer draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} isDisabled={order.isChatOpen === false} />
       {details.isOpen && <OrderDetailsPanel order={order} viewer="ADMIN" onClose={details.close} />}
+      {panelKind === 'revision' && panelOrderId === order.id && <RevisionRequestPanel order={order} onClose={closePanel} />}
     </>
   );
 }

@@ -7,6 +7,8 @@ import { SidePanelShell } from '@/components/modals/SidePanelShell';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { CompletionPaymentMode, orderCompletionService } from '@/services/order-completion.service';
 import { Order } from '@/types/order.types';
+import { useOrderRevision } from '@/hooks/useOrderRevision';
+import { openRevision } from '@/lib/revision';
 
 const OPTIONS: Array<{ mode: CompletionPaymentMode; title: string; hint: string }> = [
   { mode: 'ONLINE', title: 'অনলাইন পেমেন্ট', hint: 'কাস্টমারের কাছে পেমেন্ট কার্ড যাবে। সে "Accept & Pay" করলে অর্ডার সম্পন্ন হবে।' },
@@ -23,6 +25,40 @@ const apiErrorMessage = (error: unknown) => {
  * All rules (status, who may complete, cash vs online) are enforced by the backend.
  */
 export function WorkCompletePanel({ order, onClose }: { order: Order; onClose: () => void }) {
+  // A revision was already paid for: finishing it only closes the order again.
+  if (openRevision(order)) return <RevisionDonePanel order={order} onClose={onClose} />;
+  return <PaymentCompletePanel order={order} onClose={onClose} />;
+}
+
+/* "Revision Done": the re-work is finished. No payment, no commission; the order is completed again. */
+function RevisionDonePanel({ order, onClose }: { order: Order; onClose: () => void }) {
+  const { finish } = useOrderRevision(order.id);
+  const issue = openRevision(order)?.issueDescription;
+
+  return (
+    <SidePanelShell title="রিভিশন শেষ করুন" onClose={onClose}>
+      <p className="text-[13px] font-medium leading-relaxed text-[#697586]">
+        কাস্টমারের সমস্যা: &ldquo;{issue}&rdquo;
+      </p>
+      <p className="mt-[12px] text-[13px] font-medium leading-relaxed text-[#697586]">
+        এটি ওয়ারেন্টির কাজ, তাই নতুন কোনো পেমেন্ট বা কমিশন লাগবে না। কাজ শেষ হলে নিচের বাটনে চাপ দিন।
+      </p>
+      <div className="mt-[24px] flex justify-center">
+        <button
+          type="button"
+          disabled={finish.isPending}
+          onClick={() => finish.mutate(undefined, { onSuccess: onClose })}
+          className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {finish.isPending ? 'সম্পন্ন হচ্ছে...' : 'রিভিশন সম্পন্ন'}
+        </button>
+      </div>
+    </SidePanelShell>
+  );
+}
+
+/* The first completion: how the customer pays and, for cash, whether they gave a tip. */
+function PaymentCompletePanel({ order, onClose }: { order: Order; onClose: () => void }) {
   const queryClient = useQueryClient();
   const [paymentMode, setPaymentMode] = useState<CompletionPaymentMode>('ONLINE');
   const [hasCashTip, setHasCashTip] = useState(false);
