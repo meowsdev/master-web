@@ -40,7 +40,7 @@ export function ExtraChargeCard({ request, viewer = 'CUSTOMER', isAnswering, onA
         <div className="flex justify-between font-semibold"><dt>সর্বমোট নতুন বিল</dt><dd>{formatTaka(previousTotal + addedTotal)}</dd></div>
       </dl>
 
-      {/* The customer does not use the app (e.g. an admin placed the order): it approves itself after 30 minutes. */}
+      {/* The customer does not use the app (e.g. an admin placed the order): it approves itself after 15 minutes. */}
       {request.status === 'PENDING' && request.autoApproveAt && (
         <p className="mt-[10px] rounded-[10px] bg-[#fff4e5] px-[10px] py-[6px] text-[12px] font-medium text-[#b7791f]">
           কাস্টমার অ্যাপে নেই। {formatTime(request.autoApproveAt)} এর মধ্যে উত্তর না এলে এটি অটো-অ্যাপ্রুভ হবে।
