@@ -33,7 +33,9 @@ export function useOrderTimeline(order: Order, messages: Message[], extraCharges
       entries.push({ key: `advance-${index}`, at: toTime(payment.createdAt), kind: 'advance', index });
     });
     if (order.paymentAndTip) {
-      entries.push({ key: 'completion', at: toTime(order.paymentAndTip.createdAt), kind: 'completion' });
+      // Latest change: a revision's extra charges reuse this card, and it must show where the customer is now.
+      const paymentAt = order.paymentAndTip.updatedAt ?? order.paymentAndTip.createdAt;
+      entries.push({ key: 'completion', at: toTime(paymentAt), kind: 'completion' });
     }
     if (order.isReviewPending || order.providerReview) {
       // The review is the last thing asked of the customer, so it follows completion; once sent it stays as history.

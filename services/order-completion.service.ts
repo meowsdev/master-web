@@ -3,6 +3,12 @@ import { apiClient } from '@/lib/axios';
 export type CompletionPaymentMode = 'CASH' | 'ONLINE';
 export type OnlinePaymentMethod = 'BKASH' | 'NAGAD' | 'CARD';
 
+export interface FinishRevisionRequest {
+  reason: string;
+  wasQualityIssue: boolean;
+  paymentMode?: CompletionPaymentMode;
+}
+
 export const orderCompletionService = {
   /** Provider: the work is done; cash closes the order, online waits for the customer. */
   complete: async (orderId: string, paymentMode: CompletionPaymentMode, tipAmount?: number) => {
@@ -10,9 +16,12 @@ export const orderCompletionService = {
     return response.data;
   },
 
-  /** Provider: the revision (re-work) is done. The order closes again with no new payment. */
-  finishRevision: async (orderId: string) => {
-    const response = await apiClient.post(`/orders/${orderId}/finish-revision`);
+  /**
+   * Provider: the revision (re-work) is done, with why it came back. Nothing due: the order closes again with
+   * no new payment. Extra charges added during the revision: `paymentMode` says how the customer pays them.
+   */
+  finishRevision: async (orderId: string, body: FinishRevisionRequest) => {
+    const response = await apiClient.post(`/orders/${orderId}/finish-revision`, body);
     return response.data;
   },
 

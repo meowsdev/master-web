@@ -31,29 +31,106 @@ export function WorkCompletePanel({ order, onClose }: { order: Order; onClose: (
   return <PaymentCompletePanel order={order} onClose={onClose} />;
 }
 
-/* "Revision Done": the re-work is finished. No payment, no commission; the order is completed again. */
+const MIN_REASON_LENGTH = 5;
+
+/*
+ * "Revision Done": the re-work is finished. The provider / technician writes why the order came back and
+ * whether the first job's quality caused it. The warranty covers the service only, so extra charges approved
+ * during the revision (parts, a bigger problem) are still due: then they also pick how the customer pays.
+ */
 function RevisionDonePanel({ order, onClose }: { order: Order; onClose: () => void }) {
   const { finish } = useOrderRevision(order.id);
   const issue = openRevision(order)?.issueDescription;
+  const dueAmount = Number(order.dueAmount);
+  const isMoneyDue = dueAmount > 0;
+  const [reason, setReason] = useState('');
+  const [wasQualityIssue, setWasQualityIssue] = useState<boolean | null>(null);
+  const [paymentMode, setPaymentMode] = useState<CompletionPaymentMode>('ONLINE');
+
+  const isReasonReady = reason.trim().length >= MIN_REASON_LENGTH;
+  const isReady = isReasonReady && wasQualityIssue !== null;
+
+  const submit = () => {
+    if (!isReady || wasQualityIssue === null) return;
+    finish.mutate(
+      { reason: reason.trim(), wasQualityIssue, ...(isMoneyDue ? { paymentMode } : {}) },
+      { onSuccess: onClose },
+    );
+  };
 
   return (
     <SidePanelShell title="রিভিশন শেষ করুন" onClose={onClose}>
       <p className="text-[13px] font-medium leading-relaxed text-[#697586]">
         কাস্টমারের সমস্যা: &ldquo;{issue}&rdquo;
       </p>
-      <p className="mt-[12px] text-[13px] font-medium leading-relaxed text-[#697586]">
-        এটি ওয়ারেন্টির কাজ, তাই নতুন কোনো পেমেন্ট বা কমিশন লাগবে না। কাজ শেষ হলে নিচের বাটনে চাপ দিন।
-      </p>
+
+      <p className="mt-[20px] text-[15px] font-semibold text-[#202939]">কাজ শেষ হওয়ার পর কেন আবার রিভিশনে এলো?</p>
+      <textarea
+        value={reason}
+        onChange={(event) => setReason(event.target.value.slice(0, 1000))}
+        rows={4}
+        placeholder="যেমন: প্রথমবার গ্যাস লিক ধরা পড়েনি, তাই ঠান্ডা হচ্ছিল না।"
+        className="mt-[10px] w-full resize-none rounded-[10px] border border-[#e5e5e5] p-[12px] text-[14px] font-medium text-[#202939] outline-none placeholder:text-[#9aa4b2] focus:border-[#1daa61]"
+      />
+
+      <p className="mt-[16px] text-[15px] font-semibold text-[#202939]">প্রথম কাজের কোয়ালিটিতে কি সমস্যা ছিল?</p>
+      <div className="mt-[10px] flex gap-[10px]">
+        {[{ label: 'হ্যাঁ, ছিল', value: true }, { label: 'না, অন্য কারণে', value: false }].map((choice) => (
+          <button
+            key={choice.label}
+            type="button"
+            aria-pressed={wasQualityIssue === choice.value}
+            onClick={() => setWasQualityIssue(choice.value)}
+            className={`h-[40px] flex-1 cursor-pointer rounded-[10px] text-[14px] font-semibold ${wasQualityIssue === choice.value ? 'bg-[#1daa61] text-white' : 'bg-[#f7f5f3] text-[#202939]'}`}
+          >
+            {choice.label}
+          </button>
+        ))}
+      </div>
+
+      {isMoneyDue ? (
+        <>
+          <p className="mt-[20px] text-[13px] font-medium leading-relaxed text-[#697586]">
+            রিভিশনের সময় এক্সট্রা চার্জ যোগ হয়েছে। বাকি: <span className="font-semibold text-[#202939]">{formatTaka(dueAmount)}</span>
+          </p>
+          <p className="mt-[12px] text-[15px] font-semibold text-[#202939]">কাস্টমার কীভাবে পেমেন্ট করবে?</p>
+          <div role="radiogroup" className="mt-[10px] flex flex-col gap-[10px]">
+            {OPTIONS.map((option) => (
+              <button
+                key={option.mode}
+                type="button"
+                role="radio"
+                aria-checked={paymentMode === option.mode}
+                onClick={() => setPaymentMode(option.mode)}
+                className={`w-full cursor-pointer rounded-[12px] border p-[14px] text-left ${paymentMode === option.mode ? 'border-[#1daa61] bg-[#e7fce3]' : 'border-[#e5e5e5]'}`}
+              >
+                <span className="block text-[14px] font-semibold text-[#202939]">{option.title}</span>
+                <span className="mt-[2px] block text-[12px] font-medium text-[#697586]">{option.hint}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className="mt-[20px] text-[13px] font-medium leading-relaxed text-[#697586]">
+          এটি ওয়ারেন্টির কাজ, তাই নতুন কোনো পেমেন্ট বা কমিশন লাগবে না। পার্টস বা বড় সমস্যা থাকলে আগে &ldquo;Extra Charge&rdquo; পাঠান।
+        </p>
+      )}
+
       <div className="mt-[24px] flex justify-center">
         <button
           type="button"
-          disabled={finish.isPending}
-          onClick={() => finish.mutate(undefined, { onSuccess: onClose })}
+          disabled={!isReady || finish.isPending}
+          onClick={submit}
           className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {finish.isPending ? 'সম্পন্ন হচ্ছে...' : 'রিভিশন সম্পন্ন'}
         </button>
       </div>
+      {!isReady && (
+        <p className="mt-[10px] text-center text-[12px] font-medium text-[#697586]">
+          বাকি আছে: {[!isReasonReady && 'কারণ', wasQualityIssue === null && 'কোয়ালিটি'].filter(Boolean).join(', ')}
+        </p>
+      )}
     </SidePanelShell>
   );
 }

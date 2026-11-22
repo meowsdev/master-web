@@ -70,6 +70,11 @@ export interface ServiceRevision {
   attachedImages?: string[];
   revisionStatus: 'REQUESTED' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED';
   warrantyExpiresAt?: string | null;
+  /** The provider's / technician's answer when finishing: why the order came back after completion. */
+  completionReason?: string | null;
+  /** Was the first job's quality the cause? Null until the revision is finished. */
+  wasQualityIssue?: boolean | null;
+  completedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -81,6 +86,7 @@ export interface OrderPaymentAndTip {
   tipAmount: string | number;
   confirmationStatus: 'PENDING' | 'CONFIRMED' | 'DISPUTED' | 'EXPIRED';
   createdAt: string;
+  updatedAt?: string;
 }
 
 /** Who is handling an order, as the backend words it for the customer. */

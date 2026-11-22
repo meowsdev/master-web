@@ -39,7 +39,7 @@ export function RevisionCard({ order, canRequest }: RevisionCardProps) {
       {running ? (
         <p className="mt-[8px] text-[13px] font-medium text-[#697586]">&ldquo;{running.issueDescription}&rdquo;</p>
       ) : (
-        <p className="mt-[8px] text-[13px] font-medium text-[#697586]">কাজে কোনো সমস্যা থাকলে অর্ডারটি আবার প্রোভাইডারের কাছে রিভিশনে পাঠানো যাবে, কোনো চার্জ ছাড়া।</p>
+        <p className="mt-[8px] text-[13px] font-medium text-[#697586]">কাজে কোনো সমস্যা থাকলে অর্ডারটি আবার প্রোভাইডারের কাছে রিভিশনে পাঠানো যাবে। সার্ভিসের কাজ ফ্রি; নতুন পার্টস বা অন্য বড় সমস্যার খরচ আলাদা।</p>
       )}
 
       {!running && canRequest && (

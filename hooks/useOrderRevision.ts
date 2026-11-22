@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { orderCompletionService } from '@/services/order-completion.service';
+import { FinishRevisionRequest, orderCompletionService } from '@/services/order-completion.service';
 import { revisionService } from '@/services/revision.service';
 
 const apiErrorMessage = (error: unknown, fallback: string) => {
@@ -28,9 +28,9 @@ export function useOrderRevision(orderId: string) {
   });
 
   const finish = useMutation({
-    mutationFn: () => orderCompletionService.finishRevision(orderId),
-    onSuccess: () => {
-      toast.success('রিভিশন সম্পন্ন হয়েছে।');
+    mutationFn: (body: FinishRevisionRequest) => orderCompletionService.finishRevision(orderId, body),
+    onSuccess: (_result, body) => {
+      toast.success(body.paymentMode === 'ONLINE' ? 'কাস্টমারের কাছে পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে।' : 'রিভিশন সম্পন্ন হয়েছে।');
       void refresh();
     },
     onError: (error) => toast.error(apiErrorMessage(error, 'রিভিশন শেষ করা যায়নি।')),

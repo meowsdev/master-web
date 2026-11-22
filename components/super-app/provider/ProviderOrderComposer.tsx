@@ -50,12 +50,13 @@ export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, c
   const isRunning = order.orderStatus === OrderStatus.ACCEPTED || order.orderStatus === OrderStatus.IN_PROGRESS;
   const isInProgress = order.orderStatus === OrderStatus.IN_PROGRESS;
   const isWaitingForOnlinePayment = order.paymentAndTip?.paymentMode === 'ONLINE' && order.orderStatus !== OrderStatus.COMPLETED;
-  // In revision: the job was already paid, so "Work Complete" becomes "Revision Done" (no payment step).
+  // In revision: the job was already paid, so "Work Complete" becomes "Revision Done". The warranty covers the
+  // service only, so parts or a bigger problem found during a revision can still be billed as an Extra Charge.
   const isInRevision = Boolean(openRevision(order));
   const actions: PlusAction[] = [
     ...(canAssignWorker ? [{ id: 'assign' as const, label: 'Assign Worker', icon: UserAdd01Icon, isEnabled: isRunning }] : []),
-    { id: 'extraCharge', label: 'Extra Charge', icon: Wallet01Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment && !isInRevision },
-    { id: 'complete', label: isInRevision ? 'Revision Done' : isWaitingForOnlinePayment ? 'Waiting for payment...' : 'Work Complete', icon: CheckmarkCircle02Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment },
+    { id: 'extraCharge', label: 'Extra Charge', icon: Wallet01Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment },
+    { id: 'complete', label: isWaitingForOnlinePayment ? 'Waiting for payment...' : isInRevision ? 'Revision Done' : 'Work Complete', icon: CheckmarkCircle02Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment },
     // After the job: parts bought and other costs, for the admin to review (the backend refuses a second claim).
     { id: 'expenseClaim', label: 'পার্টস / খরচ', icon: Invoice01Icon, isEnabled: Boolean(order.completedAt) && canSendCosts },
   ];

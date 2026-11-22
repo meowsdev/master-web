@@ -3,7 +3,7 @@
 import { SidePanelShell } from '@/components/modals/SidePanelShell';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { useServiceAreaLabel } from '@/hooks/useServiceAreaLabel';
-import { Order, OrderStatus, OrderUserProfile } from '@/types/order.types';
+import { Order, OrderStatus, OrderUserProfile, ServiceRevision } from '@/types/order.types';
 import { Fact, Section } from '../admin/member/MemberParts';
 import { ORDER_STATUS_LABEL } from '../order-history/order-status';
 import { formatScheduleDate } from './order-labels';
@@ -17,6 +17,46 @@ const personName = (person?: OrderUserProfile | null) =>
   person ? person.name || (person.username ? `@${person.username}` : person.maskedPhone) || '—' : '—';
 
 const PAYMENT_STATUS_TEXT: Record<string, string> = { UNPAID: 'Unpaid', PARTIAL: 'Partly paid', PAID: 'Paid', REFUNDED: 'Refunded' };
+
+/*
+ * One trip back for revision on the Timeline: when and why the customer sent it, then when it was finished,
+ * the provider's / technician's reason it came back and whether the first job's quality was the cause.
+ */
+function RevisionHistoryItem({ revision, number }: { revision: ServiceRevision; number: number }) {
+  const isDone = revision.revisionStatus === 'COMPLETED';
+  return (
+    <div className="my-[6px] rounded-[10px] bg-[#fff4e5] p-[10px]">
+      <Fact label={`Revision ${number} · sent`}>{formatDateTime(revision.createdAt)}</Fact>
+      <p className="mt-[2px] text-[13px] font-medium leading-relaxed text-[#202939]">
+        <span className="text-[#697586]">Customer: </span>
+        {revision.issueDescription}
+      </p>
+
+      {isDone ? (
+        <>
+          <div className="mt-[6px]">
+            <Fact label={`Revision ${number} · done`}>{formatDateTime(revision.completedAt ?? revision.updatedAt)}</Fact>
+          </div>
+          {revision.completionReason && (
+            <p className="mt-[2px] text-[13px] font-medium leading-relaxed text-[#202939]">
+              <span className="text-[#697586]">Why it came back: </span>
+              {revision.completionReason}
+            </p>
+          )}
+          {revision.wasQualityIssue !== null && revision.wasQualityIssue !== undefined && (
+            <p className={`mt-[4px] text-[12px] font-semibold ${revision.wasQualityIssue ? 'text-[#d64545]' : 'text-[#205737]'}`}>
+              {revision.wasQualityIssue ? 'Quality issue in the first job' : 'Not a quality issue'}
+            </p>
+          )}
+        </>
+      ) : (
+        <p className="mt-[6px] text-[12px] font-semibold text-[#b7791f]">
+          {revision.revisionStatus === 'REJECTED' ? 'Rejected' : 'In revision now'}
+        </p>
+      )}
+    </div>
+  );
+}
 
 /*
  * The right-hand "Order details" panel, the same for every order whatever its state (waiting, running,
@@ -34,6 +74,10 @@ export function OrderDetailsPanel({ order, onClose }: { order: Order; viewer: Or
   const isCancelled = order.orderStatus === OrderStatus.CANCELLED;
   const review = order.providerReview;
   const customerRating = order.customerRating;
+  // Every time the order was sent back, oldest first, so the history reads top to bottom.
+  const revisions = [...(order.revisions ?? [])].sort(
+    (first, second) => new Date(first.createdAt).getTime() - new Date(second.createdAt).getTime(),
+  );
 
   return (
     <SidePanelShell title="Order details" onClose={onClose}>
@@ -109,6 +153,9 @@ export function OrderDetailsPanel({ order, onClose }: { order: Order; viewer: Or
         <Fact label="Placed">{formatDateTime(order.createdAt)}</Fact>
         {order.acceptedAt && <Fact label="Accepted">{formatDateTime(order.acceptedAt)}</Fact>}
         {order.completedAt && <Fact label="Completed">{formatDateTime(order.completedAt)}</Fact>}
+        {revisions.map((revision, index) => (
+          <RevisionHistoryItem key={revision.id} revision={revision} number={index + 1} />
+        ))}
         {isCancelled && <Fact label="Cancelled">{formatDateTime(order.updatedAt)}</Fact>}
       </Section>
 
