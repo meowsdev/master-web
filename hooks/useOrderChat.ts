@@ -28,6 +28,10 @@ export function useOrderChat(order: Order, userId: string, viewer: 'CUSTOMER' | 
     queryKey: ['order-conversation', userId, viewer === 'CUSTOMER' ? order.service?.categoryId : order.id],
     queryFn: () => (viewer === 'CUSTOMER' ? chatService.getOrCreateConversation({ serviceId }) : chatService.getOrderConversation(order.id)),
     staleTime: Infinity,
+    // Staff open an existing chat only; an order nobody has accepted yet has none (404). Ask again quietly
+    // every 10 s instead of retrying the error, so the chat appears once the provider takes the order.
+    retry: false,
+    refetchInterval: (query) => (query.state.data ? false : 10000),
   });
 
   const messagesKey = ['order-chat-messages', userId, order.id];

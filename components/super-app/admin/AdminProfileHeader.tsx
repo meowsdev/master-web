@@ -1,6 +1,8 @@
 import { User } from '@/types/auth.types';
 
-/* The admin's header in the sidebar: photo, name and a role badge. No due and no Pay button: admins hold no wallet. */
+const ROLE_BADGE: Record<string, string> = { ADMIN: 'Admin', MANAGER: 'Manager', SUPPORT: 'Support', HR: 'HR', COUNSELOR: 'Counselor' };
+
+/* A staff member's header in the sidebar: photo, name and their role badge. No due and no Pay button: staff hold no wallet. */
 export function AdminProfileHeader({ user }: { user: User }) {
   return (
     <div className="flex items-center gap-[10px]">
@@ -13,8 +15,8 @@ export function AdminProfileHeader({ user }: { user: User }) {
         </span>
       )}
       <div className="flex min-w-0 flex-col">
-        <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{user.name || 'Admin'}</span>
-        <span className="w-fit rounded-full bg-[#202939] px-[8px] py-[1px] text-[11px] font-semibold text-white">Admin</span>
+        <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{user.name || ROLE_BADGE[user.role] || 'Staff'}</span>
+        <span className="w-fit rounded-full bg-[#202939] px-[8px] py-[1px] text-[11px] font-semibold text-white">{ROLE_BADGE[user.role] ?? user.role}</span>
       </div>
     </div>
   );

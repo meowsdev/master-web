@@ -21,6 +21,7 @@ import { ProviderPaymentNote } from './ProviderPaymentNote';
 import { providerOrderTitle } from './provider-order-filters';
 import { RevisionCard } from '../order-chat/RevisionCard';
 import { ExpenseClaimsCard } from '../order-chat/ExpenseClaimsCard';
+import { useExpenseClaims } from '@/hooks/useExpenseClaims';
 
 interface ProviderOrderWorkspaceProps {
   order: Order;
@@ -44,6 +45,8 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
   const timeline = useOrderTimeline(order, messages, extraCharges);
   const openPanel = useOrderPanelStore((state) => state.open);
   const bottomRef = useRef<HTMLDivElement>(null);
+  // Shares the cache with the costs card below, so the + menu knows whether costs can still be sent.
+  const { canSubmit: canSendCosts } = useExpenseClaims(order.id, userId);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [timeline.length]);
@@ -93,7 +96,7 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
         <div ref={bottomRef} />
       </div>
 
-      <ProviderOrderComposer order={order} draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} onChooseAction={(kind) => openPanel(order.id, kind)} canAssignWorker={isProviderViewer} />
+      <ProviderOrderComposer order={order} draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} onChooseAction={(kind) => openPanel(order.id, kind)} canAssignWorker={isProviderViewer} canSendCosts={canSendCosts} />
       <ProviderOrderPanels order={order} userId={userId} viewer={viewer} />
     </>
   );

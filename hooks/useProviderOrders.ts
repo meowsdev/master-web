@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ordersService } from '@/services/orders.service';
 import { Order, OrderStatus } from '@/types/order.types';
 import { useProviderOfferAlerts } from '@/hooks/useProviderOfferAlerts';
+import { ORDER_STATUS_LABEL } from '@/components/super-app/order-history/order-status';
 
 interface UseProviderOrdersProps {
   isProvider: boolean;
@@ -16,12 +17,10 @@ interface UseProviderOrdersProps {
 
 export function useProviderOrders({ isProvider, userId, playSound }: UseProviderOrdersProps) {
   const queryClient = useQueryClient();
-  const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
-
-  // Reset active order when userId changes
-  useEffect(() => {
-    setActiveOrderId(null);
-  }, [userId]);
+  // The open order belongs to the signed-in user: after a switch of account nothing stays selected.
+  const [selection, setSelection] = useState<{ userId?: string | null; orderId: string | null }>({ userId, orderId: null });
+  const activeOrderId = selection.userId === userId ? selection.orderId : null;
+  const setActiveOrderId = useCallback((orderId: string | null) => setSelection({ userId, orderId }), [userId]);
 
   // Fetch only assigned orders for the authenticated provider (auto-polling every 3s)
   const {
@@ -96,7 +95,8 @@ export function useProviderOrders({ isProvider, userId, playSound }: UseProvider
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ['provider-assigned-orders'] });
       queryClient.invalidateQueries({ queryKey: ['my-orders-drawer'] });
-      toast.success(`Order #${updated.id.slice(0, 8).toUpperCase()} updated to ${updated.orderStatus}!`);
+      // The order number the provider sees on screen, and the status in words.
+      toast.success(`Order #${updated.referenceCode ?? updated.id.slice(0, 8).toUpperCase()}: ${ORDER_STATUS_LABEL[updated.orderStatus]?.text ?? updated.orderStatus}`);
     },
     onError: (err: unknown) => {
       const msg =

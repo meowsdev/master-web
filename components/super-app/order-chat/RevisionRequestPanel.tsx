@@ -22,7 +22,7 @@ export function RevisionRequestPanel({ order, onClose }: { order: Order; onClose
         }}
       >
         <p className="text-[13px] font-medium leading-relaxed text-[#697586]">
-          {REVISION_WINDOW_DAYS} দিনের সার্ভিস ওয়ারেন্টির মধ্যে অর্ডারটি আবার প্রোভাইডারের কাছে যাবে (রি-টাচ / রি-ওয়ার্ক)। এর জন্য নতুন কোনো চার্জ লাগবে না।
+          {REVISION_WINDOW_DAYS.toLocaleString('bn-BD')} দিনের সার্ভিস ওয়ারেন্টির মধ্যে অর্ডারটি আবার প্রোভাইডারের কাছে যাবে (রি-টাচ / রি-ওয়ার্ক)। এর জন্য নতুন কোনো চার্জ লাগবে না।
         </p>
 
         <p className="mb-[6px] mt-[16px] text-[14px] font-semibold text-[#202939]">কী সমস্যা হচ্ছে?</p>

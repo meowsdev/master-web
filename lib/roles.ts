@@ -25,6 +25,8 @@ export interface StaffPermissions {
   canSendToRevision: boolean;
   /** Review a job's parts / costs, change the amounts and approve (backend: ADMIN). */
   canReviewExpenses: boolean;
+  /** Staff tab: add Manager / Support / HR / Counselor, change position, turn off (backend: ADMIN). */
+  canManageStaff: boolean;
 }
 
 const NONE: StaffPermissions = {
@@ -38,6 +40,7 @@ const NONE: StaffPermissions = {
   canAssignOrders: false,
   canSendToRevision: false,
   canReviewExpenses: false,
+  canManageStaff: false,
 };
 
 const MANAGER: StaffPermissions = {
@@ -51,10 +54,11 @@ const MANAGER: StaffPermissions = {
   canAssignOrders: true,
   canSendToRevision: false,
   canReviewExpenses: false,
+  canManageStaff: false,
 };
 
 const PERMISSIONS_BY_ROLE: Record<string, StaffPermissions> = {
-  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true, canReviewExpenses: true },
+  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true, canReviewExpenses: true, canManageStaff: true },
   MANAGER,
   // Support chat is open to support staff; member management is not (admin-members is ADMIN/MANAGER).
   SUPPORT: { ...NONE, canChatWithMembers: true },

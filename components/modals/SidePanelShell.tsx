@@ -20,14 +20,16 @@ interface SidePanelShellProps {
    * true: clicks outside are caught, so a half-filled sign-up can't be abandoned.
    */
   blockOutside?: boolean;
+  /** The App Store / Google Play badges at the bottom: only on the public panels (sign-in, service info), not on work panels. */
+  showStoreBadges?: boolean;
 }
 
 /*
  * The right-hand panel frame shared by the sign-in and service-details panels
- * (Figma: 570px wide, 65px header with ✕ + title, store badges at the bottom).
+ * (Figma: 570px wide, 65px header with ✕ + title, store badges at the bottom of the public panels).
  * There is no click-outside-to-close: only the ✕ closes it.
  */
-export function SidePanelShell({ title, onClose, children, blockOutside = false }: SidePanelShellProps) {
+export function SidePanelShell({ title, onClose, children, blockOutside = false, showStoreBadges = false }: SidePanelShellProps) {
   return (
     <div className={blockOutside ? SIDE_PANEL_BLOCKING_OVERLAY_CLASS : SIDE_PANEL_OVERLAY_CLASS}>
       <aside
@@ -48,10 +50,12 @@ export function SidePanelShell({ title, onClose, children, blockOutside = false 
         <div className="flex flex-1 flex-col justify-between gap-[32px] overflow-y-auto p-[20px]">
           <div>{children}</div>
 
-          <div className="flex flex-wrap items-start justify-end gap-[23px]">
-            <AppStoreBadge />
-            <GooglePlayBadge />
-          </div>
+          {showStoreBadges && (
+            <div className="flex flex-wrap items-start justify-end gap-[23px]">
+              <AppStoreBadge />
+              <GooglePlayBadge />
+            </div>
+          )}
         </div>
       </aside>
     </div>

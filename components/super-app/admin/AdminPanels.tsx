@@ -11,6 +11,7 @@ import { AdminCreateOrderPanel } from './panels/AdminCreateOrderPanel';
 import { MemberDetailsPanel } from './member/MemberDetailsPanel';
 import { AdminServicePanel } from './panels/AdminServicePanel';
 import { ProvidersPanel } from './panels/ProvidersPanel';
+import { AddStaffPanel, StaffDetailsPanel } from './staff/StaffPanels';
 
 /* The management panel the admin's rail opened, if any. */
 export function AdminPanels() {
@@ -38,5 +39,7 @@ export function AdminPanels() {
   if (kind === 'adminOrder' && adminId) return <AdminCreateOrderPanel adminId={adminId} onClose={close} />;
   // One panel per member: a different person gets fresh state.
   if (kind === 'adminMember' && target && adminId) return <MemberDetailsPanel key={target} adminId={adminId} memberId={target} onClose={close} />;
+  if (kind === 'adminAddStaff' && adminId) return <AddStaffPanel adminId={adminId} onClose={close} />;
+  if (kind === 'adminStaff' && target && adminId) return <StaffDetailsPanel key={target} adminId={adminId} staffId={target} onClose={close} />;
   return null;
 }

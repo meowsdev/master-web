@@ -17,6 +17,8 @@ interface ProviderOrderComposerProps {
   onChooseAction: (action: OrderPanelKind) => void;
   /** Only the provider picks which technician works an order; a technician does not see "Assign Worker". */
   canAssignWorker?: boolean;
+  /** Costs can be sent: the job is complete and no claim is waiting or approved. */
+  canSendCosts?: boolean;
 }
 
 interface PlusAction {
@@ -31,7 +33,7 @@ interface PlusAction {
  * Attach, mic and call are not built yet and say so. The menu only asks; the backend decides what
  * is allowed (status flow, who may act, price limits). Entries that do not fit the order's status are greyed.
  */
-export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, canSend, onChooseAction, canAssignWorker = true }: ProviderOrderComposerProps) {
+export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, canSend, onChooseAction, canAssignWorker = true, canSendCosts = false }: ProviderOrderComposerProps) {
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -55,7 +57,7 @@ export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, c
     { id: 'extraCharge', label: 'Extra Charge', icon: Wallet01Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment && !isInRevision },
     { id: 'complete', label: isInRevision ? 'Revision Done' : isWaitingForOnlinePayment ? 'Waiting for payment...' : 'Work Complete', icon: CheckmarkCircle02Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment },
     // After the job: parts bought and other costs, for the admin to review (the backend refuses a second claim).
-    { id: 'expenseClaim', label: 'পার্টস / খরচ', icon: Invoice01Icon, isEnabled: Boolean(order.completedAt) },
+    { id: 'expenseClaim', label: 'পার্টস / খরচ', icon: Invoice01Icon, isEnabled: Boolean(order.completedAt) && canSendCosts },
   ];
 
   const comingSoonButton = 'flex size-[32px] shrink-0 cursor-pointer items-center justify-center text-[#202939]';

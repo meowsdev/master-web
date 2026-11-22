@@ -41,7 +41,7 @@ export function ServicePreviewPanel({ service, onClose, primaryActionLabel, onPr
 
   return (
     // The list beside the panel stays clickable (AGENTS.md §9): picking another service swaps the details.
-    <SidePanelShell title={service.name} onClose={onClose}>
+    <SidePanelShell title={service.name} onClose={onClose} showStoreBadges>
       <div className="flex flex-col gap-[24px]">
         <ServiceHero service={service} />
 

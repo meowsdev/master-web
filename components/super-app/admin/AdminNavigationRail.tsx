@@ -3,7 +3,7 @@
 import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import Image from 'next/image';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
-import { CustomerSupportIcon, UserGroupIcon, UserSharingIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
+import { Briefcase01Icon, CustomerSupportIcon, UserGroupIcon, UserSharingIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
 import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { RailSelection, RailTab } from '@/types/super-app.types';
@@ -23,7 +23,8 @@ const SUPPORT_CHAT_TABS: Array<{ tab: RailTab; title: string; icon: IconSvgEleme
 
 /* The staff rail: logo, Messages (all orders), then Services and the member chats when the role may use them, profile at the bottom. */
 export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOpenAccount }: AdminNavigationRailProps) {
-  const { canManageServices, canChatWithMembers } = useStaffPermissions();
+  const { canManageServices, canChatWithMembers, canManageStaff } = useStaffPermissions();
+  const isStaffSelected = selection === 'STAFF';
   const openKind = useOrderPanelStore((state) => state.kind);
   const closePanel = useOrderPanelStore((state) => state.close);
   const isMessagesSelected = selection === 'CHATS' && !openKind?.startsWith('admin');
@@ -88,7 +89,22 @@ export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOp
           );
         })}
 
-
+        {/* Staff: office accounts (Manager, Support, HR, Counselor). Admin only. */}
+        {canManageStaff && (
+          <button
+            type="button"
+            onClick={() => {
+              closePanel();
+              onSelectTab('STAFF');
+            }}
+            title="Staff"
+            aria-label="Staff"
+            aria-current={isStaffSelected ? 'page' : undefined}
+            className={`flex size-[36px] cursor-pointer items-center justify-center rounded-full transition-colors ${isStaffSelected ? 'bg-[#d7fdd2] text-[#1daa61]' : 'bg-white text-[#202939] hover:bg-[#ebe8e4]'}`}
+          >
+            <HugeiconsIcon icon={Briefcase01Icon} size={18} />
+          </button>
+        )}
       </div>
 
       <button type="button" onClick={onOpenAccount} title="Profile" className={`size-[36px] cursor-pointer overflow-hidden rounded-full ${selection === 'ACCOUNT' ? 'ring-2 ring-[#1daa61]' : ''}`}>

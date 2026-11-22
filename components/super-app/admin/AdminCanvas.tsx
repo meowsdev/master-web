@@ -16,7 +16,8 @@ export function AdminCanvas({ userId, activeRailTab, onBack, onSwitchAccount }: 
   const openOrderId = useOrderHistoryStore(selectOpenOrderId(userId));
   const order = orders.find((item) => item.id === openOrderId);
   const { canManageServices, canChatWithMembers } = useStaffPermissions();
-  const isServicesTab = canManageServices && activeRailTab === 'SERVICES';
+  // Services and Staff are management tabs: the canvas stays empty and their panels open on the right.
+  const isServicesTab = (canManageServices && activeRailTab === 'SERVICES') || activeRailTab === 'STAFF';
   const supportRole = canChatWithMembers ? supportRoleForTab(activeRailTab) : null;
 
   return (

@@ -18,7 +18,7 @@ interface AuthDrawerShellProps {
 /* Sign-in / profile panel: the shared side-panel frame plus the Figma avatar circle on top. */
 export function AuthDrawerShell({ title, onClose, children, avatar, blockOutside }: AuthDrawerShellProps) {
   return (
-    <SidePanelShell title={title} onClose={onClose} blockOutside={blockOutside}>
+    <SidePanelShell title={title} onClose={onClose} blockOutside={blockOutside} showStoreBadges>
       <div className="flex flex-col items-center gap-[64px]">
         {avatar ?? <Image src="/auth/avatar-placeholder.svg" alt="" width={120} height={120} className="shrink-0" />}
         <div className="flex w-full flex-col items-center gap-[48px]">{children}</div>

@@ -6,6 +6,9 @@ import { openRevision, revisionDaysLeft, REVISION_WINDOW_DAYS } from '@/lib/revi
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { Order } from '@/types/order.types';
 
+/** Bengali digits, to match the rest of the card. */
+const bn = (value: number) => value.toLocaleString('bn-BD');
+
 interface RevisionCardProps {
   order: Order;
   /** The customer of the order or an admin: may send it back for revision. Everyone else only sees the status. */
@@ -29,7 +32,7 @@ export function RevisionCard({ order, canRequest }: RevisionCardProps) {
       <div className="flex items-center gap-[8px]">
         <HugeiconsIcon icon={RepeatIcon} size={18} className="text-[#b7791f]" />
         <h3 className="text-[13px] font-semibold">
-          {running ? 'রিভিশন চলছে (রি-টাচ / রি-ওয়ার্ক)' : `${REVISION_WINDOW_DAYS} দিনের সার্ভিস ওয়ারেন্টি · আর ${daysLeft} দিন বাকি`}
+          {running ? 'রিভিশন চলছে (রি-টাচ / রি-ওয়ার্ক)' : `${bn(REVISION_WINDOW_DAYS)} দিনের সার্ভিস ওয়ারেন্টি · আর ${bn(daysLeft ?? 0)} দিন বাকি`}
         </h3>
       </div>
 
