@@ -11,10 +11,26 @@ import { ProblemSection } from '@/components/modals/place-order/ProblemSection';
 import { ScheduleSection } from '@/components/modals/place-order/ScheduleSection';
 import { ServiceAvatar } from '@/components/modals/place-order/ServiceAvatar';
 import { usePlaceOrderForm } from '@/hooks/usePlaceOrderForm';
-import { CustomerLookup, orderPlacementService } from '@/services/order-placement.service';import { useOrderHistoryStore } from '@/store/useOrderHistoryStore';
+import { CustomerLookup, orderPlacementService } from '@/services/order-placement.service';
+import { useOrderHistoryStore } from '@/store/useOrderHistoryStore';
 import { Order } from '@/types/order.types';
-import { UserIcon } from '@hugeicons/core-free-icons';
-import { OrderField, fieldControlClass } from '@/components/modals/place-order/OrderField';
+import { LayersIcon, UserIcon } from '@hugeicons/core-free-icons';
+import { OrderField, OrderSelect, fieldControlClass } from '@/components/modals/place-order/OrderField';
+import { formatTaka } from '@/components/modals/place-order/format-taka';
+import { CustomServiceForm, CustomServiceSection, EMPTY_CUSTOM_SERVICE, customServiceMissing, parseCustomOrderPrice } from './CustomServiceSection';
+
+/** Existing: a service from the catalog, priced by the backend. Custom: a service typed by hand, with its price. */
+type OrderKind = 'EXISTING' | 'CUSTOM';
+
+const ORDER_KIND_OPTIONS: Array<{ value: OrderKind; label: string }> = [
+  { value: 'EXISTING', label: 'চালু সার্ভিস থেকে (Existing)' },
+  { value: 'CUSTOM', label: 'কাস্টম সার্ভিস (Custom)' },
+];
+
+const apiErrorMessage = (error: unknown) => {
+  const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
+  return (Array.isArray(message) ? message[0] : message) || 'অর্ডার তৈরি করা যায়নি।';
+};
 
 /* One line under the number: a known customer (details filled in), a new number, or a number that is not a customer. */
 function CustomerLookupNote({ lookup }: { lookup: CustomerLookup }) {
@@ -67,11 +83,46 @@ export function AdminCreateOrderPanel({ adminId, onClose }: { adminId: string; o
       }),
   });
 
+  const [orderKind, setOrderKind] = useState<OrderKind>('EXISTING');
+  const [custom, setCustom] = useState<CustomServiceForm>(EMPTY_CUSTOM_SERVICE);
+  const [isPlacingCustom, setIsPlacingCustom] = useState(false);
+  const isCustom = orderKind === 'CUSTOM';
+
   const isPhoneValid = customerPhone !== '' && isValidPhoneNumber(customerPhone);
   // A number of a provider / technician / staff, or a blocked customer: the backend refuses the order too.
   const cannotOrderFor = lookup?.found === true && (lookup.role !== 'CUSTOMER' || lookup.status !== 'ACTIVE');
-  const canSubmit = isPhoneValid && !cannotOrderFor && state.isReady && !state.isSubmitting;
-  const missing = [...(isPhoneValid ? [] : ['কাস্টমারের নম্বর']), ...state.missingFields];
+  // A custom order is checked here: the catalog form's "problem" does not apply; place and time still do.
+  const placeAndTimeMissing = state.missingFields.filter((field) => field !== 'সমস্যা');
+  const formMissing = isCustom ? [...customServiceMissing(custom), ...placeAndTimeMissing] : state.missingFields;
+  const isSubmitting = isCustom ? isPlacingCustom : state.isSubmitting;
+  const canSubmit = isPhoneValid && !cannotOrderFor && formMissing.length === 0 && !isSubmitting;
+  const missing = [...(isPhoneValid ? [] : ['কাস্টমারের নম্বর']), ...formMissing];
+  const customPrice = parseCustomOrderPrice(custom.price);
+
+  const submitCustom = async () => {
+    if (!canSubmit || customPrice === null || !state.districtId || !state.upazilaId) return;
+    setIsPlacingCustom(true);
+    try {
+      const { order } = await orderPlacementService.placeCustomOrderForCustomer({
+        customerPhone,
+        ...(customerName.trim() ? { customerName: customerName.trim() } : {}),
+        mainServiceName: custom.mainServiceName.trim(),
+        subServiceName: custom.subServiceName.trim(),
+        ...(custom.description.trim() ? { description: custom.description.trim() } : {}),
+        price: customPrice,
+        districtId: state.districtId,
+        upazilaId: state.upazilaId,
+        addressDetail: state.addressDetail.trim(),
+        scheduledDate: state.scheduledDate,
+        timeSlot: state.timeSlot,
+      });
+      handlePlaced(order);
+    } catch (error) {
+      toast.error(apiErrorMessage(error));
+    } finally {
+      setIsPlacingCustom(false);
+    }
+  };
 
   /*
    * A complete number is looked up at once. A registered customer's name and last place fill the form;
@@ -110,7 +161,7 @@ export function AdminCreateOrderPanel({ adminId, onClose }: { adminId: string; o
   return (
     <SidePanelShell title="New order" onClose={onClose}>
       <div className="pb-[24px]">
-        <ServiceAvatar category={state.category} subService={state.subService} />
+        <ServiceAvatar category={isCustom ? undefined : state.category} subService={isCustom ? undefined : state.subService} />
 
         <div className="mb-[8px] pt-[40px]">
           <PhoneNumberField value={customerPhone} onChange={changePhone} />
@@ -120,19 +171,42 @@ export function AdminCreateOrderPanel({ adminId, onClose }: { adminId: string; o
           </OrderField>
         </div>
 
-        <ProblemSection state={state} />
+        {/* First the kind of order: a catalog service, or one typed by hand. The rest of the form follows it. */}
+        <section className="mt-[16px] rounded-[16px] border border-[#e5e5e5] bg-white px-[16px] pb-[16px] pt-[1px]">
+          <OrderSelect
+            icon={LayersIcon}
+            placeholder="অর্ডারের ধরন"
+            value={orderKind}
+            options={ORDER_KIND_OPTIONS}
+            onChange={(value) => setOrderKind(value === 'CUSTOM' ? 'CUSTOM' : 'EXISTING')}
+          />
+          <p className="mt-[8px] text-[12px] font-medium leading-relaxed text-[#697586]">
+            {isCustom
+              ? 'লিস্টে নেই এমন সার্ভিস: মেইন সার্ভিস, সাব-সার্ভিস, বিস্তারিত আর দাম নিজে লিখুন।'
+              : 'লিস্ট থেকে সার্ভিস বেছে নিন, দাম নিজে থেকে হিসাব হবে।'}
+          </p>
+        </section>
+
+        {isCustom ? <CustomServiceSection form={custom} onChange={setCustom} /> : <ProblemSection state={state} />}
         <ScheduleSection state={state} />
 
-        {state.quote && <OrderQuoteSummary quote={state.quote} />}
+        {isCustom
+          ? customPrice !== null && (
+              <div className="mt-[20px] flex justify-between rounded-[12px] border border-[#e5e5e5] bg-[#f7f5f3] p-[14px] text-[15px] font-semibold text-[#202939]">
+                <span>Total</span>
+                <span>{formatTaka(customPrice)}</span>
+              </div>
+            )
+          : state.quote && <OrderQuoteSummary quote={state.quote} />}
 
         <div className="mt-[28px] flex justify-center">
           <button
             type="button"
-            onClick={state.submit}
+            onClick={isCustom ? submitCustom : state.submit}
             disabled={!canSubmit}
             className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {state.isSubmitting ? 'Creating order...' : 'Create order'}
+            {isSubmitting ? 'Creating order...' : 'Create order'}
           </button>
         </div>
         {!canSubmit && missing.length > 0 && <p className="mt-[10px] text-center text-[12px] font-medium text-[#697586]">বাকি আছে: {missing.join(', ')}</p>}

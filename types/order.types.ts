@@ -192,6 +192,8 @@ export interface Order {
   /** Completed, not reviewed yet: the tab stays so the payment result and review card show. */
   isReviewPending?: boolean;
   revisions?: ServiceRevision[];
+  /** An admin's order for a service not in the catalog; `service` then carries the names the admin typed. */
+  isCustomService?: boolean;
   /** False when the customer has not verified their number by OTP: online payment is off, cash only. */
   canPayOnline?: boolean;
   /** Last moment a revision may be requested (7-day warranty from completion); null if never completed. */
