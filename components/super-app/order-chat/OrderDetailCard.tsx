@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert02Icon, Calendar03Icon, Home01Icon, Note01Icon, ScaleIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
 import { Order, OrderStatus, PaymentStatus } from '@/types/order.types';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
-import { buildOrderTabLabel, formatScheduleDate } from './order-labels';
+import { buildOrderTabLabel, formatMessageTime, formatScheduleDate } from './order-labels';
 import { OrderDetailLine } from './OrderDetailLine';
 
 interface OrderDetailCardProps {
@@ -45,68 +45,74 @@ export function OrderDetailCard({ order, onPayNow, onCancel, isCancelling }: Ord
   const [problemLine, ...surchargeLines] = detail?.priceBreakdown ?? [];
 
   return (
-    <article className="ml-auto w-full max-w-[420px] rounded-[16px] bg-secondary p-[14px] text-ink shadow-sm">
-      <header className="flex items-center justify-between gap-[8px]">
-        <span className="min-w-0 truncate text-[12px] font-medium">{buildOrderTabLabel(order)}</span>
-        <div className="flex shrink-0 items-center gap-[6px]">
-          {isPaid ? (
-            <span className="rounded-[8px] bg-white px-[8px] py-[4px] text-[12px] font-semibold text-primary">Paid</span>
-          ) : (
-            <span className="rounded-[8px] bg-white px-[8px] py-[4px] text-[12px] font-semibold">
-              {formatTaka(order.dueAmount)} <span className="rounded-full border border-ink/40 px-[5px] text-[10px]">Due</span>
-            </span>
+    <div className="ml-auto w-full max-w-[420px]">
+      <article className="w-full rounded-[16px] bg-secondary p-[14px] text-ink shadow-sm">
+        <header className="flex items-center justify-between gap-[8px]">
+          <span className="min-w-0 truncate text-[12px] font-medium">{buildOrderTabLabel(order)}</span>
+          <div className="flex shrink-0 items-center gap-[6px]">
+            {isPaid ? (
+              <span className="rounded-[8px] bg-white px-[8px] py-[4px] text-[12px] font-semibold text-primary">Paid</span>
+            ) : (
+              <span className="rounded-[8px] bg-white px-[8px] py-[4px] text-[12px] font-semibold">
+                {formatTaka(order.dueAmount)} <span className="rounded-full border border-ink/40 px-[5px] text-[10px]">Due</span>
+              </span>
+            )}
+            {/* Nothing left to pay (or the order is cancelled): the button stays but cannot be pressed. */}
+            <button
+              type="button"
+              onClick={onPayNow}
+              disabled={isPaid || isCancelled || !canPayAdvance}
+              title={!canPayAdvance && !isPaid && !isCancelled ? 'You can pay once a provider accepts your order' : undefined}
+              className="cursor-pointer rounded-[8px] bg-ink px-[12px] py-[6px] text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-ink/30"
+            >
+              {isPaid ? 'Paid' : 'Pay Now'}
+            </button>
+          </div>
+        </header>
+
+        <ul className="mt-[14px] flex flex-col gap-[10px]">
+          <OrderDetailLine icon={Wrench01Icon}>{order.service?.category?.name}</OrderDetailLine>
+          {problemLine && (
+            <OrderDetailLine icon={Alert02Icon}>
+              {problemLine.label}
+              {problemLine.count > 1 ? ` × ${problemLine.count}` : ''} ({formatTaka(problemLine.amount)})
+            </OrderDetailLine>
           )}
-          {/* Nothing left to pay (or the order is cancelled): the button stays but cannot be pressed. */}
-          <button
-            type="button"
-            onClick={onPayNow}
-            disabled={isPaid || isCancelled || !canPayAdvance}
-            title={!canPayAdvance && !isPaid && !isCancelled ? 'You can pay once a provider accepts your order' : undefined}
-            className="cursor-pointer rounded-[8px] bg-ink px-[12px] py-[6px] text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-ink/30"
-          >
-            {isPaid ? 'Paid' : 'Pay Now'}
-          </button>
-        </div>
-      </header>
+          {detail?.description && <OrderDetailLine icon={Note01Icon}>{detail.description}</OrderDetailLine>}
+          {surchargeLines.map((line) => (
+            <OrderDetailLine key={line.label} icon={ScaleIcon}>
+              {line.label} ({formatTaka(line.amount)})
+            </OrderDetailLine>
+          ))}
+          {detail && <OrderDetailLine icon={Home01Icon}>{detail.addressDetail}</OrderDetailLine>}
+          {detail && (
+            <OrderDetailLine icon={Calendar03Icon}>
+              {formatScheduleDate(detail.scheduledDate)} | {detail.timeSlot}
+            </OrderDetailLine>
+          )}
+        </ul>
 
-      <ul className="mt-[14px] flex flex-col gap-[10px]">
-        <OrderDetailLine icon={Wrench01Icon}>{order.service?.category?.name}</OrderDetailLine>
-        {problemLine && (
-          <OrderDetailLine icon={Alert02Icon}>
-            {problemLine.label}
-            {problemLine.count > 1 ? ` × ${problemLine.count}` : ''} ({formatTaka(problemLine.amount)})
-          </OrderDetailLine>
+        {!isCancelled && (
+          <footer className="mt-[14px] flex items-center justify-end gap-[12px]">
+            <span className="text-[13px] font-medium">
+              {isWaiting ? 'Waiting time' : 'Accepted in'}: {waitingTime}
+            </span>
+            {/* Once a provider has accepted, cancelling is no longer possible: the button stays but is disabled. */}
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={!isWaiting || isCancelling}
+              className="cursor-pointer rounded-[10px] bg-white px-[14px] py-[8px] text-[14px] font-semibold disabled:cursor-not-allowed disabled:text-muted disabled:opacity-80"
+            >
+              {isWaiting ? 'Cancel Order' : statusLabel}
+            </button>
+          </footer>
         )}
-        {detail?.description && <OrderDetailLine icon={Note01Icon}>{detail.description}</OrderDetailLine>}
-        {surchargeLines.map((line) => (
-          <OrderDetailLine key={line.label} icon={ScaleIcon}>
-            {line.label} ({formatTaka(line.amount)})
-          </OrderDetailLine>
-        ))}
-        {detail && <OrderDetailLine icon={Home01Icon}>{detail.addressDetail}</OrderDetailLine>}
-        {detail && (
-          <OrderDetailLine icon={Calendar03Icon}>
-            {formatScheduleDate(detail.scheduledDate)} | {detail.timeSlot}
-          </OrderDetailLine>
-        )}
-      </ul>
-
-      {!isCancelled && (
-        <footer className="mt-[14px] flex items-center justify-end gap-[12px]">
-          <span className="text-[13px] font-medium">
-            {isWaiting ? 'Waiting time' : 'Accepted in'}: {waitingTime}
-          </span>
-          {/* Once a provider has accepted, cancelling is no longer possible: the button stays but is disabled. */}
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={!isWaiting || isCancelling}
-            className="cursor-pointer rounded-[10px] bg-white px-[14px] py-[8px] text-[14px] font-semibold disabled:cursor-not-allowed disabled:text-muted disabled:opacity-80"
-          >
-            {isWaiting ? 'Cancel Order' : statusLabel}
-          </button>
-        </footer>
-      )}
-    </article>
+      </article>
+      {/* When the order was sent, under the card like every chat message. */}
+      <time dateTime={order.createdAt} title={new Date(order.createdAt).toLocaleString()} className="mt-[2px] block text-right text-[11px] font-medium text-muted">
+        {formatMessageTime(order.createdAt)}
+      </time>
+    </div>
   );
 }

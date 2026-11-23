@@ -61,7 +61,7 @@ export function SupportDirectorySidebar({ user, role, onMemberOpened, onOpenAuth
         }
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[8px]">
+      <div className="min-h-0 flex-1 overflow-y-auto px-[16px] pb-[8px]">
         {!isLoading && (
           <p className="px-[10px] pb-[4px] pt-[8px] text-[13px] font-semibold text-muted">
             {isFiltered ? `Showing ${visibleMembers.length} of ${members.length} ${labels.plural}` : `Total: ${members.length} ${labels.plural}`}

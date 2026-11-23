@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 import { Alert02Icon, Calendar03Icon, Store01Icon, UserIcon } from '@hugeicons/core-free-icons';
 import { Order, OrderStatus } from '@/types/order.types';
-import { buildOrderTabLabel, formatScheduleDate } from './order-labels';
+import { buildOrderTabLabel, formatScheduleDate, formatMessageTime } from './order-labels';
 
 const STATUS_TEXT: Partial<Record<OrderStatus, string>> = {
   [OrderStatus.ACCEPTED]: 'Accepted',
@@ -21,9 +21,6 @@ function Line({ icon, children }: { icon: IconSvgElement; children: ReactNode })
   );
 }
 
-/** "11.14 AM", the way the Figma message timestamp reads. */
-const formatMessageTime = (isoDate: string) =>
-  new Date(isoDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }).replace(':', '.');
 
 /*
  * Incoming message that appears once a provider accepts: the technician it was assigned to

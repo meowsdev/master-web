@@ -62,7 +62,7 @@ export function CustomerOrdersSidebar({ user, onStartNewOrder, onOpenAuth, onOpe
         searchPlaceholder="Search orders..."
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[8px]">
+      <div className="min-h-0 flex-1 overflow-y-auto px-[16px] pb-[8px]">
         {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-muted">Loading orders...</p>}
         {!isLoading && visibleOrders.length === 0 && (
           <p className="p-[24px] text-center text-[14px] font-medium text-muted">

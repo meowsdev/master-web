@@ -13,3 +13,7 @@ export function buildOrderTabLabel(order: Order): string {
 export function formatScheduleDate(isoDate: string): string {
   return new Date(isoDate).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
+
+/** "11.14 AM": the time under every chat message and card, in the viewer's time zone. */
+export const formatMessageTime = (isoDate: string) =>
+  new Date(isoDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }).replace(':', '.');

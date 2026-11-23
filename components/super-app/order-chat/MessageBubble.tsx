@@ -1,8 +1,6 @@
 import { Message } from '@/types/chat.types';
+import { formatMessageTime } from './order-labels';
 
-/** "11.14 AM", the same style as the cards' timestamps. */
-const formatMessageTime = (isoDate: string) =>
-  new Date(isoDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }).replace(':', '.');
 
 /** WhatsApp gives each group member their own name colour; the same person always gets the same one. */
 const NAME_COLORS = ['#1f7aec', '#d6336c', '#e8590c', '#2b8a3e', '#7048e8', '#0c8599', '#c2255c', '#5c940d'];

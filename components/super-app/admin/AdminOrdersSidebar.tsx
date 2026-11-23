@@ -70,7 +70,7 @@ export function AdminOrdersSidebar({ user, onOrderOpened, onOpenAuth }: { user: 
         profileSlot={<StaffSidebarHeader user={user} action={canCreateOrders ? { label: 'New order', onClick: () => openPanel(null, 'adminOrder') } : undefined} />}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[8px]">
+      <div className="min-h-0 flex-1 overflow-y-auto px-[16px] pb-[8px]">
         {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-muted">Loading orders...</p>}
         {!isLoading && visibleOrders.length === 0 && <p className="p-[24px] text-center text-[14px] font-medium text-muted">{orders.length === 0 ? 'No orders yet.' : 'No orders match.'}</p>}
         {visibleOrders.map((order) => (

@@ -140,7 +140,7 @@ export function AdminServicesSidebar({ user, onServiceOpened, onOpenAuth }: { us
         profileSlot={<StaffSidebarHeader user={user} action={{ label: 'New main service', onClick: newMainService }} />}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[24px]">
+      <div className="min-h-0 flex-1 overflow-y-auto px-[16px] pb-[24px]">
         {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-muted">Loading services...</p>}
         {!isLoading && visibleEntries.length === 0 && <p className="p-[24px] text-center text-[14px] font-medium text-muted">No services match.</p>}
         {visibleEntries.map((entry) => (

@@ -64,10 +64,10 @@ export function CustomerSidebarTop({
   const filterChips: FilterChip[] = ['All', ...categoryNames];
 
   return (
-    <div className="flex shrink-0 flex-col px-[8px] pb-0">
+    <div className="flex shrink-0 flex-col px-[16px] pb-0">
       {/* Same height and divider line as the chat header and the right-hand panel header, so the three line up. */}
       {showBrandRow && (
-        <div className={`-mx-[8px] flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 flex-col justify-center border-b border-line px-[16px]`}>
+        <div className={`-mx-[16px] flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 flex-col justify-center border-b border-line px-[16px]`}>
       {profileSlot}
       {showBrandRow && !profileSlot && isAuthenticated && user && onStartNewOrder && (
         <CustomerProfileHeader user={user} onStartNewOrder={onStartNewOrder} />
@@ -133,6 +133,7 @@ export function CustomerSidebarTop({
         activeId={activeFilterChip}
         onSelect={onSelectFilterChip}
         trailing={chipsTrailing}
+        rowClassName="py-[12px]"
       />
         </div>
         </div>

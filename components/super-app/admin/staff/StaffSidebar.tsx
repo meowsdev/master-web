@@ -44,7 +44,7 @@ export function StaffSidebar({ user, onStaffOpened, onOpenAuth }: { user: User; 
         profileSlot={<StaffSidebarHeader user={user} action={{ label: 'নতুন স্টাফ যোগ করুন', onClick: () => openPanel(null, 'adminAddStaff') }} />}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[8px]">
+      <div className="min-h-0 flex-1 overflow-y-auto px-[16px] pb-[8px]">
         {!isLoading && <p className="px-[10px] pb-[4px] pt-[8px] text-[13px] font-semibold text-muted">মোট স্টাফ: {visible.length.toLocaleString('bn-BD')}</p>}
         {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-muted">লোড হচ্ছে...</p>}
         {!isLoading && visible.length === 0 && <p className="p-[24px] text-center text-[14px] font-medium text-muted">কোনো স্টাফ পাওয়া যায়নি।</p>}

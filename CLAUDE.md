@@ -56,3 +56,7 @@ Allowed exceptions (meaning, not decoration). Use these only for the purpose giv
 - Buttons: 40px high, `text-[14px] font-semibold`, `rounded-[10px]`. The one larger action is the Tap to Schedule bar.
 - Every row of filters or tabs (sidebar filters, Overview · FAQ · How to Order · Review · Details, editor tabs) is
   `ChipRow` / `filterChipClass` (`components/super-app/ChipRow.tsx`). Do not style a new chip or tab by hand.
+- Every chat's message box is `OrderChatComposer` (`components/super-app/order-chat/OrderChatComposer.tsx`) for every
+  role: attach, text, voice, and call / send. Role-only buttons go in its `actions` slot (e.g. the provider's + menu).
+- Sidebar lists keep a 16px gutter on both sides (`px-[16px]` on the list, the search and the chips), so a selected
+  row's background never touches the sidebar's edges.

@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
-import { Attachment01Icon, CallIcon, CheckmarkCircle02Icon, Invoice01Icon, Mic01Icon, PlusSignIcon, SentIcon, UserAdd01Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
+import { CheckmarkCircle02Icon, Invoice01Icon, PlusSignIcon, UserAdd01Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import { Order, OrderStatus } from '@/types/order.types';
 import { openRevision } from '@/lib/revision';
-import { ComingSoonDialog } from './ComingSoonDialog';
+import { OrderChatComposer } from '../order-chat/OrderChatComposer';
 import { OrderPanelKind } from '@/store/useOrderPanelStore';
 
 interface ProviderOrderComposerProps {
@@ -29,12 +29,11 @@ interface PlusAction {
 }
 
 /*
- * The provider's message box: attach, type, mic, call and a plus menu with the job actions.
- * Attach, mic and call are not built yet and say so. The menu only asks; the backend decides what
+ * The provider's message box: the shared box of every role (attach, type, voice, call / send) plus the + menu with
+ * the job actions. The menu only asks; the backend decides what
  * is allowed (status flow, who may act, price limits). Entries that do not fit the order's status are greyed.
  */
 export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, canSend, onChooseAction, canAssignWorker = true, canSendCosts = false }: ProviderOrderComposerProps) {
-  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -66,44 +65,15 @@ export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, c
     { id: 'expenseClaim', label: 'পার্টস / খরচ', icon: Invoice01Icon, isEnabled: Boolean(order.completedAt) && canSendCosts && !isInRevision },
   ];
 
-  const comingSoonButton = 'flex size-[32px] shrink-0 cursor-pointer items-center justify-center text-ink';
-
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        onSubmit();
-      }}
-      className="shrink-0 bg-surface px-[16px] pb-[16px] pt-[8px]"
-    >
-      <div className="relative flex h-[48px] items-center gap-[8px] rounded-[24px] bg-white px-[12px] shadow-sm">
-        <button type="button" onClick={() => setIsComingSoonOpen(true)} aria-label="Attach" className={comingSoonButton}>
-          <HugeiconsIcon icon={Attachment01Icon} size={20} />
-        </button>
-
-        <input
-          value={draft}
-          onChange={(event) => onDraftChange(event.target.value)}
-          maxLength={1000}
-          disabled={order.isChatOpen === false}
-          placeholder={order.orderStatus === OrderStatus.PENDING ? 'অর্ডার accept করলে চ্যাট চালু হবে' : 'Type a message'}
-          className="min-w-0 flex-1 bg-transparent text-[14px] font-medium text-ink outline-none placeholder:text-muted"
-        />
-
-        <button type="button" onClick={() => setIsComingSoonOpen(true)} aria-label="Voice message" className={comingSoonButton}>
-          <HugeiconsIcon icon={Mic01Icon} size={20} />
-        </button>
-
-        {draft.trim() ? (
-          <button type="submit" disabled={!canSend} aria-label="Send message" className="flex size-[36px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-white disabled:bg-primary-disabled">
-            <HugeiconsIcon icon={SentIcon} size={18} />
-          </button>
-        ) : (
-          <button type="button" onClick={() => setIsComingSoonOpen(true)} aria-label="Call" className="flex size-[36px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-white">
-            <HugeiconsIcon icon={CallIcon} size={18} />
-          </button>
-        )}
-
+    <OrderChatComposer
+      draft={draft}
+      onDraftChange={onDraftChange}
+      onSubmit={onSubmit}
+      canSend={canSend}
+      isDisabled={order.isChatOpen === false}
+      disabledHint={order.orderStatus === OrderStatus.PENDING ? 'অর্ডার accept করলে চ্যাট চালু হবে' : undefined}
+      actions={
         <div ref={menuRef} className="relative shrink-0">
           <button
             type="button"
@@ -116,7 +86,7 @@ export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, c
           </button>
 
           {isMenuOpen && (
-            <div role="menu" className="absolute bottom-[44px] right-0 z-30 w-[220px] rounded-[12px] border border-line bg-white p-[6px] shadow-lg">
+            <div role="menu" className="absolute bottom-[48px] right-0 z-30 w-[220px] rounded-[12px] border border-line bg-white p-[6px] shadow-lg">
               {actions.map((action) => (
                 <button
                   key={action.id}
@@ -136,9 +106,7 @@ export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, c
             </div>
           )}
         </div>
-      </div>
-
-      {isComingSoonOpen && <ComingSoonDialog onClose={() => setIsComingSoonOpen(false)} />}
-    </form>
+      }
+    />
   );
 }

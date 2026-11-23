@@ -61,7 +61,7 @@ export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, 
         profileSlot={<ProviderProfileHeader user={user} />}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[8px]">
+      <div className="min-h-0 flex-1 overflow-y-auto px-[16px] pb-[8px]">
         <div className="pt-[8px]">
           <SupportChatRow userId={user.id} isActive={isSupportOpen} onOpen={onOpenSupport} />
         </div>
