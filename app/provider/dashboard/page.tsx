@@ -115,17 +115,17 @@ export default function ProviderDashboardPage() {
       case 'GOLD':
         return 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800';
       case 'SILVER':
-        return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+        return 'bg-surface text-ink dark:bg-slate-800 dark:text-slate-300 border-line dark:border-slate-700';
       case 'BRONZE':
       case 'NEW':
         return 'bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300 border-orange-200 dark:border-orange-800';
       default:
-        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
+        return 'bg-secondary text-primary dark:bg-emerald-950/60 dark:text-emerald-300 border-secondary dark:border-emerald-800';
     }
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-50 pb-16">
+    <div className="min-h-screen bg-surface dark:bg-black text-ink dark:text-zinc-50 pb-16">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
@@ -159,25 +159,25 @@ export default function ProviderDashboardPage() {
         {/* Top Metrics Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Wallet Card */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div className="bg-white dark:bg-zinc-900 border border-line dark:border-zinc-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-zinc-500">
+              <span className="text-xs font-semibold text-muted">
                 Platform Wallet
               </span>
-              <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-secondary dark:bg-emerald-950/60 text-primary flex items-center justify-center">
                 <Wallet className="w-4 h-4" />
               </div>
             </div>
 
             <div className="my-4">
-              <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
+              <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-ink dark:text-white">
                 {walletBalance.toFixed(2)} BDT
               </span>
               <p
                 className={`text-xs mt-1 font-medium ${
                   isWalletNegative
                     ? 'text-rose-600 dark:text-rose-400'
-                    : 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-primary dark:text-emerald-400'
                 }`}
               >
                 {isWalletNegative ? '● Account Locked (Negative)' : '● Active & Good Standing'}
@@ -187,7 +187,7 @@ export default function ProviderDashboardPage() {
             <button
               type="button"
               onClick={() => setIsTopUpOpen(true)}
-              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 bg-primary hover:bg-primary text-white text-xs font-semibold rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               Top Up Wallet
@@ -195,9 +195,9 @@ export default function ProviderDashboardPage() {
           </div>
 
           {/* Level Card */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div className="bg-white dark:bg-zinc-900 border border-line dark:border-zinc-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-zinc-500">
+              <span className="text-xs font-semibold text-muted">
                 Monthly Leveling Rank
               </span>
               <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
@@ -207,7 +207,7 @@ export default function ProviderDashboardPage() {
 
             <div className="my-4">
               <div className="flex items-center gap-2">
-                <span className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white">
+                <span className="text-2xl sm:text-3xl font-extrabold text-ink dark:text-white">
                   {providerLevel}
                 </span>
                 <span
@@ -218,23 +218,23 @@ export default function ProviderDashboardPage() {
                   Verified
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 mt-1">
+              <p className="text-xs text-muted mt-1">
                 ⭐ {ratingScore.toFixed(1)} Rating • Evaluated monthly
               </p>
             </div>
 
-            <div className="w-full bg-zinc-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-surface dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
               <div
-                className="bg-emerald-500 h-full rounded-full transition-all"
+                className="bg-primary h-full rounded-full transition-all"
                 style={{ width: `${Math.min(100, (completedOrders / 25) * 100)}%` }}
               />
             </div>
           </div>
 
           {/* Completed Orders Card */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div className="bg-white dark:bg-zinc-900 border border-line dark:border-zinc-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-zinc-500">
+              <span className="text-xs font-semibold text-muted">
                 Total Orders Completed
               </span>
               <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center">
@@ -243,33 +243,33 @@ export default function ProviderDashboardPage() {
             </div>
 
             <div className="my-4">
-              <span className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white">
+              <span className="text-2xl sm:text-3xl font-extrabold text-ink dark:text-white">
                 {completedOrders} Orders
               </span>
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+              <p className="text-xs text-primary dark:text-emerald-400 mt-1 font-medium">
                 {orders.length > 0
                   ? `${Math.round((completedOrders / orders.length) * 100)}% Completion Rate`
                   : 'Ready for Orders'}
               </p>
             </div>
 
-            <div className="text-[11px] text-zinc-400">
+            <div className="text-[11px] text-muted">
               Qualifies for Silver/Gold badge promotion with active performance.
             </div>
           </div>
         </div>
 
         {/* Provider Orders Management Section */}
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm space-y-4">
+        <div className="bg-white dark:bg-zinc-900 border border-line dark:border-zinc-800 rounded-3xl p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Package className="w-5 h-5 text-emerald-600" />
-              <h2 className="text-base font-bold text-zinc-900 dark:text-white">
+              <Package className="w-5 h-5 text-primary" />
+              <h2 className="text-base font-bold text-ink dark:text-white">
                 Assigned Orders & Service Requests
               </h2>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-muted">
                 {orders.length} Total Orders
               </span>
               <button
@@ -278,7 +278,7 @@ export default function ProviderDashboardPage() {
                   queryClient.invalidateQueries({ queryKey: ['provider-orders'] });
                   refetchMe();
                 }}
-                className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-muted hover:text-muted dark:hover:text-zinc-200 rounded-lg transition-colors cursor-pointer"
                 title="Refresh"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
@@ -287,15 +287,15 @@ export default function ProviderDashboardPage() {
           </div>
 
           {isLoading ? (
-            <div className="text-center py-12 text-xs text-zinc-400">
+            <div className="text-center py-12 text-xs text-muted">
               Loading provider orders...
             </div>
           ) : orders.length === 0 ? (
-            <div className="text-center py-16 text-zinc-400 text-xs">
+            <div className="text-center py-16 text-muted text-xs">
               No orders assigned yet. Orders assigned by counselors or placed by customers will appear here.
             </div>
           ) : (
-            <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            <div className="divide-y divide-line dark:divide-zinc-800">
               {orders.map((ord: Order) => (
                 <div
                   key={ord.id}
@@ -303,14 +303,14 @@ export default function ProviderDashboardPage() {
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-zinc-900 dark:text-white">
+                      <span className="text-xs font-bold text-ink dark:text-white">
                         Order #{ord.id.slice(0, 8).toUpperCase()}
                       </span>
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-md">
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-surface dark:bg-zinc-800 text-ink dark:text-zinc-300 rounded-md">
                         {ord.orderStatus}
                       </span>
                     </div>
-                    <p className="text-xs text-zinc-500 mt-1">
+                    <p className="text-xs text-muted mt-1">
                       Total: {Number(ord.totalPrice).toFixed(2)} BDT (Platform Fee:{' '}
                       {Number(ord.adminCommission).toFixed(2)} BDT)
                     </p>
@@ -328,7 +328,7 @@ export default function ProviderDashboardPage() {
                           })
                         }
                         disabled={updateStatusMutation.isPending}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
+                        className="px-3 py-1.5 bg-primary hover:bg-primary text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer disabled:bg-primary-disabled"
                       >
                         Start Work
                       </button>
@@ -352,7 +352,7 @@ export default function ProviderDashboardPage() {
 
                     <a
                       href={`/orders/${ord.id}`}
-                      className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold rounded-lg transition-colors"
+                      className="px-3 py-1.5 bg-surface dark:bg-zinc-800 hover:bg-surface dark:hover:bg-zinc-700 text-ink dark:text-zinc-200 text-xs font-semibold rounded-lg transition-colors"
                     >
                       View Details
                     </a>
@@ -366,28 +366,28 @@ export default function ProviderDashboardPage() {
         {/* Top Up Wallet Modal */}
         {isTopUpOpen && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-white dark:bg-zinc-900 border border-line dark:border-zinc-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-secondary dark:bg-emerald-950/60 text-primary flex items-center justify-center">
                     <CreditCard className="w-4 h-4" />
                   </div>
-                  <h3 className="text-base font-bold text-zinc-900 dark:text-white">
+                  <h3 className="text-base font-bold text-ink dark:text-white">
                     Recharge Provider Wallet
                   </h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsTopUpOpen(false)}
-                  className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-lg"
+                  className="p-1 text-muted hover:text-muted dark:hover:text-zinc-200 rounded-lg"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted">
                 Current Balance:{' '}
-                <strong className={isWalletNegative ? 'text-rose-600 font-bold' : 'text-emerald-600'}>
+                <strong className={isWalletNegative ? 'text-rose-600 font-bold' : 'text-primary'}>
                   {walletBalance.toFixed(2)} BDT
                 </strong>
                 . Recharging ensures smooth order acceptance and instant account unblocking.
@@ -406,8 +406,8 @@ export default function ProviderDashboardPage() {
                       }}
                       className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
                         !customAmount && topUpAmount === amt
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                          : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
+                          ? 'bg-primary text-white border-primary shadow-sm'
+                          : 'bg-surface dark:bg-zinc-800 text-ink dark:text-zinc-300 border-line dark:border-zinc-700 hover:border-zinc-400'
                       }`}
                     >
                       +{amt} BDT
@@ -417,7 +417,7 @@ export default function ProviderDashboardPage() {
 
                 {/* Custom Amount Input */}
                 <div>
-                  <label className="text-[11px] font-semibold text-zinc-500 mb-1 block">
+                  <label className="text-[11px] font-semibold text-muted mb-1 block">
                     Or Enter Custom Amount (BDT)
                   </label>
                   <input
@@ -427,13 +427,13 @@ export default function ProviderDashboardPage() {
                     placeholder="e.g. 1500"
                     value={customAmount}
                     onChange={(e) => setCustomAmount(e.target.value)}
-                    className="w-full p-2.5 text-xs sm:text-sm bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-zinc-900 dark:text-white"
+                    className="w-full p-2.5 text-xs sm:text-sm bg-surface dark:bg-zinc-800 border border-line dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-ink dark:text-white"
                   />
                 </div>
 
                 {/* Payment Simulation Note */}
-                <div className="p-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl text-[11px] text-zinc-500 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                <div className="p-3 bg-surface dark:bg-zinc-800/60 rounded-xl text-[11px] text-muted flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
                   Instant credit via bKash / Nagad / Card Gateway.
                 </div>
 
@@ -441,14 +441,14 @@ export default function ProviderDashboardPage() {
                   <button
                     type="button"
                     onClick={() => setIsTopUpOpen(false)}
-                    className="px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl"
+                    className="px-4 py-2 text-xs font-semibold text-muted dark:text-zinc-400 hover:bg-surface dark:hover:bg-zinc-800 rounded-xl"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={rechargeMutation.isPending}
-                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer"
+                    className="px-5 py-2 bg-primary hover:bg-primary text-white text-xs font-semibold rounded-xl shadow-md transition-all disabled:bg-primary-disabled cursor-pointer"
                   >
                     {rechargeMutation.isPending ? 'Processing...' : 'Pay & Recharge'}
                   </button>

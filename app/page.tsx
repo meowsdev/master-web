@@ -24,6 +24,8 @@ import { SuperAppSidebar } from '@/components/super-app/SuperAppSidebar';
 import { MainCanvasArea } from '@/components/super-app/MainCanvasArea';
 import { ServicePreviewPanel } from '@/components/modals/ServicePreviewPanel';
 import { SuperAppModals } from '@/components/super-app/SuperAppModals';
+import { CatalogPanels } from '@/components/modals/catalog/CatalogPanels';
+import { useCatalogPanelStore } from '@/store/useCatalogPanelStore';
 
 const emptySubscribe = () => () => {};
 
@@ -145,7 +147,7 @@ export default function SuperAppPage() {
   });
 
   // Logged-out visitors see a service's public page; Contact Now leads through login to its chat.
-  const { previewService, openPreview, closePreview, handleContactNow, cancelContact } = useGuestServicePreview({
+  const { previewService, closePreview, handleContactNow, cancelContact } = useGuestServicePreview({
     isAuthenticated,
     onOpenAuth: () => modals.handleOpenAuth('LOGIN'),
     onOpenChat: (service) => {
@@ -182,13 +184,13 @@ export default function SuperAppPage() {
 
   if (!isMounted) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#efeae2] dark:bg-[#0b141a]">
-        <div className="w-10 h-10 rounded-full border-3 border-[#008069] border-t-transparent animate-spin" />
+      <div className="flex h-screen w-screen items-center justify-center bg-surface dark:bg-[#0b141a]">
+        <div className="w-10 h-10 rounded-full border-3 border-primary border-t-transparent animate-spin" />
       </div>
     );
   }
 
-  const bgMain = isDarkMode ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#f0f2f5] text-[#111b21]';
+  const bgMain = isDarkMode ? 'bg-[#0b141a] text-muted' : 'bg-surface text-[#111b21]';
   // The + buttons open the Place Order panel; the customer picks the service inside it.
   const handleStartNewOrder = () => {
     setActiveRailTab('CHATS');
@@ -246,7 +248,17 @@ export default function SuperAppPage() {
         allDbServicesCount={dbServices.length}
         isServicesLoading={isServicesLoading}
         activeServiceId={activeServiceId}
-        onSelectService={(service) => { if (isAuthenticated) { leaveSupportChat(); return handleSelectServiceWithReadSync(service); } modals.closeSidePanels(); openPreview(service); }}
+        // Everyone opens the main service's chat: guests see its Services tab (cards, details, cart) and log in to order.
+        // Opening a main service's chat also opens its Overview, FAQ, How to Order, Review and Details on the right.
+        onSelectService={(service) => {
+          leaveSupportChat();
+          if (isAuthenticated) handleSelectServiceWithReadSync(service);
+          else {
+            modals.closeSidePanels();
+            handleSelectService(service);
+          }
+          if (service.isMainService) useCatalogPanelStore.getState().openMainService(service.id);
+        }}
         serviceMessages={serviceMessages}
         conversationByServiceId={conversationByServiceId}
       />
@@ -322,6 +334,9 @@ export default function SuperAppPage() {
         onOrderRevisionRequested={handleReopenOrderRevision}
         onSelectServiceById={(id) => { const target = dbServices.find((s) => s.id === id); if (target) handleSelectServiceWithReadSync(target); }}
       />
+
+      {/* 5. The Services tab's right-hand panels (sub-service details, cart checkout, custom request) */}
+      <CatalogPanels onOrderPlaced={handleOrderPlaced} />
 
       {!isAuthenticated && (
         <ServicePreviewPanel service={modals.isAnySidePanelOpen ? null : previewService} onClose={closePreview} primaryActionLabel="Contact Now" onPrimaryAction={handleContactNow} />

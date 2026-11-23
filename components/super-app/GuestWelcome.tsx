@@ -20,7 +20,7 @@ const MIN_ROW_SCALE = 1;
 
 /*
  * Logged-out landing canvas, built from the Figma welcome frame.
- * Colors (#1daa61, #697586, #f7f5f3, #e5e5e5) are that design's own tokens and
+ * Colors (#38C792, #697586, #F7F5F3, #F7F5F3) are that design's own tokens and
  * intentionally differ from the WhatsApp chat palette; Manrope comes from
  * the --font-manrope variable registered in app/layout.tsx.
  */
@@ -37,24 +37,24 @@ export function GuestWelcome({ onOpenAuth }: GuestWelcomeProps) {
       className="flex min-w-0 flex-1 flex-col overflow-auto"
       style={{ fontFamily: 'var(--font-manrope), sans-serif' }}
     >
-      <header className={`flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-end gap-[10px] border-b border-[#e5e5e5] bg-white px-[16px] lg:px-[48px]`}>
+      <header className={`flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-end gap-[10px] border-b border-line bg-white px-[16px] lg:px-[48px]`}>
         <button
           type="button"
-          className="cursor-pointer rounded-[12px] bg-white whitespace-nowrap px-[12px] py-[8px] text-[14px] font-semibold tracking-[-0.4px] text-[#697586] lg:px-[16px] lg:text-[16px] xl:text-[20px]"
+          className="cursor-pointer rounded-[12px] bg-white whitespace-nowrap px-[12px] py-[8px] text-[14px] font-semibold tracking-[-0.4px] text-muted lg:px-[16px] lg:text-[16px] xl:text-[20px]"
         >
           Apply Partner
         </button>
         <button
           type="button"
           onClick={() => onOpenAuth('REGISTER')}
-          className="cursor-pointer rounded-[12px] border border-[#1daa61] bg-white whitespace-nowrap px-[12px] py-[8px] text-[14px] font-semibold tracking-[-0.4px] text-[#1daa61] lg:px-[16px] lg:text-[16px] xl:text-[20px]"
+          className="cursor-pointer rounded-[12px] border border-primary bg-white whitespace-nowrap px-[12px] py-[8px] text-[14px] font-semibold tracking-[-0.4px] text-primary lg:px-[16px] lg:text-[16px] xl:text-[20px]"
         >
           Create New Account
         </button>
       </header>
 
       {/* Measured box: its width minus padding is what the cards may use. */}
-      <div ref={contentAreaRef} className="flex flex-1 bg-[#f7f5f3] p-[24px] sm:p-[48px]">
+      <div ref={contentAreaRef} className="flex flex-1 bg-surface p-[24px] sm:p-[48px]">
         {/*
           `zoom` shrinks the fixed-pixel Figma cards while keeping layout size in sync
           (unlike transform). `m-auto` centers the content yet keeps it reachable

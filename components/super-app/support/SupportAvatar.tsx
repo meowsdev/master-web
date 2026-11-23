@@ -5,7 +5,7 @@ export function SupportAvatar({ name, photo, sizeClass = 'size-[44px]' }: { name
     return <img src={photo} alt="" className={`${sizeClass} shrink-0 rounded-full object-cover`} />;
   }
   return (
-    <span className={`${sizeClass} flex shrink-0 items-center justify-center rounded-full bg-[#d7fdd2] text-[18px] font-semibold text-[#205737]`}>
+    <span className={`${sizeClass} flex shrink-0 items-center justify-center rounded-full bg-secondary text-[18px] font-semibold text-ink`}>
       {(name || '?').charAt(0).toUpperCase()}
     </span>
   );

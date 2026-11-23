@@ -33,13 +33,13 @@ export function HeaderOptionsMenu({ items }: { items: HeaderMenuItem[] }) {
         onClick={() => setIsOpen((wasOpen) => !wasOpen)}
         aria-label="Options"
         aria-expanded={isOpen}
-        className="flex size-[36px] cursor-pointer items-center justify-center rounded-full text-[#202939] transition-colors hover:bg-black/5"
+        className="flex size-[36px] cursor-pointer items-center justify-center rounded-full text-ink transition-colors hover:bg-black/5"
       >
         <HugeiconsIcon icon={MoreVerticalIcon} size={20} />
       </button>
 
       {isOpen && (
-        <div role="menu" className="absolute right-0 top-[40px] z-50 w-[200px] overflow-hidden rounded-[12px] border border-[#e5e5e5] bg-white py-[6px] shadow-lg">
+        <div role="menu" className="absolute right-0 top-[40px] z-50 w-[200px] overflow-hidden rounded-[12px] border border-line bg-white py-[6px] shadow-lg">
           {items.map((item) => (
             <button
               key={item.label}
@@ -49,8 +49,8 @@ export function HeaderOptionsMenu({ items }: { items: HeaderMenuItem[] }) {
                 setIsOpen(false);
                 item.onSelect();
               }}
-              className={`w-full cursor-pointer px-[16px] py-[10px] text-left text-[14px] font-medium hover:bg-[#f7f5f3] ${
-                item.isDanger ? 'text-[#d64545]' : 'text-[#202939]'
+              className={`w-full cursor-pointer px-[16px] py-[10px] text-left text-[14px] font-medium hover:bg-surface ${
+                item.isDanger ? 'text-[#d64545]' : 'text-ink'
               }`}
             >
               {item.label}

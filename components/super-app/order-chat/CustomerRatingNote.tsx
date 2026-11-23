@@ -18,12 +18,12 @@ export function CustomerRatingNote({ order, viewer }: { order: Order; viewer: ke
   if (!given) return null;
 
   return (
-    <article className="w-full max-w-[460px] self-center rounded-[16px] bg-gradient-to-b from-white to-[#eefaf5] p-[16px] text-[#202939]">
+    <article className="w-full max-w-[460px] self-center rounded-[16px] bg-gradient-to-b from-white to-secondary p-[16px] text-ink">
       <h3 className="text-[13px] font-semibold">{TITLE[viewer]}</h3>
 
       <div aria-label={`${given.rating} out of 5`} className="mt-[10px] flex justify-center gap-[6px]">
         {RATING_STEPS.map((step) => (
-          <HugeiconsIcon key={step} icon={StarIcon} size={26} className={step <= given.rating ? 'text-[#f5a524]' : 'text-[#cecece]'} fill={step <= given.rating ? 'currentColor' : 'none'} />
+          <HugeiconsIcon key={step} icon={StarIcon} size={26} className={step <= given.rating ? 'text-[#f5a524]' : 'text-muted'} fill={step <= given.rating ? 'currentColor' : 'none'} />
         ))}
       </div>
 

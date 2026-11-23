@@ -6,10 +6,11 @@ import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { ExpenseClaim, ExpenseItem } from '@/types/expense-claim.types';
 import { Order } from '@/types/order.types';
+import { openRevision } from '@/lib/revision';
 
 const STATUS_LABEL: Record<ExpenseClaim['status'], { text: string; className: string }> = {
   PENDING: { text: 'এডমিন রিভিউয়ের অপেক্ষায়', className: 'text-[#b7791f]' },
-  APPROVED: { text: 'অনুমোদিত', className: 'text-[#1daa61]' },
+  APPROVED: { text: 'অনুমোদিত', className: 'text-primary' },
   REJECTED: { text: 'ফেরত পাঠানো হয়েছে', className: 'text-[#d64545]' },
 };
 
@@ -30,19 +31,19 @@ function ClaimSummary({ claim }: { claim: ExpenseClaim }) {
   const status = STATUS_LABEL[claim.status];
   const isApproved = claim.status === 'APPROVED';
   return (
-    <div className="border-t border-[#e5e5e5] pt-[10px] first:border-t-0 first:pt-0">
+    <div className="border-t border-line pt-[10px] first:border-t-0 first:pt-0">
       <p className={`text-[12px] font-semibold ${status.className}`}>{status.text}</p>
       <ItemList items={isApproved && claim.approvedItems ? claim.approvedItems : claim.items} />
-      <dl className="mt-[8px] flex flex-col gap-[2px] text-[13px] font-medium text-[#697586]">
+      <dl className="mt-[8px] flex flex-col gap-[2px] text-[13px] font-medium text-muted">
         <div className="flex justify-between"><dt>দাবি করা খরচ</dt><dd>{formatTaka(claim.claimedTotal)}</dd></div>
         {isApproved && (
           <>
-            <div className="flex justify-between font-semibold text-[#202939]"><dt>অনুমোদিত খরচ</dt><dd>{formatTaka(claim.approvedTotal ?? 0)}</dd></div>
+            <div className="flex justify-between font-semibold text-ink"><dt>অনুমোদিত খরচ</dt><dd>{formatTaka(claim.approvedTotal ?? 0)}</dd></div>
             <div className="flex justify-between"><dt>কমিশন</dt><dd>{formatTaka(claim.commissionBefore ?? 0)} → {formatTaka(claim.commissionAfter ?? 0)}</dd></div>
           </>
         )}
       </dl>
-      {claim.reviewNote && <p className="mt-[6px] text-[12px] font-medium text-[#697586]">এডমিনের নোট: {claim.reviewNote}</p>}
+      {claim.reviewNote && <p className="mt-[6px] text-[12px] font-medium text-muted">এডমিনের নোট: {claim.reviewNote}</p>}
     </div>
   );
 }
@@ -58,15 +59,16 @@ export function ExpenseClaimsCard({ order, userId, viewer }: { order: Order; use
   const { canReviewExpenses } = useStaffPermissions();
   const openPanel = useOrderPanelStore((state) => state.open);
   const pending = claims.find((claim) => claim.status === 'PENDING');
-  const canSend = viewer === 'WORKER' && canSubmit && Boolean(order.completedAt);
+  // Closed while a revision is open: parts found then are billed to the customer as an Extra Charge.
+  const canSend = viewer === 'WORKER' && canSubmit && Boolean(order.completedAt) && !openRevision(order);
 
   if (claims.length === 0 && !canSend) return null;
 
   return (
-    <article className="w-full max-w-[460px] self-center rounded-[16px] bg-white p-[16px] text-[#202939] shadow-sm">
+    <article className="w-full max-w-[460px] self-center rounded-[16px] bg-white p-[16px] text-ink shadow-sm">
       <h3 className="text-[13px] font-semibold">পার্টস / খরচের হিসাব</h3>
       {claims.length === 0 && (
-        <p className="mt-[6px] text-[13px] font-medium text-[#697586]">কাজে পার্টস কিনে থাকলে বা অন্য খরচ হলে জমা দিন। এডমিন অনুমোদন দিলে সেই খরচ বাদ দিয়ে কমিশন হিসাব হবে।</p>
+        <p className="mt-[6px] text-[13px] font-medium text-muted">কাজে পার্টস কিনে থাকলে বা অন্য খরচ হলে জমা দিন। এডমিন অনুমোদন দিলে সেই খরচ বাদ দিয়ে কমিশন হিসাব হবে।</p>
       )}
 
       {claims.length > 0 && (
@@ -76,12 +78,12 @@ export function ExpenseClaimsCard({ order, userId, viewer }: { order: Order; use
       )}
 
       {canSend && (
-        <button type="button" onClick={() => openPanel(order.id, 'expenseClaim')} className="mt-[12px] h-[36px] cursor-pointer rounded-[10px] bg-[#1daa61] px-[16px] text-[14px] font-semibold text-white hover:bg-[#189452]">
+        <button type="button" onClick={() => openPanel(order.id, 'expenseClaim')} className="mt-[12px] h-[36px] cursor-pointer rounded-[10px] bg-primary px-[16px] text-[14px] font-semibold text-white hover:bg-primary/90">
           {claims.length > 0 ? 'আবার খরচ পাঠান' : 'পার্টস / খরচ জমা দিন'}
         </button>
       )}
       {viewer === 'ADMIN' && pending && canReviewExpenses && (
-        <button type="button" onClick={() => openPanel(order.id, 'expenseReview')} className="mt-[12px] h-[36px] cursor-pointer rounded-[10px] bg-[#1daa61] px-[16px] text-[14px] font-semibold text-white hover:bg-[#189452]">
+        <button type="button" onClick={() => openPanel(order.id, 'expenseReview')} className="mt-[12px] h-[36px] cursor-pointer rounded-[10px] bg-primary px-[16px] text-[14px] font-semibold text-white hover:bg-primary/90">
           রিভিউ করুন
         </button>
       )}

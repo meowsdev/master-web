@@ -1,9 +1,8 @@
 'use client';
 
-import Image from 'next/image';
 import { ReactNode } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
+import { ArrowLeft01Icon, StarIcon } from '@hugeicons/core-free-icons';
 import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import { HeaderOptionsMenu, HeaderMenuItem } from './HeaderOptionsMenu';
 
@@ -25,19 +24,19 @@ export function ConversationHeader({ picture, title, ratingLabel, backLabel, onB
   return (
     <header
       className={`flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-between gap-[12px] border-b px-[16px] ${
-        isDarkMode ? 'border-[#222e35] bg-[#202c33]' : 'border-[#e5e5e5] bg-white'
+        isDarkMode ? 'border-[#222e35] bg-[#202c33]' : 'border-line bg-white'
       }`}
     >
       <div className="flex min-w-0 items-center gap-[10px]">
         <button type="button" onClick={onBack} aria-label={backLabel} className="cursor-pointer md:hidden">
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={22} className="text-[#202939]" />
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={22} className="text-ink" />
         </button>
 
         <button type="button" onClick={onOpenTitle} className="flex min-w-0 cursor-pointer items-center gap-[10px] text-left">
           {picture}
-          <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{title}</span>
-          <span className="flex shrink-0 items-center gap-[3px] text-[13px] font-semibold text-[#202939]">
-            <Image src="/chat-list/star.svg" alt="" width={12} height={11.4} style={{ width: 'auto', height: 'auto' }} />
+          <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-ink">{title}</span>
+          <span className="flex shrink-0 items-center gap-[3px] text-[13px] font-semibold text-ink">
+            <HugeiconsIcon icon={StarIcon} size={13} className="shrink-0 fill-[#f5a524] text-[#f5a524]" />
             {ratingLabel}
           </span>
         </button>

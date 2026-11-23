@@ -147,9 +147,9 @@ export function OrdersDrawer({
 
   if (!isOpen) return null;
 
-  const textPrimary = isDarkMode ? 'text-[#e9edef]' : 'text-[#111b21]';
-  const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
-  const bgCard = isDarkMode ? 'bg-[#202c33] border-[#2f3b43]' : 'bg-[#f0f2f5] border-[#e9edef]';
+  const textPrimary = isDarkMode ? 'text-muted' : 'text-[#111b21]';
+  const textSecondary = isDarkMode ? 'text-muted' : 'text-muted';
+  const bgCard = isDarkMode ? 'bg-[#202c33] border-[#2f3b43]' : 'bg-surface border-line';
 
   const runningCount = orders.filter(
     (o) =>
@@ -163,13 +163,13 @@ export function OrdersDrawer({
       {/* Slide-in WhatsApp Drawer Container */}
       <div
         className={`relative z-10 ${SIDE_PANEL_CLASS} h-full shadow-2xl border-l flex flex-col overflow-hidden animate-in slide-in-from-right duration-200 ${
-          isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]'
+          isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-line'
         }`}
       >
         {/* Header (Pinned) */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-black/5 dark:border-white/10 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-[#008069]/10 dark:bg-[#005c4b]/40 text-[#008069] dark:text-[#25D366]">
+            <div className="p-2 rounded-xl bg-primary/10 dark:bg-[#005c4b]/40 text-primary dark:text-[#38C792]">
               <Package className="w-5 h-5" />
             </div>
             <div>
@@ -203,7 +203,7 @@ export function OrdersDrawer({
             onClick={() => setActiveTab('ALL')}
             className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'ALL'
-                ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-[#008069] dark:text-[#25D366] font-bold shadow-xs'
+                ? 'bg-secondary dark:bg-[#005c4b] text-primary dark:text-[#38C792] font-bold shadow-xs'
                 : `${textSecondary} hover:bg-black/5 dark:hover:bg-white/5`
             }`}
           >
@@ -213,7 +213,7 @@ export function OrdersDrawer({
             onClick={() => setActiveTab('RUNNING')}
             className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'RUNNING'
-                ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-[#008069] dark:text-[#25D366] font-bold shadow-xs'
+                ? 'bg-secondary dark:bg-[#005c4b] text-primary dark:text-[#38C792] font-bold shadow-xs'
                 : `${textSecondary} hover:bg-black/5 dark:hover:bg-white/5`
             }`}
           >
@@ -233,7 +233,7 @@ export function OrdersDrawer({
             onClick={() => setActiveTab('COMPLETED')}
             className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'COMPLETED'
-                ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-[#008069] dark:text-[#25D366] font-bold shadow-xs'
+                ? 'bg-secondary dark:bg-[#005c4b] text-primary dark:text-[#38C792] font-bold shadow-xs'
                 : `${textSecondary} hover:bg-black/5 dark:hover:bg-white/5`
             }`}
           >
@@ -245,7 +245,7 @@ export function OrdersDrawer({
         <div className="flex-1 overflow-y-auto p-5 space-y-3 overscroll-contain">
           {!isAuthenticated ? (
             <div className="text-center py-12 px-4 space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-[#008069]/10 text-[#008069] dark:text-[#25D366] flex items-center justify-center mx-auto">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary dark:text-[#38C792] flex items-center justify-center mx-auto">
                 <LogIn className="w-7 h-7" />
               </div>
               <div>
@@ -259,7 +259,7 @@ export function OrdersDrawer({
                   onClose();
                   onOpenAuth();
                 }}
-                className="px-5 py-2.5 bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold text-xs rounded-xl transition-all cursor-pointer inline-flex items-center gap-2"
+                className="px-5 py-2.5 bg-primary hover:bg-primary dark:bg-[#38C792] dark:hover:bg-[#38C792] text-white dark:text-[#111b21] font-bold text-xs rounded-xl transition-all cursor-pointer inline-flex items-center gap-2"
               >
                 <LogIn className="w-4 h-4" />
                 <span>Login with Phone</span>
@@ -271,14 +271,14 @@ export function OrdersDrawer({
                 <div
                   key={n}
                   className={`h-28 rounded-2xl animate-pulse ${
-                    isDarkMode ? 'bg-[#202c33]' : 'bg-[#f0f2f5]'
+                    isDarkMode ? 'bg-[#202c33]' : 'bg-surface'
                   }`}
                 />
               ))}
             </div>
           ) : filteredOrders.length === 0 ? (
             <div className="text-center py-16 px-4 space-y-3">
-              <div className="w-14 h-14 rounded-2xl bg-black/5 dark:bg-white/5 text-[#8696a0] flex items-center justify-center mx-auto">
+              <div className="w-14 h-14 rounded-2xl bg-black/5 dark:bg-white/5 text-muted flex items-center justify-center mx-auto">
                 <Package className="w-7 h-7" />
               </div>
               <h4 className={`text-sm font-bold ${textPrimary}`}>No orders in this list</h4>
@@ -311,7 +311,7 @@ export function OrdersDrawer({
                 >
                   {/* Top Bar: ID and Status Pill */}
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-[11px] font-bold text-[#8696a0]">
+                    <span className="font-mono text-[11px] font-bold text-muted">
                       #{order.id.slice(0, 8).toUpperCase()}
                     </span>
 
@@ -320,7 +320,7 @@ export function OrdersDrawer({
                         isOrderRevision
                           ? 'bg-amber-400 dark:bg-amber-500 text-black font-black border border-amber-300 shadow-xs animate-pulse'
                           : isCompleted
-                          ? 'bg-[#d9fdd3] text-[#008069] dark:bg-[#005c4b]/60 dark:text-[#25D366]'
+                          ? 'bg-secondary text-primary dark:bg-[#005c4b]/60 dark:text-[#38C792]'
                           : isRunning
                           ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
                           : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
@@ -382,7 +382,7 @@ export function OrdersDrawer({
                   {/* Price & Payment Mode */}
                   <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/10 text-xs">
                     <span className={`font-medium ${textSecondary}`}>Total Amount</span>
-                    <span className="font-extrabold text-[#008069] dark:text-[#25D366] text-sm">
+                    <span className="font-extrabold text-primary dark:text-[#38C792] text-sm">
                       ৳ {Number(order.finalPrice || order.originalPrice).toFixed(0)}
                     </span>
                   </div>
@@ -392,9 +392,9 @@ export function OrdersDrawer({
                     <button
                       onClick={() => {
                         onClose();
-                        onSelectServiceById(order.serviceId);
+                        onSelectServiceById(order.categoryId ?? order.service?.categoryId ?? order.serviceId);
                       }}
-                      className="flex-1 py-2 px-3 rounded-xl bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      className="flex-1 py-2 px-3 rounded-xl bg-primary hover:bg-primary dark:bg-[#38C792] dark:hover:bg-[#38C792] text-white dark:text-[#111b21] text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
                       <span>Open in Chat</span>
@@ -414,7 +414,7 @@ export function OrdersDrawer({
                         <button
                           onClick={() => completeOrderMutation.mutate(order.id)}
                           disabled={completeOrderMutation.isPending}
-                          className="py-2 px-3 rounded-xl bg-[#d9fdd3] dark:bg-[#005c4b]/50 hover:bg-[#c2f7b8] text-[#008069] dark:text-[#25D366] text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                          className="py-2 px-3 rounded-xl bg-secondary dark:bg-[#005c4b]/50 hover:bg-secondary/80 text-primary dark:text-[#38C792] text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
                           title="Mark as Completed"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />

@@ -27,7 +27,7 @@ export function AdminAddMemberPanel({ adminId, role, onClose }: { adminId: strin
   return (
     <SidePanelShell title={TITLE[role]} onClose={onClose}>
       <div className="pb-[24px]">
-        <p className="mb-[8px] text-[13px] font-medium leading-relaxed text-[#697586]">{NOTE[role]}</p>
+        <p className="mb-[8px] text-[13px] font-medium leading-relaxed text-muted">{NOTE[role]}</p>
         <PhoneNumberField value={form.phone} onChange={form.setPhone} />
         <OrderField icon={UserIcon}>
           <input value={form.name} onChange={(event) => form.setName(event.target.value)} maxLength={100} placeholder={role === 'TECHNICIAN' ? 'Name' : 'Name (optional)'} className={fieldControlClass} />
@@ -72,12 +72,12 @@ export function AdminAddMemberPanel({ adminId, role, onClose }: { adminId: strin
             type="button"
             onClick={form.save}
             disabled={form.missing.length > 0 || form.isSaving}
-            className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
+            className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
           >
             {form.isSaving ? 'Adding...' : TITLE[role]}
           </button>
         </div>
-        {form.missing.length > 0 && <p className="mt-[10px] text-center text-[12px] font-medium text-[#697586]">বাকি আছে: {form.missing.join(', ')}</p>}
+        {form.missing.length > 0 && <p className="mt-[10px] text-center text-[12px] font-medium text-muted">বাকি আছে: {form.missing.join(', ')}</p>}
       </div>
     </SidePanelShell>
   );

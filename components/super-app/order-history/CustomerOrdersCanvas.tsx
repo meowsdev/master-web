@@ -27,7 +27,7 @@ export function CustomerOrdersCanvas({ userId, onBackMobile, onOpenOrdersDrawer 
 
   if (!order) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-[#f7f5f3] p-[24px] text-center text-[15px] font-medium text-[#697586]">
+      <div className="flex flex-1 items-center justify-center bg-surface p-[24px] text-center text-[15px] font-medium text-muted">
         Select an order to see its full chat history.
       </div>
     );

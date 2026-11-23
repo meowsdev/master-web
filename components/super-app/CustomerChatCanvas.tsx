@@ -5,8 +5,8 @@ import { Clock } from 'lucide-react';
 import { Service } from '@/types/service.types';
 import { OrderCardData } from '@/types/super-app.types';
 import { ChatHeader } from './ChatHeader';
-import { PlaceOrderEmptyState } from './PlaceOrderEmptyState';
-import { OrderTabsBar } from './order-chat/OrderTabsBar';
+import { OrderTabsBar, SERVICES_TAB } from './order-chat/OrderTabsBar';
+import { ServicesTab } from './catalog/ServicesTab';
 import { OrderChatPanel } from './order-chat/OrderChatPanel';
 import { useCustomerOrderTabs } from '@/hooks/useCustomerOrderTabs';
 
@@ -28,6 +28,8 @@ interface CustomerChatCanvasProps {
   /** The open order tab; null until the customer picks one (the newest is shown meanwhile). */
   selectedOrderId: string | null;
   onSelectOrderTab: (orderId: string | null) => void;
+  /** Guests: ordering from the Services tab asks them to log in first. */
+  onRequireAuth: () => void;
 }
 
 export function CustomerChatCanvas({
@@ -47,12 +49,15 @@ export function CustomerChatCanvas({
   userId,
   selectedOrderId,
   onSelectOrderTab,
+  onRequireAuth,
 }: CustomerChatCanvasProps) {
   const [isCompletingBanner, setIsCompletingBanner] = useState(false);
   const orderTabs = useCustomerOrderTabs(userId, activeService.categoryId);
-  // A chat only exists inside an order: with none picked yet the newest order is shown, with none at all
-  // the customer is asked to place one. (Anything else goes to the Support chat.)
-  const selectedOrder = orderTabs.find((order) => order.id === selectedOrderId) ?? orderTabs[0];
+  // With no tab picked yet, the newest running order opens; with none running, the Services tab (the sub-service
+  // cards). A picked order that has since closed falls back the same way.
+  const pickedOrder = orderTabs.find((order) => order.id === selectedOrderId);
+  const selectedOrder = selectedOrderId === SERVICES_TAB ? undefined : (pickedOrder ?? orderTabs[orderTabs.length - 1]);
+  const selectedTab = selectedOrder?.id ?? SERVICES_TAB;
   return (
     <>
       <ChatHeader
@@ -65,7 +70,7 @@ export function CustomerChatCanvas({
         isDarkMode={isDarkMode}
       />
 
-      {isAuthenticated && orderTabs.length > 0 && <OrderTabsBar orders={orderTabs} selectedOrderId={selectedOrder?.id ?? null} onSelect={onSelectOrderTab} />}
+      {isAuthenticated && orderTabs.length > 0 && <OrderTabsBar orders={orderTabs} selectedTab={selectedTab} onSelect={onSelectOrderTab} />}
 
       {/* Active Order Banner: Shows live status & quick completion action */}
       {activeOrder && (activeOrder.status === 'IN_PROGRESS' || activeOrder.status === 'PENDING' || activeOrder.status === 'ACCEPTED') && activeOrderMessageId && (
@@ -90,7 +95,7 @@ export function CustomerChatCanvas({
               }
             }}
             disabled={isCompletingBanner}
-            className="shrink-0 ml-2 px-3 py-1 bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold rounded-full text-xs shadow-xs cursor-pointer transition-colors disabled:opacity-60 flex items-center gap-1.5"
+            className="shrink-0 ml-2 px-3 py-1 bg-primary hover:bg-primary dark:bg-[#38C792] dark:hover:bg-[#38C792] text-white dark:text-[#111b21] font-bold rounded-full text-xs shadow-xs cursor-pointer transition-colors disabled:bg-primary-disabled flex items-center gap-1.5"
           >
             {isCompletingBanner ? (
               <>
@@ -118,7 +123,7 @@ export function CustomerChatCanvas({
               // If there's no order card yet, let user open orders drawer or create/complete
               if (onOpenOrders) onOpenOrders();
             }}
-            className="px-3 py-1 bg-[#008069] hover:bg-[#00705c] text-white font-bold rounded-full text-xs cursor-pointer shadow-xs"
+            className="px-3 py-1 bg-primary hover:bg-primary text-white font-bold rounded-full text-xs cursor-pointer shadow-xs"
           >
             Manage Orders & Revision
           </button>
@@ -128,7 +133,7 @@ export function CustomerChatCanvas({
       {selectedOrder && userId ? (
         <OrderChatPanel key={selectedOrder.id} order={selectedOrder} userId={userId} onOpenOrders={onOpenOrders} />
       ) : (
-        <PlaceOrderEmptyState onPlaceOrder={onOpenBooking} />
+        <ServicesTab mainServiceId={activeService.categoryId} isAuthenticated={isAuthenticated} onRequireAuth={onRequireAuth} />
       )}
     </>
   );

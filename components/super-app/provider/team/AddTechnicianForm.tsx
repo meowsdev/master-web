@@ -25,9 +25,9 @@ export function AddTechnicianForm({ userId, onDone, onCancel }: { userId: string
   const isReady = isPhoneReady && name.trim().length > 0;
 
   return (
-    <div className="rounded-[12px] border border-[#e5e5e5] bg-white p-[14px]">
-      <p className="mb-[8px] text-[14px] font-semibold text-[#202939]">নতুন টেকনিশিয়ান যোগ করুন</p>
-      <p className="mb-[8px] text-[12px] font-medium leading-relaxed text-[#697586]">
+    <div className="rounded-[12px] border border-line bg-white p-[14px]">
+      <p className="mb-[8px] text-[14px] font-semibold text-ink">নতুন টেকনিশিয়ান যোগ করুন</p>
+      <p className="mb-[8px] text-[12px] font-medium leading-relaxed text-muted">
         এই নম্বর দিয়েই টেকনিশিয়ান অ্যাপে লগইন করবে। যোগ করার পর তাকে যেকোনো অর্ডারে assign করতে পারবেন।
       </p>
       <PhoneNumberField value={phone} onChange={setPhone} />
@@ -40,12 +40,12 @@ export function AddTechnicianForm({ userId, onDone, onCancel }: { userId: string
           type="button"
           disabled={!isReady || add.isPending}
           onClick={() => add.mutate({ mobileNumber: phone, name: name.trim() })}
-          className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
+          className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
         >
           {add.isPending ? 'যোগ হচ্ছে...' : 'যোগ করুন'}
         </button>
         {onCancel && (
-          <button type="button" onClick={onCancel} className="cursor-pointer rounded-[8px] px-[16px] py-[8px] text-[14px] font-semibold text-[#697586] hover:bg-[#f7f5f3]">
+          <button type="button" onClick={onCancel} className="cursor-pointer rounded-[8px] px-[16px] py-[8px] text-[14px] font-semibold text-muted hover:bg-surface">
             বাতিল
           </button>
         )}

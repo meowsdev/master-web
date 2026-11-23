@@ -22,7 +22,7 @@ export function ExtraChargeCard({ request, viewer = 'CUSTOMER', isAnswering, onA
   const isAnswered = request.status !== 'PENDING';
 
   return (
-    <article className="w-full max-w-[420px] rounded-[16px] bg-white p-[14px] text-[#202939] shadow-sm">
+    <article className="w-full max-w-[420px] rounded-[16px] bg-white p-[14px] text-ink shadow-sm">
       <h3 className="text-[13px] font-semibold">অতিরিক্ত সার্ভিস ও পার্টস সংযোজন রিকয়েস্ট...</h3>
 
       <ul className="mt-[12px] flex flex-col gap-[4px] text-[14px] font-medium">
@@ -34,7 +34,7 @@ export function ExtraChargeCard({ request, viewer = 'CUSTOMER', isAnswering, onA
         ))}
       </ul>
 
-      <dl className="mt-[12px] flex flex-col gap-[4px] border-t border-[#e5e5e5] pt-[12px] text-[14px] font-medium">
+      <dl className="mt-[12px] flex flex-col gap-[4px] border-t border-line pt-[12px] text-[14px] font-medium">
         <div className="flex justify-between"><dt>পূর্বের বিল</dt><dd>{formatTaka(previousTotal)}</dd></div>
         <div className="flex justify-between"><dt>নতুন সংযোজিত খরচ</dt><dd>{formatTaka(addedTotal)}</dd></div>
         <div className="flex justify-between font-semibold"><dt>সর্বমোট নতুন বিল</dt><dd>{formatTaka(previousTotal + addedTotal)}</dd></div>
@@ -47,14 +47,14 @@ export function ExtraChargeCard({ request, viewer = 'CUSTOMER', isAnswering, onA
         </p>
       )}
       {request.isAutoApproved && (
-        <p className="mt-[10px] rounded-[10px] bg-[#eefaf5] px-[10px] py-[6px] text-[12px] font-medium text-[#1daa61]">
+        <p className="mt-[10px] rounded-[10px] bg-secondary px-[10px] py-[6px] text-[12px] font-medium text-primary">
           অটো-অ্যাপ্রুভড: কাস্টমার অ্যাপে ছিলেন না, নির্ধারিত সময়ে উত্তর আসেনি।
         </p>
       )}
 
       {viewer === 'PROVIDER' ? (
         <footer className="mt-[14px] flex justify-end">
-          <span className="rounded-[10px] bg-[#f7f5f3] px-[14px] py-[8px] text-[14px] font-semibold text-[#697586]">
+          <span className="rounded-[10px] bg-surface px-[14px] py-[8px] text-[14px] font-semibold text-muted">
             {request.status === 'PENDING' ? 'Waiting for the customer' : request.status === 'APPROVED' ? (request.isAutoApproved ? 'Auto-approved' : 'Customer approved') : 'Customer rejected'}
           </span>
         </footer>
@@ -64,7 +64,7 @@ export function ExtraChargeCard({ request, viewer = 'CUSTOMER', isAnswering, onA
           type="button"
           onClick={onReject}
           disabled={isAnswered || isAnswering}
-          className="cursor-pointer rounded-[10px] bg-white px-[16px] py-[8px] text-[15px] font-semibold shadow-sm ring-1 ring-[#e5e5e5] disabled:cursor-not-allowed disabled:text-[#9aa4b2] disabled:ring-0"
+          className="cursor-pointer rounded-[10px] bg-white px-[16px] py-[8px] text-[15px] font-semibold shadow-sm ring-1 ring-line disabled:cursor-not-allowed disabled:text-muted disabled:ring-0"
         >
           {request.status === 'REJECTED' ? 'Rejected' : 'Reject'}
         </button>
@@ -72,7 +72,7 @@ export function ExtraChargeCard({ request, viewer = 'CUSTOMER', isAnswering, onA
           type="button"
           onClick={onApprove}
           disabled={isAnswered || isAnswering}
-          className="cursor-pointer rounded-[10px] bg-[#1daa61] px-[16px] py-[8px] text-[15px] font-semibold text-white hover:bg-[#189452] disabled:cursor-not-allowed disabled:bg-[#a9e5cf] disabled:hover:bg-[#a9e5cf]"
+          className="cursor-pointer rounded-[10px] bg-primary px-[16px] py-[8px] text-[15px] font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-secondary disabled:hover:bg-secondary"
         >
           {request.status === 'APPROVED' ? 'Accepted' : 'Approve'}- {formatTaka(previousTotal + addedTotal)}
         </button>

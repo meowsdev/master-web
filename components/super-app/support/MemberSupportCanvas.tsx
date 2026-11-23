@@ -17,7 +17,7 @@ export function MemberSupportCanvas({ userId, onBack }: { userId: string; onBack
       threadId={thread?.threadId ?? null}
       title="Support"
       subtitle="Chat with our team"
-      avatar={<span className="flex size-[36px] shrink-0 items-center justify-center rounded-full bg-[#1daa61] text-[16px] font-semibold text-white">S</span>}
+      avatar={<span className="flex size-[36px] shrink-0 items-center justify-center rounded-full bg-primary text-[16px] font-semibold text-white">S</span>}
       isViewerSupport={false}
       onBack={onBack}
       emptyHint="Write to our team. We will reply here."

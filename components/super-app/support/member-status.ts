@@ -12,9 +12,9 @@ export const MEMBER_STATUS_FILTERS = ['Active', 'Restricted', 'Blocked', 'Banned
 export function memberStatusLabel({ status, isRestricted }: StatusFields): { text: string; className: string } {
   if (status === 'BANNED') return { text: isRestricted ? 'Banned · Restricted' : 'Banned', className: 'text-[#d64545]' };
   if (status === 'SUSPENDED') return { text: isRestricted ? 'Blocked · Restricted' : 'Blocked', className: 'text-[#d64545]' };
-  if (status === 'INACTIVE') return { text: isRestricted ? 'Inactive · Restricted' : 'Inactive', className: 'text-[#697586]' };
+  if (status === 'INACTIVE') return { text: isRestricted ? 'Inactive · Restricted' : 'Inactive', className: 'text-muted' };
   if (isRestricted) return { text: 'Restricted', className: 'text-[#b7791f]' };
-  return { text: 'Active', className: 'text-[#1daa61]' };
+  return { text: 'Active', className: 'text-primary' };
 }
 
 /** Which chip a person belongs to. Restricted also matches a blocked or banned person who is restricted too. */

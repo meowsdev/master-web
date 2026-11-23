@@ -18,12 +18,12 @@ export function OtpResendButton({ secondsLeft, isSending, onResend }: OtpResendB
         // Disabled while sending too, so a double click can't fire two requests.
         disabled={isCoolingDown || isSending}
         onClick={onResend}
-        className="font-semibold text-[#1daa61] hover:underline disabled:cursor-not-allowed disabled:text-[#697586] disabled:no-underline cursor-pointer"
+        className="font-semibold text-primary hover:underline disabled:cursor-not-allowed disabled:text-muted disabled:no-underline cursor-pointer"
       >
         {isSending ? 'Sending...' : 'Resend OTP'}
       </button>
       {isCoolingDown && (
-        <span className="ml-1 text-[#697586]" aria-live="polite">
+        <span className="ml-1 text-muted" aria-live="polite">
           in <strong className="font-mono">{formatCountdown(secondsLeft)}</strong>
         </span>
       )}

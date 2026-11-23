@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { catalogAdminService } from '@/services/catalog-admin.service';
 import { toast } from 'sonner';
-import { Note01Icon, Wrench01Icon } from '@hugeicons/core-free-icons';
+import { Layers01Icon, Note01Icon, Wrench01Icon } from '@hugeicons/core-free-icons';
 import { SidePanelShell } from '@/components/modals/SidePanelShell';
 import { OrderField, fieldControlClass } from '@/components/modals/place-order/OrderField';
 import { adminService } from '@/services/admin.service';
 import { PicturePicker } from '../PicturePicker';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
+import { useAdminCatalogStore } from '@/store/useAdminCatalogStore';
 
 const apiErrorMessage = (error: unknown) => {
   const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
@@ -22,16 +24,25 @@ const apiErrorMessage = (error: unknown) => {
 export function AdminCategoryPanel({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const openPanel = useOrderPanelStore((state) => state.open);
+  const selectMainService = useAdminCatalogStore((state) => state.selectMainService);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [icon, setIcon] = useState('');
+  // The top-bar category it sits in; without one customers do not see it.
+  const [groupId, setGroupId] = useState('');
+  const { data: groups = [] } = useQuery({ queryKey: ['admin-catalog-tree'], queryFn: catalogAdminService.tree });
 
   const create = useMutation({
-    mutationFn: () => adminService.createCategory({ name: name.trim(), description: description.trim() || undefined, iconUrl: icon.trim() || undefined }),
+    mutationFn: () => adminService.createCategory({ name: name.trim(), description: description.trim() || undefined, iconUrl: icon.trim() || undefined, groupId: groupId || undefined }),
     onSuccess: (category) => {
       toast.success(`${category.name} created. Now add its first service.`);
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
       queryClient.invalidateQueries({ queryKey: ['order-catalog'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-catalog-tree'] });
+      queryClient.invalidateQueries({ queryKey: ['super-app-services'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-catalog-ungrouped'] });
+      // The new main service opens in the middle, with the form for its first service on the right.
+      selectMainService(category.id);
       openPanel(`new:${category.id}`, 'adminService');
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
@@ -46,7 +57,7 @@ export function AdminCategoryPanel({ onClose }: { onClose: () => void }) {
         }}
         className="pb-[24px]"
       >
-        <p className="text-[13px] font-medium text-[#697586]">A main service groups the services customers order, like &ldquo;AC Repair &amp; Service&rdquo;.</p>
+        <p className="text-[13px] font-medium text-muted">A main service groups the services customers order, like &ldquo;AC Repair &amp; Service&rdquo;.</p>
 
         <OrderField icon={Wrench01Icon}>
           <input value={name} onChange={(event) => setName(event.target.value)} maxLength={100} placeholder="Main service name" className={fieldControlClass} />
@@ -54,10 +65,20 @@ export function AdminCategoryPanel({ onClose }: { onClose: () => void }) {
         <OrderField icon={Note01Icon}>
           <input value={description} onChange={(event) => setDescription(event.target.value)} maxLength={300} placeholder="Description (optional)" className={fieldControlClass} />
         </OrderField>
+        <OrderField icon={Layers01Icon}>
+          <select value={groupId} onChange={(event) => setGroupId(event.target.value)} className={`${fieldControlClass} cursor-pointer appearance-none`}>
+            <option value="">Category (top bar)</option>
+            {groups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+        </OrderField>
         <PicturePicker value={icon} onChange={setIcon} />
 
         <div className="mt-[28px] flex justify-center">
-          <button type="submit" disabled={!name.trim() || create.isPending} className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="submit" disabled={!name.trim() || !groupId || create.isPending} className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled">
             {create.isPending ? 'Creating...' : 'Create main service'}
           </button>
         </div>

@@ -32,12 +32,12 @@ export function AvatarPicker({ photoUrl, onChange }: AvatarPickerProps) {
         type="button"
         onClick={() => setIsPickerOpen((isOpen) => !isOpen)}
         aria-label="Change profile photo"
-        className="relative flex size-[120px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-[#d9d9d9]"
+        className="relative flex size-[120px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-surface"
       >
         {photoUrl ? (
           <Image src={photoUrl} alt="Profile photo" width={120} height={120} unoptimized className="size-full object-cover" />
         ) : (
-          <Camera className="size-[40px] text-[#202939]" strokeWidth={1.5} />
+          <Camera className="size-[40px] text-ink" strokeWidth={1.5} />
         )}
       </button>
 
@@ -52,12 +52,12 @@ export function AvatarPicker({ photoUrl, onChange }: AvatarPickerProps) {
                   type="button"
                   onClick={() => onChange(presetUrl)}
                   className={`relative size-[40px] cursor-pointer overflow-hidden rounded-full border-2 transition-all ${
-                    isSelected ? 'border-[#1daa61]' : 'border-transparent opacity-80 hover:opacity-100'
+                    isSelected ? 'border-primary' : 'border-transparent opacity-80 hover:opacity-100'
                   }`}
                 >
                   <Image src={presetUrl} alt={`Preset ${index + 1}`} width={40} height={40} unoptimized className="size-full object-cover" />
                   {isSelected && (
-                    <span className="absolute inset-0 flex items-center justify-center bg-[#1daa61]/40">
+                    <span className="absolute inset-0 flex items-center justify-center bg-primary/40">
                       <Check className="size-[14px] text-white" strokeWidth={3} />
                     </span>
                   )}
@@ -70,7 +70,7 @@ export function AvatarPicker({ photoUrl, onChange }: AvatarPickerProps) {
             placeholder="Paste image URL (https://...)"
             value={photoUrl && !AVATAR_PRESETS.includes(photoUrl) ? photoUrl : ''}
             onChange={(event) => onChange(event.target.value.trim() || null)}
-            className="w-full border-b border-[#cecece] bg-transparent pb-[8px] text-[14px] text-[#202939] outline-none transition-colors placeholder:text-[#697586] focus:border-[#1daa61]"
+            className="w-full border-b border-line bg-transparent pb-[8px] text-[14px] text-ink outline-none transition-colors placeholder:text-muted focus:border-primary"
           />
         </div>
       )}

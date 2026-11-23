@@ -19,14 +19,14 @@ interface LocationSelectProps {
 export function LocationSelect({ icon: Icon, placeholder, options, value, onChange, disabled }: LocationSelectProps) {
   return (
     <div className="flex w-full items-center gap-[12px]">
-      <Icon className="size-[24px] shrink-0 text-[#202939]" strokeWidth={1.5} />
-      <div className="relative flex-1 border-b border-[#cecece] pb-[8px] transition-colors focus-within:border-[#1daa61]">
+      <Icon className="size-[24px] shrink-0 text-ink" strokeWidth={1.5} />
+      <div className="relative flex-1 border-b border-line pb-[8px] transition-colors focus-within:border-primary">
         <select
           value={value ?? ''}
           disabled={disabled}
           onChange={(event) => onChange(event.target.value === '' ? null : Number(event.target.value))}
           className={`w-full cursor-pointer appearance-none bg-transparent pr-[32px] text-[18px] tracking-[-0.36px] outline-none disabled:cursor-not-allowed ${
-            value === null ? 'text-[#697586]' : 'text-[#202939]'
+            value === null ? 'text-muted' : 'text-ink'
           }`}
         >
           <option value="">{placeholder}</option>
@@ -36,7 +36,7 @@ export function LocationSelect({ icon: Icon, placeholder, options, value, onChan
             </option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-0 top-[2px] size-[24px] text-[#202939]" strokeWidth={1.5} />
+        <ChevronDown className="pointer-events-none absolute right-0 top-[2px] size-[24px] text-ink" strokeWidth={1.5} />
       </div>
     </div>
   );

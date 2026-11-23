@@ -5,7 +5,7 @@ import { useLocationOptions } from '@/hooks/useLocationOptions';
 import { useProviderAreas, useSaveProviderAreas } from '@/hooks/useProviderAreas';
 
 const selectClass =
-  'h-[44px] w-full cursor-pointer rounded-[10px] border border-[#cecece] bg-white px-[12px] text-[15px] font-medium text-[#202939] outline-none focus:border-[#1daa61]';
+  'h-[44px] w-full cursor-pointer rounded-[10px] border border-line bg-white px-[12px] text-[15px] font-medium text-ink outline-none focus:border-primary';
 
 /*
  * "Where I work": the upazilas where this provider takes orders. A new order is offered to the providers of its
@@ -59,9 +59,9 @@ export function ProviderAreasSection({ userId }: { userId: string }) {
   const handleSave = () => save.mutate([...selected].map(([upazilaId, district]) => ({ districtId: district, upazilaId })));
 
   return (
-    <section className="w-full border-t border-[#e5e5e5] pt-[24px]">
-      <h4 className="text-[16px] font-semibold text-[#202939]">Where I work</h4>
-      <p className="mt-[4px] text-[13px] font-medium leading-relaxed text-[#697586]">
+    <section className="w-full border-t border-line pt-[24px]">
+      <h4 className="text-[16px] font-semibold text-ink">Where I work</h4>
+      <p className="mt-[4px] text-[13px] font-medium leading-relaxed text-muted">
         Pick the upazilas where you take orders. New orders are offered to providers of the customer&apos;s upazila first, then of the same district.
         {hasLoadedSaved && selected.size === 0 && <span className="font-semibold text-[#b7791f]"> You have no area, so you get no new orders.</span>}
       </p>
@@ -77,9 +77,9 @@ export function ProviderAreasSection({ userId }: { userId: string }) {
 
       {districtId !== null && (
         <div className="mt-[12px] flex flex-col gap-[10px]">
-          {isLoadingUpazilas && <p className="text-[14px] font-medium text-[#697586]">Loading upazilas...</p>}
+          {isLoadingUpazilas && <p className="text-[14px] font-medium text-muted">Loading upazilas...</p>}
           {upazilas.length > 0 && (
-            <button type="button" onClick={toggleAllShown} className="w-fit cursor-pointer text-[14px] font-semibold text-[#1daa61] hover:underline">
+            <button type="button" onClick={toggleAllShown} className="w-fit cursor-pointer text-[14px] font-semibold text-primary hover:underline">
               {allShownSelected ? 'Clear this district' : 'Select the whole district'}
             </button>
           )}
@@ -92,7 +92,7 @@ export function ProviderAreasSection({ userId }: { userId: string }) {
                   type="button"
                   aria-pressed={isOn}
                   onClick={() => toggleUpazila(upazila.id)}
-                  className={`h-[34px] cursor-pointer rounded-full border px-[12px] text-[13px] font-medium transition-colors ${isOn ? 'border-[#bccdba] bg-[#a9e5cf] text-[#202939]' : 'border-[#cecece] bg-white text-[#697586] hover:bg-[#f7f5f3]'}`}
+                  className={`h-[34px] cursor-pointer rounded-full border px-[12px] text-[13px] font-medium transition-colors ${isOn ? 'border-secondary bg-secondary text-ink' : 'border-line bg-white text-muted hover:bg-surface'}`}
                 >
                   {upazila.bnName}
                 </button>
@@ -103,12 +103,12 @@ export function ProviderAreasSection({ userId }: { userId: string }) {
       )}
 
       <div className="mt-[16px] flex items-center justify-between gap-[12px]">
-        <span className="text-[13px] font-semibold text-[#202939]">{selected.size === 0 ? 'No area chosen yet' : `${selected.size} upazila(s) in ${countsByDistrict.size} district(s)`}</span>
+        <span className="text-[13px] font-semibold text-ink">{selected.size === 0 ? 'No area chosen yet' : `${selected.size} upazila(s) in ${countsByDistrict.size} district(s)`}</span>
         <button
           type="button"
           disabled={isLoading || save.isPending}
           onClick={handleSave}
-          className="h-[38px] cursor-pointer rounded-[8px] bg-[#1daa61] px-[16px] text-[14px] font-semibold text-white hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-[38px] cursor-pointer rounded-[8px] bg-primary px-[16px] text-[14px] font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
         >
           {save.isPending ? 'Saving...' : 'Save areas'}
         </button>

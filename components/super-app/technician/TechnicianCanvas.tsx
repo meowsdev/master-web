@@ -28,7 +28,7 @@ export function TechnicianCanvas({ userId, onBack, onSwitchAccount, onStartCall 
     return (
       <>
         <ChatEmptyHeader onSwitchAccount={onSwitchAccount} menuItems={[]} />
-        <div className="flex flex-1 items-center justify-center bg-[#f7f5f3] text-[14px] font-medium text-[#697586]">Choose a job to see its details.</div>
+        <div className="flex flex-1 items-center justify-center bg-surface text-[14px] font-medium text-muted">Choose a job to see its details.</div>
       </>
     );
   }

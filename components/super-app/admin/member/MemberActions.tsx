@@ -68,7 +68,7 @@ export function MemberActions({ member, canBan, isBusy, onAct }: MemberActionsPr
             type="button"
             disabled={isBusy}
             onClick={() => setPending(option)}
-            className={`h-[36px] cursor-pointer rounded-[10px] border px-[14px] text-[14px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${option.isDanger ? 'border-[#d64545] text-[#d64545] hover:bg-[#fde8e8]' : 'border-[#202939] text-[#202939] hover:bg-[#f7f5f3]'}`}
+            className={`h-[36px] cursor-pointer rounded-[10px] border px-[14px] text-[14px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${option.isDanger ? 'border-[#d64545] text-[#d64545] hover:bg-[#fde8e8]' : 'border-ink text-ink hover:bg-surface'}`}
           >
             {option.label}
           </button>
@@ -76,9 +76,9 @@ export function MemberActions({ member, canBan, isBusy, onAct }: MemberActionsPr
       </div>
 
       {pending && (
-        <div className="mt-[12px] rounded-[12px] border border-[#e5e5e5] bg-[#f7f5f3] p-[12px]">
-          <p className="text-[14px] font-semibold text-[#202939]">{pending.label}?</p>
-          <p className="mt-[2px] text-[13px] font-medium text-[#697586]">{pending.effect}</p>
+        <div className="mt-[12px] rounded-[12px] border border-line bg-surface p-[12px]">
+          <p className="text-[14px] font-semibold text-ink">{pending.label}?</p>
+          <p className="mt-[2px] text-[13px] font-medium text-muted">{pending.effect}</p>
           {pending.asksReason && (
             <textarea
               value={reason}
@@ -86,7 +86,7 @@ export function MemberActions({ member, canBan, isBusy, onAct }: MemberActionsPr
               maxLength={300}
               rows={2}
               placeholder="Reason (kept in the history)"
-              className="mt-[8px] w-full resize-none rounded-[8px] border border-[#cecece] bg-white p-[8px] text-[14px] font-medium text-[#202939] outline-none focus:border-[#1daa61]"
+              className="mt-[8px] w-full resize-none rounded-[8px] border border-line bg-white p-[8px] text-[14px] font-medium text-ink outline-none focus:border-primary"
             />
           )}
           <div className="mt-[10px] flex gap-[8px]">
@@ -97,11 +97,11 @@ export function MemberActions({ member, canBan, isBusy, onAct }: MemberActionsPr
                 onAct(pending.action, reason);
                 close();
               }}
-              className={`h-[34px] cursor-pointer rounded-[8px] px-[14px] text-[13px] font-semibold text-white disabled:opacity-50 ${pending.isDanger ? 'bg-[#d64545] hover:bg-[#bd3b3b]' : 'bg-[#1daa61] hover:bg-[#189452]'}`}
+              className={`h-[34px] cursor-pointer rounded-[8px] px-[14px] text-[13px] font-semibold text-white disabled:opacity-50 ${pending.isDanger ? 'bg-[#d64545] hover:bg-[#bd3b3b]' : 'bg-primary hover:bg-primary/90'}`}
             >
               Confirm
             </button>
-            <button type="button" onClick={close} className="h-[34px] cursor-pointer rounded-[8px] border border-[#cecece] bg-white px-[14px] text-[13px] font-semibold text-[#202939]">
+            <button type="button" onClick={close} className="h-[34px] cursor-pointer rounded-[8px] border border-line bg-white px-[14px] text-[13px] font-semibold text-ink">
               Cancel
             </button>
           </div>

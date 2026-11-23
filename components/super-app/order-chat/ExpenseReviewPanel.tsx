@@ -39,31 +39,31 @@ function ReviewForm({ order, userId, claim, onClose }: { order: Order; userId: s
 
   return (
     <>
-      <p className="text-[13px] font-medium leading-relaxed text-[#697586]">
+      <p className="text-[13px] font-medium leading-relaxed text-muted">
         প্রোভাইডারের পাঠানো খরচ যাচাই করুন। দরকার হলে পরিমাণ কমান বা বাড়ান, তারপর অনুমোদন দিন। মোট বিল থেকে অনুমোদিত খরচ বাদ দিয়ে কমিশন হিসাব হবে।
       </p>
-      <p className="mt-[10px] text-[13px] font-medium text-[#697586]">প্রোভাইডারের দাবি: {formatTaka(claim.claimedTotal)}</p>
+      <p className="mt-[10px] text-[13px] font-medium text-muted">প্রোভাইডারের দাবি: {formatTaka(claim.claimedTotal)}</p>
 
       <AmountRowsEditor rows={rows} onChange={setRows} labelPlaceholder="খরচের নাম" addLabel="খরচ যোগ করুন" maxRows={20} />
 
-      <div className="mt-[20px] rounded-[12px] border border-[#e5e5e5] bg-[#f7f5f3] p-[14px] text-[13px] font-medium text-[#697586]">
+      <div className="mt-[20px] rounded-[12px] border border-line bg-surface p-[14px] text-[13px] font-medium text-muted">
         <div className="flex justify-between"><span>অর্ডারের মোট বিল</span><span>{formatTaka(total)}</span></div>
         <div className="mt-[6px] flex justify-between"><span>অনুমোদিত খরচ</span><span>− {formatTaka(costs)}</span></div>
         <div className="mt-[6px] flex justify-between"><span>কমিশনের ভিত্তি</span><span>{formatTaka(Math.max(0, total - costs))}</span></div>
-        <div className="mt-[8px] flex justify-between border-t border-[#e5e5e5] pt-[8px] text-[15px] font-semibold text-[#202939]">
+        <div className="mt-[8px] flex justify-between border-t border-line pt-[8px] text-[15px] font-semibold text-ink">
           <span>কমিশন</span><span>{formatTaka(commission)} → {formatTaka(newCommission)}</span>
         </div>
       </div>
 
-      <div className="mt-[16px] rounded-[10px] border border-[#cecece] bg-white px-[12px] py-[8px]">
+      <div className="mt-[16px] rounded-[10px] border border-line bg-white px-[12px] py-[8px]">
         <textarea value={note} onChange={(event) => setNote(event.target.value)} rows={2} maxLength={300} placeholder="প্রোভাইডারের জন্য নোট (ঐচ্ছিক)" className={`${fieldControlClass} resize-none`} />
       </div>
 
       <div className="mt-[24px] flex justify-center gap-[10px]">
-        <button type="button" disabled={isBusy} onClick={() => reject.mutate({ claimId: claim.id, note: note.trim() || undefined }, { onSuccess: onClose })} className="cursor-pointer rounded-[8px] border border-[#cecece] bg-white px-[20px] py-[8px] text-[14px] font-semibold text-[#202939] hover:bg-[#f7f5f3] disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" disabled={isBusy} onClick={() => reject.mutate({ claimId: claim.id, note: note.trim() || undefined }, { onSuccess: onClose })} className="cursor-pointer rounded-[8px] border border-line bg-white px-[20px] py-[8px] text-[14px] font-semibold text-ink hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50">
           ফেরত পাঠান
         </button>
-        <button type="button" disabled={isBusy} onClick={approveClaim} className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" disabled={isBusy} onClick={approveClaim} className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled">
           {approve.isPending ? 'অনুমোদন হচ্ছে...' : 'অনুমোদন ও সাবমিট'}
         </button>
       </div>
@@ -82,7 +82,7 @@ export function ExpenseReviewPanel({ order, userId, onClose }: { order: Order; u
         // A key per claim: a newly sent claim gets a fresh form.
         <ReviewForm key={pending.id} order={order} userId={userId} claim={pending} onClose={onClose} />
       ) : (
-        <p className="text-[14px] font-medium text-[#697586]">রিভিউয়ের জন্য কোনো খরচ অপেক্ষায় নেই।</p>
+        <p className="text-[14px] font-medium text-muted">রিভিউয়ের জন্য কোনো খরচ অপেক্ষায় নেই।</p>
       )}
     </SidePanelShell>
   );

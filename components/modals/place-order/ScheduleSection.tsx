@@ -8,7 +8,22 @@ import { OrderField, OrderSelect, fieldControlClass } from './OrderField';
 import { SchedulePickerDialog, shortSlotLabel } from './SchedulePickerDialog';
 import { FormPart } from './FormPart';
 
-type FormState = ReturnType<typeof usePlaceOrderForm>;
+/** Only the "where and when" part of a form: the Place Order form, the cart checkout and the Custom request share it. */
+export type ScheduleFormState = Pick<
+  ReturnType<typeof usePlaceOrderForm>,
+  | 'locations'
+  | 'districtId'
+  | 'selectDistrict'
+  | 'upazilaId'
+  | 'setUpazilaId'
+  | 'addressDetail'
+  | 'setAddressDetail'
+  | 'scheduledDate'
+  | 'setScheduledDate'
+  | 'timeSlot'
+  | 'setTimeSlot'
+> & { catalog?: { timeSlots: string[] } };
+type FormState = ScheduleFormState;
 
 /* Two parts of the form: where (district, upazila, address), then when (date and time slot, via "Tap to Schedule"). */
 export function ScheduleSection({ state }: { state: FormState }) {
@@ -78,14 +93,14 @@ function ScheduleButton({ state }: { state: FormState }) {
         type="button"
         onClick={() => setIsOpen(true)}
         className={`mt-[16px] flex h-[52px] w-full cursor-pointer items-center justify-center gap-[10px] rounded-[12px] border-2 px-[16px] text-[15px] font-semibold transition-colors ${
-          isScheduled ? 'border-[#1daa61] bg-[#e7fce3] text-[#205737]' : 'border-dashed border-[#1daa61] text-[#1daa61] hover:bg-[#e7fce3]'
+          isScheduled ? 'border-primary bg-secondary text-ink' : 'border-dashed border-primary text-primary hover:bg-secondary'
         }`}
       >
         <HugeiconsIcon icon={isScheduled ? Clock01Icon : Calendar03Icon} size={20} />
         {isScheduled && slot ? (
           <span className="truncate">
             {formatScheduleDay(state.scheduledDate)} · {slot.range} {slot.period}
-            <span className="ml-[8px] text-[12px] font-medium text-[#697586] underline">পরিবর্তন</span>
+            <span className="ml-[8px] text-[12px] font-medium text-muted underline">পরিবর্তন</span>
           </span>
         ) : (
           'Tap to Schedule'

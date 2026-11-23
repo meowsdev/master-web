@@ -1,7 +1,5 @@
 'use client';
 
-import { HugeiconsIcon } from '@hugeicons/react';
-import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -14,7 +12,7 @@ import { CustomerSidebarTop } from '../CustomerSidebarTop';
 import { OrderHistoryListItem } from '../order-history/OrderHistoryListItem';
 import { CustomerAvatar } from '../provider/CustomerAvatar';
 import { PROVIDER_FILTER_CHIPS, hasOpenRevision, matchesProviderFilter, providerOrderTitle } from '../provider/provider-order-filters';
-import { AdminProfileHeader } from './AdminProfileHeader';
+import { StaffSidebarHeader } from './AdminProfileHeader';
 
 /** Every order on the platform, newest first. The backend returns all of them for an admin. */
 export function useAdminOrders(userId: string | undefined) {
@@ -69,27 +67,12 @@ export function AdminOrdersSidebar({ user, onOrderOpened, onOpenAuth }: { user: 
         categoryNames={[...PROVIDER_FILTER_CHIPS]}
         isSearchCollapsed={false}
         searchPlaceholder="Search all orders..."
-        profileSlot={
-          <div className="flex items-center justify-between">
-            <AdminProfileHeader user={user} />
-            {canCreateOrders && (
-            <button
-              type="button"
-              onClick={() => openPanel(null, 'adminOrder')}
-              title="New order"
-              aria-label="New order"
-              className="flex size-[40px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1daa61] text-white transition-transform hover:scale-105"
-            >
-              <HugeiconsIcon icon={PlusSignIcon} size={22} strokeWidth={2.5} />
-            </button>
-            )}
-          </div>
-        }
+        profileSlot={<StaffSidebarHeader user={user} action={canCreateOrders ? { label: 'New order', onClick: () => openPanel(null, 'adminOrder') } : undefined} />}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[8px]">
-        {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-[#697586]">Loading orders...</p>}
-        {!isLoading && visibleOrders.length === 0 && <p className="p-[24px] text-center text-[14px] font-medium text-[#697586]">{orders.length === 0 ? 'No orders yet.' : 'No orders match.'}</p>}
+      <div className="min-h-0 flex-1 overflow-y-auto px-[16px] pb-[8px]">
+        {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-muted">Loading orders...</p>}
+        {!isLoading && visibleOrders.length === 0 && <p className="p-[24px] text-center text-[14px] font-medium text-muted">{orders.length === 0 ? 'No orders yet.' : 'No orders match.'}</p>}
         {visibleOrders.map((order) => (
           <OrderHistoryListItem
             key={order.id}

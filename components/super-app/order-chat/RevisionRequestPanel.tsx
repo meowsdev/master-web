@@ -21,12 +21,12 @@ export function RevisionRequestPanel({ order, onClose }: { order: Order; onClose
           request.mutate(issue.trim(), { onSuccess: onClose });
         }}
       >
-        <p className="text-[13px] font-medium leading-relaxed text-[#697586]">
+        <p className="text-[13px] font-medium leading-relaxed text-muted">
           {REVISION_WINDOW_DAYS.toLocaleString('bn-BD')} দিনের সার্ভিস ওয়ারেন্টির মধ্যে অর্ডারটি আবার প্রোভাইডারের কাছে যাবে (রি-টাচ / রি-ওয়ার্ক)। এর জন্য নতুন কোনো চার্জ লাগবে না।
         </p>
 
-        <p className="mb-[6px] mt-[16px] text-[14px] font-semibold text-[#202939]">কী সমস্যা হচ্ছে?</p>
-        <div className="rounded-[10px] border border-[#cecece] bg-white px-[12px] py-[8px]">
+        <p className="mb-[6px] mt-[16px] text-[14px] font-semibold text-ink">কী সমস্যা হচ্ছে?</p>
+        <div className="rounded-[10px] border border-line bg-white px-[12px] py-[8px]">
           <textarea
             value={issue}
             onChange={(event) => setIssue(event.target.value)}
@@ -41,7 +41,7 @@ export function RevisionRequestPanel({ order, onClose }: { order: Order; onClose
           <button
             type="submit"
             disabled={!isReady}
-            className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
+            className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
           >
             {request.isPending ? 'পাঠানো হচ্ছে...' : 'রিভিশনে পাঠান'}
           </button>

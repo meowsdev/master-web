@@ -1,13 +1,15 @@
 'use client';
 
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Search01Icon, ShoppingBag02Icon, UserIcon } from '@hugeicons/core-free-icons';
 import Image from 'next/image';
 import { ReactNode } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useHorizontalScroll } from '@/hooks/useHorizontalScroll';
 import { FilterChip } from '@/types/super-app.types';
 import { User } from '@/types/auth.types';
 import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import { CustomerProfileHeader } from './CustomerProfileHeader';
+import { ChipRow } from './ChipRow';
+import { railIconClass } from './RailIconButton';
 
 
 interface CustomerSidebarTopProps {
@@ -34,6 +36,8 @@ interface CustomerSidebarTopProps {
   searchPlaceholder?: string;
   /** Replaces the customer profile header (the provider view shows its own, with the due and Pay Now). */
   profileSlot?: ReactNode;
+  /** After the chips, e.g. the staff "Add" chip that creates a category. */
+  chipsTrailing?: ReactNode;
 }
 
 /* Brand header, search pill and filter chips of the Figma customer sidebar. */
@@ -55,18 +59,15 @@ export function CustomerSidebarTop({
   isSearchCollapsed,
   searchPlaceholder = 'Search services...',
   profileSlot,
+  chipsTrailing,
 }: CustomerSidebarTopProps) {
   const filterChips: FilterChip[] = ['All', ...categoryNames];
-  const { ref: chipRowRef, canScrollLeft, canScrollRight, scrollByAmount, wasDragged } =
-    useHorizontalScroll<HTMLDivElement>();
 
-  const arrowClass =
-    'absolute top-1/2 z-10 flex size-[28px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[#e5e5e5] bg-white text-[#202939] shadow-md transition-transform hover:scale-110';
   return (
-    <div className="flex shrink-0 flex-col px-[8px] pb-0">
+    <div className="flex shrink-0 flex-col px-[16px] pb-0">
       {/* Same height and divider line as the chat header and the right-hand panel header, so the three line up. */}
       {showBrandRow && (
-        <div className={`-mx-[8px] flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 flex-col justify-center border-b border-[#e5e5e5] px-[16px]`}>
+        <div className={`-mx-[16px] flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 flex-col justify-center border-b border-line px-[16px]`}>
       {profileSlot}
       {showBrandRow && !profileSlot && isAuthenticated && user && onStartNewOrder && (
         <CustomerProfileHeader user={user} onStartNewOrder={onStartNewOrder} />
@@ -75,13 +76,13 @@ export function CustomerSidebarTop({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-[8px]">
             <Image src="/chat-list/brand-logo.svg" alt="" width={36} height={36} />
-            <span className="text-[18px] font-semibold tracking-[-0.36px] text-[#202939]">SupeerApp</span>
+            <span className="text-[18px] font-semibold tracking-[-0.36px] text-ink">SupeerApp</span>
           </div>
           {!isAuthenticated && (
             <button
               type="button"
               onClick={onOpenAuth}
-              className="cursor-pointer rounded-[10px] bg-[#1daa61] px-[14px] py-[5px] text-[15px] font-semibold tracking-[-0.3px] text-white"
+              className="btn-raised cursor-pointer rounded-[10px] bg-primary px-[14px] py-[5px] text-[15px] font-semibold tracking-[-0.3px] text-white transition-transform hover:scale-105"
             >
               Join Now
             </button>
@@ -89,10 +90,10 @@ export function CustomerSidebarTop({
           {isAuthenticated && (
             <div className="flex items-center gap-[8px] md:hidden">
               <button type="button" onClick={onOpenOrders} title="My Orders & History" className="size-[36px] cursor-pointer">
-                <Image src="/rail/orders-inactive.svg" alt="My orders" width={36} height={36} />
+                <span className={railIconClass(false)}><HugeiconsIcon icon={ShoppingBag02Icon} size={22} strokeWidth={1.7} /></span>
               </button>
               <button type="button" onClick={onOpenAccount} title="Edit profile" className="size-[36px] cursor-pointer">
-                <Image src="/rail/account-inactive.svg" alt="Profile" width={36} height={36} />
+                <span className={railIconClass(false)}><HugeiconsIcon icon={UserIcon} size={22} strokeWidth={1.7} /></span>
               </button>
             </div>
           )}
@@ -111,8 +112,8 @@ export function CustomerSidebarTop({
         <div className="min-h-0 overflow-hidden">
         {/* Spacing lives inside the clipped box so it collapses together with the content */}
         <div className="flex flex-col gap-[10px] pt-[10px]">
-      <label className="flex h-[40px] items-center gap-[12px] rounded-[20px] bg-[#f7f5f3] pl-[24px] pr-[16px]">
-        <Image src="/chat-list/search.svg" alt="" width={24} height={24} className="shrink-0" />
+      <label className="flex h-[40px] items-center gap-[12px] rounded-[20px] bg-surface pl-[24px] pr-[16px]">
+        <HugeiconsIcon icon={Search01Icon} size={22} strokeWidth={1.8} className="shrink-0 text-muted" />
         <input
           type="text"
           value={searchQuery}
@@ -121,47 +122,19 @@ export function CustomerSidebarTop({
           onBlur={onSearchBlur}
           id="service-search-input"
           placeholder={searchPlaceholder}
-          className="w-full bg-transparent text-[14px] font-medium text-[#202939] outline-none placeholder:text-[#697586]"
+          className="w-full bg-transparent text-[14px] font-medium text-ink outline-none placeholder:text-muted"
         />
       </label>
 
       {/* Many categories overflow the row: wheel, drag and the arrows all scroll it sideways. */}
-      <div className="relative">
-        {canScrollLeft && (
-          <button type="button" aria-label="Scroll categories left" onClick={() => scrollByAmount(-160)} className={`${arrowClass} left-0`}>
-            <ChevronLeft className="size-[16px]" />
-          </button>
-        )}
-        <div
-          ref={chipRowRef}
-          className="no-scrollbar flex cursor-grab select-none items-center gap-[8px] overflow-x-auto px-[16px] py-[12px] active:cursor-grabbing"
-        >
-          {filterChips.map((chip) => {
-            const isActive = activeFilterChip === chip;
-            return (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => {
-                  if (!wasDragged()) onSelectFilterChip(chip);
-                }}
-                className={`h-[36px] shrink-0 cursor-pointer rounded-[20px] border px-[12px] text-[16px] font-semibold ${
-                  isActive
-                    ? 'border-[#bccdba] bg-[#d7fdd2] text-[#205737]'
-                    : 'border-[#cecece] text-[#697586]'
-                }`}
-              >
-                {chip}
-              </button>
-            );
-          })}
-        </div>
-        {canScrollRight && (
-          <button type="button" aria-label="Scroll categories right" onClick={() => scrollByAmount(160)} className={`${arrowClass} right-0`}>
-            <ChevronRight className="size-[16px]" />
-          </button>
-        )}
-      </div>
+      <ChipRow
+        label="categories"
+        chips={filterChips.map((chip) => ({ id: chip, label: chip }))}
+        activeId={activeFilterChip}
+        onSelect={onSelectFilterChip}
+        trailing={chipsTrailing}
+        rowClassName="py-[12px]"
+      />
         </div>
         </div>
       </div>

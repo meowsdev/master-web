@@ -3,8 +3,9 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { servicesService } from '@/services/services.service';
+import { catalogService } from '@/services/catalog.service';
 import { ordersService } from '@/services/orders.service';
+import { conversationMainServiceId, mainServiceToEntry, orderMainServiceId } from '@/lib/main-service';
 import { chatService } from '@/services/chat.service';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Service } from '@/types/service.types';
@@ -53,10 +54,17 @@ export function useServicesFilter({
   });
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-  // Fetch real services list from database backend
+  // The chat list: main services (one chat each), shaped like services for the chat machinery (lib/main-service.ts).
   const { data: dbServices = [], isLoading: isServicesLoading } = useQuery<Service[]>({
     queryKey: ['super-app-services'],
-    queryFn: () => servicesService.getServices(),
+    queryFn: async () => (await catalogService.getMainServices()).map(mainServiceToEntry),
+  });
+
+  // Top-bar categories, in the admin's order, for the chips.
+  const { data: groups = [] } = useQuery({
+    queryKey: ['catalog-groups'],
+    queryFn: catalogService.getGroups,
+    staleTime: 60_000,
   });
 
   // Fetch customer orders (shares cache with OrdersDrawer, scoped to authenticated user)
@@ -78,10 +86,10 @@ export function useServicesFilter({
   // Index conversations by serviceId for fast O(1) unread state resolution
   const conversationByServiceId = useMemo(() => {
     const map = new Map<string, ChatSession>();
+    // Keyed by main service: the chat list's entries are main services.
     for (const conv of userConversations) {
-      if (conv.serviceId) {
-        map.set(conv.serviceId, conv);
-      }
+      const key = conversationMainServiceId(conv);
+      if (key) map.set(key, conv);
     }
     return map;
   }, [userConversations]);
@@ -178,7 +186,7 @@ export function useServicesFilter({
               (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
             )
         )
-        .map((o) => o.serviceId);
+        .map((o) => orderMainServiceId(o));
 
       list = list.filter(
         (s) => runningServiceIds.includes(s.id) || dbRunningIds.includes(s.id)
@@ -210,14 +218,14 @@ export function useServicesFilter({
     list = [...list].sort((a, b) => {
       const aRev = customerOrders.some(
         (o) =>
-          o.serviceId === a.id &&
+          orderMainServiceId(o) === a.id &&
           o.revisions?.some(
             (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
           )
       );
       const bRev = customerOrders.some(
         (o) =>
-          o.serviceId === b.id &&
+          orderMainServiceId(o) === b.id &&
           o.revisions?.some(
             (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
           )
@@ -243,14 +251,8 @@ export function useServicesFilter({
     conversationByServiceId,
   ]);
 
-  // Distinct category names in first-seen order (the backend already sorts popular services first)
-  const categoryNames = useMemo(() => {
-    const names = new Set<string>();
-    dbServices.forEach((service) => {
-      if (service.category?.name) names.add(service.category.name);
-    });
-    return [...names];
-  }, [dbServices]);
+  // Top-bar category chips in the admin's order; a chip filters the list by its entries' category name.
+  const categoryNames = useMemo(() => groups.map((group) => group.name), [groups]);
 
   return {
     dbServices,

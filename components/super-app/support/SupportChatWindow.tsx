@@ -29,9 +29,9 @@ const formatTime = (isoDate: string) =>
 
 function SupportBubble({ message, isMine }: { message: SupportMessage; isMine: boolean }) {
   return (
-    <div className={`max-w-[75%] rounded-[12px] px-[12px] py-[8px] text-[#202939] ${isMine ? 'ml-auto bg-[#ade2cf]' : 'bg-white'}`}>
+    <div className={`max-w-[75%] rounded-[12px] px-[12px] py-[8px] text-ink ${isMine ? 'ml-auto bg-secondary' : 'bg-white'}`}>
       <p className="whitespace-pre-wrap break-words text-[14px] font-medium">{message.text}</p>
-      <time className="mt-[2px] block text-right text-[11px] font-medium text-[#697586]">{formatTime(message.createdAt)}</time>
+      <time className="mt-[2px] block text-right text-[11px] font-medium text-muted">{formatTime(message.createdAt)}</time>
     </div>
   );
 }
@@ -61,10 +61,10 @@ export function SupportChatWindow({ userId, threadId, title, subtitle, avatar, i
 
   return (
     <>
-      <header className={`flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center gap-[10px] border-b border-[#e5e5e5] bg-white px-[16px]`}>
+      <header className={`flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center gap-[10px] border-b border-line bg-white px-[16px]`}>
         {onBack && (
           <button type="button" onClick={onBack} aria-label="Back" className="cursor-pointer md:hidden">
-            <HugeiconsIcon icon={ArrowLeft01Icon} size={22} className="text-[#202939]" />
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={22} className="text-ink" />
           </button>
         )}
         <button
@@ -76,15 +76,15 @@ export function SupportChatWindow({ userId, threadId, title, subtitle, avatar, i
         >
           {avatar}
           <span className="flex min-w-0 flex-col">
-            <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{title}</span>
-            {subtitle && <span className="truncate text-[12px] font-medium text-[#697586]">{subtitle}</span>}
+            <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-ink">{title}</span>
+            {subtitle && <span className="truncate text-[12px] font-medium text-muted">{subtitle}</span>}
           </span>
         </button>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-[8px] overflow-y-auto bg-[#f7f5f3] p-[16px]">
-        {isLoading && <p className="m-auto text-[14px] font-medium text-[#697586]">Loading messages...</p>}
-        {!isLoading && messages.length === 0 && <p className="m-auto text-center text-[14px] font-medium text-[#697586]">{emptyHint}</p>}
+      <div className="flex min-h-0 flex-1 flex-col gap-[8px] overflow-y-auto bg-surface p-[16px]">
+        {isLoading && <p className="m-auto text-[14px] font-medium text-muted">Loading messages...</p>}
+        {!isLoading && messages.length === 0 && <p className="m-auto text-center text-[14px] font-medium text-muted">{emptyHint}</p>}
         {messages.map((message) => (
           <SupportBubble key={message.id} message={message} isMine={message.fromSupport === isViewerSupport} />
         ))}

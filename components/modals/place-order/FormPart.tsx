@@ -20,7 +20,7 @@ interface FormPartProps {
  */
 export function FormPart({isDone, children }: FormPartProps) {
   return (
-    <section className={`mt-[16px] rounded-[16px] border bg-white px-[16px] pb-[16px] pt-[1px] transition-colors ${isDone ? 'border-[#1daa61]/50' : 'border-[#e5e5e5]'}`}>
+    <section className={`mt-[16px] rounded-[16px] border bg-white px-[16px] pb-[16px] pt-[1px] transition-colors ${isDone ? 'border-primary/50' : 'border-line'}`}>
       {children}
     </section>
   );

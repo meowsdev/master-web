@@ -28,7 +28,7 @@ export function RevisionCard({ order, canRequest }: RevisionCardProps) {
   if (!running && daysLeft === null) return null;
 
   return (
-    <article className="w-full max-w-[460px] self-center rounded-[16px] bg-gradient-to-b from-white to-[#fff4e5] p-[16px] text-[#202939]">
+    <article className="w-full max-w-[460px] self-center rounded-[16px] bg-gradient-to-b from-white to-[#fff4e5] p-[16px] text-ink">
       <div className="flex items-center gap-[8px]">
         <HugeiconsIcon icon={RepeatIcon} size={18} className="text-[#b7791f]" />
         <h3 className="text-[13px] font-semibold">
@@ -37,16 +37,16 @@ export function RevisionCard({ order, canRequest }: RevisionCardProps) {
       </div>
 
       {running ? (
-        <p className="mt-[8px] text-[13px] font-medium text-[#697586]">&ldquo;{running.issueDescription}&rdquo;</p>
+        <p className="mt-[8px] text-[13px] font-medium text-muted">&ldquo;{running.issueDescription}&rdquo;</p>
       ) : (
-        <p className="mt-[8px] text-[13px] font-medium text-[#697586]">কাজে কোনো সমস্যা থাকলে অর্ডারটি আবার প্রোভাইডারের কাছে রিভিশনে পাঠানো যাবে। সার্ভিসের কাজ ফ্রি; নতুন পার্টস বা অন্য বড় সমস্যার খরচ আলাদা।</p>
+        <p className="mt-[8px] text-[13px] font-medium text-muted">কাজে কোনো সমস্যা থাকলে অর্ডারটি আবার প্রোভাইডারের কাছে রিভিশনে পাঠানো যাবে। সার্ভিসের কাজ ফ্রি; নতুন পার্টস বা অন্য বড় সমস্যার খরচ আলাদা।</p>
       )}
 
       {!running && canRequest && (
         <button
           type="button"
           onClick={() => openPanel(order.id, 'revision')}
-          className="mt-[12px] h-[36px] cursor-pointer rounded-[10px] bg-[#1daa61] px-[16px] text-[14px] font-semibold text-white hover:bg-[#189452]"
+          className="mt-[12px] h-[36px] cursor-pointer rounded-[10px] bg-primary px-[16px] text-[14px] font-semibold text-white hover:bg-primary/90"
         >
           রিভিশনে পাঠান
         </button>

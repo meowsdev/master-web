@@ -18,7 +18,7 @@ const ROLE_NOTE: Record<StaffRole, string> = {
   COUNSELOR: 'সব অর্ডার ও তার চ্যাট দেখবেন।',
 };
 
-const primaryButton = 'cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50';
+const primaryButton = 'cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled';
 
 /* Admin adds an office staff member: number, name, position. They then sign in with OTP on that number. */
 export function AddStaffPanel({ adminId, onClose }: { adminId: string; onClose: () => void }) {
@@ -30,7 +30,7 @@ export function AddStaffPanel({ adminId, onClose }: { adminId: string; onClose: 
 
   return (
     <SidePanelShell title="নতুন স্টাফ যোগ করুন" onClose={onClose}>
-      <p className="mb-[8px] text-[13px] font-medium leading-relaxed text-[#697586]">
+      <p className="mb-[8px] text-[13px] font-medium leading-relaxed text-muted">
         এই নম্বরে তিনি OTP দিয়ে লগইন করবেন এবং তার পদ অনুযায়ী স্ক্রিন পাবেন। কাস্টমার বা পার্টনারের নম্বর স্টাফ হতে পারবে না।
       </p>
       <PhoneNumberField value={phone} onChange={setPhone} />
@@ -38,7 +38,7 @@ export function AddStaffPanel({ adminId, onClose }: { adminId: string; onClose: 
         <input value={name} onChange={(event) => setName(event.target.value)} maxLength={100} placeholder="নাম" className={fieldControlClass} />
       </OrderField>
       <OrderSelect icon={Briefcase01Icon} placeholder="পদ সিলেক্ট করুন" value={role || null} options={ROLE_OPTIONS} onChange={(value) => setRole(value as StaffRole | '')} />
-      {role && <p className="mt-[8px] text-[12px] font-medium text-[#697586]">{ROLE_NOTE[role]}</p>}
+      {role && <p className="mt-[8px] text-[12px] font-medium text-muted">{ROLE_NOTE[role]}</p>}
 
       <div className="mt-[28px] flex justify-center">
         <button type="button" disabled={!isReady} onClick={() => role && create.mutate({ mobileNumber: phone, name: name.trim(), role }, { onSuccess: onClose })} className={primaryButton}>
@@ -64,37 +64,37 @@ export function StaffDetailsPanel({ adminId, staffId, onClose }: { adminId: stri
 
   return (
     <SidePanelShell title={person.name || person.mobileNumber} onClose={onClose}>
-      <dl className="flex flex-col gap-[10px] text-[14px] font-medium text-[#202939]">
-        <div className="flex justify-between gap-[12px]"><dt className="text-[#697586]">ফোন</dt><dd>{person.mobileNumber}</dd></div>
-        <div className="flex justify-between gap-[12px]"><dt className="text-[#697586]">পদ</dt><dd>{STAFF_ROLE_LABEL[person.role] ?? person.role}</dd></div>
-        <div className="flex justify-between gap-[12px]"><dt className="text-[#697586]">অবস্থা</dt><dd className={isOff ? 'text-[#d64545]' : 'text-[#1daa61]'}>{isOff ? 'বন্ধ' : 'চালু'}</dd></div>
-        <div className="flex justify-between gap-[12px]"><dt className="text-[#697586]">লগইন</dt><dd>{person.isVerified ? 'করেছেন' : 'এখনো করেননি'}</dd></div>
-        <div className="flex justify-between gap-[12px]"><dt className="text-[#697586]">যোগ হয়েছেন</dt><dd>{new Date(person.createdAt).toLocaleDateString('bn-BD')}</dd></div>
+      <dl className="flex flex-col gap-[10px] text-[14px] font-medium text-ink">
+        <div className="flex justify-between gap-[12px]"><dt className="text-muted">ফোন</dt><dd>{person.mobileNumber}</dd></div>
+        <div className="flex justify-between gap-[12px]"><dt className="text-muted">পদ</dt><dd>{STAFF_ROLE_LABEL[person.role] ?? person.role}</dd></div>
+        <div className="flex justify-between gap-[12px]"><dt className="text-muted">অবস্থা</dt><dd className={isOff ? 'text-[#d64545]' : 'text-primary'}>{isOff ? 'বন্ধ' : 'চালু'}</dd></div>
+        <div className="flex justify-between gap-[12px]"><dt className="text-muted">লগইন</dt><dd>{person.isVerified ? 'করেছেন' : 'এখনো করেননি'}</dd></div>
+        <div className="flex justify-between gap-[12px]"><dt className="text-muted">যোগ হয়েছেন</dt><dd>{new Date(person.createdAt).toLocaleDateString('bn-BD')}</dd></div>
       </dl>
 
       {!canEdit && (
-        <p className="mt-[20px] text-[13px] font-medium text-[#697586]">{isSelf ? 'নিজের অ্যাকাউন্ট এখান থেকে বদলানো যায় না।' : 'Admin অ্যাকাউন্ট এখান থেকে বদলানো যায় না।'}</p>
+        <p className="mt-[20px] text-[13px] font-medium text-muted">{isSelf ? 'নিজের অ্যাকাউন্ট এখান থেকে বদলানো যায় না।' : 'Admin অ্যাকাউন্ট এখান থেকে বদলানো যায় না।'}</p>
       )}
 
       {canEdit && (
         <>
-          <p className="mb-[4px] mt-[24px] text-[14px] font-semibold text-[#202939]">পদ বদলান</p>
+          <p className="mb-[4px] mt-[24px] text-[14px] font-semibold text-ink">পদ বদলান</p>
           <OrderSelect icon={Briefcase01Icon} placeholder="পদ" value={chosenRole} options={ROLE_OPTIONS} onChange={(value) => value && setRole(value as StaffRole)} />
-          <p className="mt-[8px] text-[12px] font-medium text-[#697586]">{ROLE_NOTE[chosenRole]} পদ বদলালে তাকে আবার লগইন করতে হবে।</p>
+          <p className="mt-[8px] text-[12px] font-medium text-muted">{ROLE_NOTE[chosenRole]} পদ বদলালে তাকে আবার লগইন করতে হবে।</p>
           <div className="mt-[16px] flex justify-center">
             <button type="button" disabled={chosenRole === person.role || update.isPending} onClick={() => update.mutate({ staffId, change: { role: chosenRole } }, { onSuccess: () => setRole(null) })} className={primaryButton}>
               পদ সেভ করুন
             </button>
           </div>
 
-          <div className="mt-[28px] border-t border-[#e5e5e5] pt-[16px]">
-            <p className="text-[14px] font-semibold text-[#202939]">{isOff ? 'অ্যাকাউন্ট চালু করুন' : 'অ্যাকাউন্ট বন্ধ করুন'}</p>
-            <p className="mt-[4px] text-[12px] font-medium text-[#697586]">{isOff ? 'আবার লগইন করতে পারবেন।' : 'সাথে সাথে লগআউট হবেন এবং আর লগইন করতে পারবেন না, যতক্ষণ না আবার চালু করা হয়।'}</p>
+          <div className="mt-[28px] border-t border-line pt-[16px]">
+            <p className="text-[14px] font-semibold text-ink">{isOff ? 'অ্যাকাউন্ট চালু করুন' : 'অ্যাকাউন্ট বন্ধ করুন'}</p>
+            <p className="mt-[4px] text-[12px] font-medium text-muted">{isOff ? 'আবার লগইন করতে পারবেন।' : 'সাথে সাথে লগআউট হবেন এবং আর লগইন করতে পারবেন না, যতক্ষণ না আবার চালু করা হয়।'}</p>
             <button
               type="button"
               disabled={update.isPending}
               onClick={() => update.mutate({ staffId, change: { status: isOff ? 'ACTIVE' : 'SUSPENDED' } })}
-              className={`mt-[10px] h-[36px] cursor-pointer rounded-[8px] px-[16px] text-[14px] font-semibold text-white disabled:opacity-50 ${isOff ? 'bg-[#1daa61] hover:bg-[#189452]' : 'bg-[#d64545] hover:bg-[#bd3b3b]'}`}
+              className={`mt-[10px] h-[36px] cursor-pointer rounded-[8px] px-[16px] text-[14px] font-semibold text-white disabled:opacity-50 ${isOff ? 'bg-primary hover:bg-primary/90' : 'bg-[#d64545] hover:bg-[#bd3b3b]'}`}
             >
               {isOff ? 'চালু করুন' : 'বন্ধ করুন'}
             </button>

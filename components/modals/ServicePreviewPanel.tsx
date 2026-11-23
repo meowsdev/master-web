@@ -18,13 +18,13 @@ interface ServicePreviewPanelProps {
 function ServiceHero({ service }: { service: Service }) {
   if (service.imageUrl) {
     return (
-      <div className="relative aspect-[2/1] w-full overflow-hidden rounded-[12px] bg-[#f7f5f3]">
+      <div className="relative aspect-[2/1] w-full overflow-hidden rounded-[12px] bg-surface">
         <Image src={service.imageUrl} alt={service.name} fill sizes="530px" unoptimized className="object-cover" />
       </div>
     );
   }
   return (
-    <div className="flex aspect-[2/1] w-full items-center justify-center rounded-[12px] bg-gradient-to-b from-[#d7fdd2] to-[#f7f5f3] text-[72px]">
+    <div className="flex aspect-[2/1] w-full items-center justify-center rounded-[12px] bg-gradient-to-b from-secondary to-surface text-[72px]">
       {service.category?.iconUrl && !service.category.iconUrl.startsWith('http') ? service.category.iconUrl : '🛠️'}
     </div>
   );
@@ -45,20 +45,20 @@ export function ServicePreviewPanel({ service, onClose, primaryActionLabel, onPr
       <div className="flex flex-col gap-[24px]">
         <ServiceHero service={service} />
 
-        <h2 className="border-l-[4px] border-[#1daa61] pl-[12px] text-[24px] font-semibold leading-tight tracking-[-0.48px] text-[#202939]">
+        <h2 className="border-l-[4px] border-primary pl-[12px] text-[24px] font-semibold leading-tight tracking-[-0.48px] text-ink">
           {service.nameBn || service.name}
         </h2>
 
         {service.description && (
-          <p className="text-[16px] font-medium leading-relaxed text-[#202939]">{service.description}</p>
+          <p className="text-[16px] font-medium leading-relaxed text-ink">{service.description}</p>
         )}
 
         {features.length > 0 && (
           <ul className="grid grid-cols-1 gap-x-[24px] gap-y-[20px] sm:grid-cols-2">
             {/* Admins type features freely, so two can read the same; the position keeps each key unique. */}
             {features.map((feature, index) => (
-              <li key={`${index}-${feature}`} className="flex items-center gap-[8px] text-[14px] font-medium text-[#202939]">
-                <ChevronRight className="size-[16px] shrink-0 text-[#202939]" strokeWidth={1.5} />
+              <li key={`${index}-${feature}`} className="flex items-center gap-[8px] text-[14px] font-medium text-ink">
+                <ChevronRight className="size-[16px] shrink-0 text-ink" strokeWidth={1.5} />
                 <span>{feature}</span>
               </li>
             ))}

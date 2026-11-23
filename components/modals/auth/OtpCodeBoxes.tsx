@@ -26,8 +26,8 @@ export function OtpCodeBoxes({ value, onChange, length = OTP_LENGTH, disabled = 
       {Array.from({ length }, (_, index) => (
         <div
           key={index}
-          className={`flex size-[36px] items-center sm:size-[42px] justify-center rounded-[4px] border text-[20px] font-semibold text-[#202939] ${
-            isFocused && index === activeIndex ? 'border-[#1daa61]' : 'border-[#202939]'
+          className={`flex size-[36px] items-center sm:size-[42px] justify-center rounded-[4px] border text-[20px] font-semibold text-ink ${
+            isFocused && index === activeIndex ? 'border-primary' : 'border-ink'
           }`}
         >
           {value[index] ?? ''}

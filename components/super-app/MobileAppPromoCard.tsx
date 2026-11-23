@@ -4,7 +4,7 @@ import { AppStoreBadge, GooglePlayBadge } from './StoreBadges';
 /* Left 500×500 welcome card: "Download Mobile App" promo with store badges. */
 export function MobileAppPromoCard() {
   return (
-    <div className="relative size-[500px] shrink-0 overflow-clip rounded-[12px] border border-[#e5e5e5] bg-white">
+    <div className="relative size-[500px] shrink-0 overflow-clip rounded-[12px] border border-line bg-white">
       {/* Photo is wider than the card on purpose; the card crops it like in Figma */}
       <div className="absolute left-[-136.55px] top-[-1px] h-[500px] w-[749.634px]">
         <Image
@@ -45,7 +45,7 @@ export function MobileAppPromoCard() {
 
       <div className="absolute left-[31.45px] top-[31px] flex items-center gap-[5.333px]">
         <Image src="/welcome/brand-mark-small.svg" alt="" width={32} height={32} />
-        <p className="whitespace-nowrap text-[16px] font-semibold tracking-[-0.32px] text-[#202939]">
+        <p className="whitespace-nowrap text-[16px] font-semibold tracking-[-0.32px] text-ink">
           SupeerApp
         </p>
       </div>

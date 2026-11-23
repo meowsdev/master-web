@@ -42,7 +42,7 @@ export function AuthPrimaryButton({ children, disabled, type = 'submit', onClick
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="cursor-pointer rounded-[12px] bg-[#1daa61] px-[16px] py-[8px] text-[20px] font-semibold tracking-[-0.4px] text-white transition-opacity hover:bg-[#189452] disabled:cursor-not-allowed disabled:bg-[#1daa61]/50"
+      className="cursor-pointer rounded-[12px] bg-primary px-[16px] py-[8px] text-[20px] font-semibold tracking-[-0.4px] text-white transition-opacity hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary/50"
     >
       {children}
     </button>
@@ -50,4 +50,4 @@ export function AuthPrimaryButton({ children, disabled, type = 'submit', onClick
 }
 
 export const authLinkClass =
-  'cursor-pointer text-[14px] font-semibold text-[#1daa61] hover:underline';
+  'cursor-pointer text-[14px] font-semibold text-primary hover:underline';

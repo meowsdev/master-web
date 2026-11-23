@@ -47,6 +47,10 @@ export interface Service {
   isActive: boolean;
   category?: ServiceCategory;
   providerSummary?: ServiceProviderSummary;
+  /** Set on chat-list entries built from a main service (lib/main-service.ts): id and categoryId are the main service id. */
+  isMainService?: boolean;
+  groupId?: string | null;
+  servedCount?: number;
   createdAt: string;
   updatedAt: string;
 }

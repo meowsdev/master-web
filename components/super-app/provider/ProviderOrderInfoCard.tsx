@@ -5,7 +5,7 @@ import { Alert02Icon, Calendar03Icon, CreditCardIcon, Call02Icon, Home01Icon, No
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { ReactNode } from 'react';
 import { Order } from '@/types/order.types';
-import { formatScheduleDate } from '../order-chat/order-labels';
+import { formatMessageTime, formatScheduleDate } from '../order-chat/order-labels';
 import { OrderDetailLine } from '../order-chat/OrderDetailLine';
 import { ORDER_STATUS_LABEL } from '../order-history/order-status';
 import { providerOrderTitle } from './provider-order-filters';
@@ -27,10 +27,10 @@ export function ProviderOrderInfoCard({ order, actions, showParties = false }: P
   const areaLabel = useServiceAreaLabel(detail?.districtId, detail?.upazilaId);
 
   return (
-    <article className="w-full max-w-[460px] rounded-[16px] bg-white p-[14px] text-[#202939] shadow-sm">
+    <article className="w-full max-w-[460px] rounded-[16px] bg-white p-[14px] text-ink shadow-sm">
       <header className="flex items-center justify-between gap-[8px]">
         <span className="min-w-0 truncate text-[12px] font-medium">{providerOrderTitle(order)}</span>
-        <span className={`shrink-0 rounded-[8px] bg-[#f7f5f3] px-[8px] py-[4px] text-[12px] font-semibold ${status.className}`}>{status.text}</span>
+        <span className={`shrink-0 rounded-[8px] bg-surface px-[8px] py-[4px] text-[12px] font-semibold ${status.className}`}>{status.text}</span>
       </header>
 
       <ul className="mt-[14px] flex flex-col gap-[10px]">
@@ -70,7 +70,13 @@ export function ProviderOrderInfoCard({ order, actions, showParties = false }: P
         </OrderDetailLine>
       </ul>
 
-      {actions && <footer className="mt-[14px]">{actions}</footer>}
+      {/* Bottom left: when the order was sent, as on the provider-assigned card; the job buttons on the right. */}
+      <footer className="mt-[14px] flex items-end justify-between gap-[12px]">
+        <time dateTime={order.createdAt} title={new Date(order.createdAt).toLocaleString()} className="shrink-0 text-[12px] font-medium text-muted">
+          {formatMessageTime(order.createdAt)}
+        </time>
+        {actions && <div className="min-w-0">{actions}</div>}
+      </footer>
     </article>
   );
 }

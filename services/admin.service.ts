@@ -54,9 +54,12 @@ export const adminService = {
   /** Store a chosen Hugeicons icon as a picture; the backend rebuilds the SVG from the icon data. */
   saveHugeicon: async (name: string, elements: unknown) => (await apiClient.post<{ url: string }>('/uploads/hugeicon', { name, elements })).data.url,
 
-  createCategory: async (dto: { name: string; description?: string; iconUrl?: string }) => (await apiClient.post<{ id: string; name: string }>('/category/create', dto)).data,
+  createCategory: async (dto: { name: string; description?: string; iconUrl?: string; groupId?: string }) => (await apiClient.post<{ id: string; name: string }>('/category/create', dto)).data,
 
   createService: async (dto: AdminServiceInput) => (await apiClient.post<{ id: string }>('/service/create', dto)).data,
 
   updateService: async (serviceId: string, dto: Partial<AdminServiceInput>) => (await apiClient.patch(`/service/${serviceId}`, dto)).data,
+
+  /** Soft delete: the sub-service leaves the catalog; past orders keep it. */
+  deleteService: async (serviceId: string) => (await apiClient.delete(`/service/${serviceId}`)).data,
 };

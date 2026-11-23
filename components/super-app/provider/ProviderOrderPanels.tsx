@@ -6,6 +6,7 @@ import { Order } from '@/types/order.types';
 import { OrderDetailsPanel } from '../order-chat/OrderDetailsPanel';
 import { AssignWorkerPanel } from './panels/AssignWorkerPanel';
 import { ExtraChargePanel } from './panels/ExtraChargePanel';
+import { SendQuotePanel } from './panels/SendQuotePanel';
 import { WorkCompletePanel } from './panels/WorkCompletePanel';
 import { ExpenseClaimPanel } from '../order-chat/ExpenseClaimPanel';
 
@@ -19,6 +20,7 @@ export function ProviderOrderPanels({ order, userId, viewer = 'PROVIDER' }: { or
   if (openOrderId !== order.id) return null;
   if (details.isOpen) return <OrderDetailsPanel order={order} viewer={viewer} onClose={close} />;
   if (kind === 'extraCharge') return <ExtraChargePanel order={order} userId={userId} onClose={close} />;
+  if (kind === 'quote') return <SendQuotePanel order={order} userId={userId} onClose={close} />;
   if (kind === 'complete') return <WorkCompletePanel order={order} onClose={close} />;
   if (kind === 'assign') return <AssignWorkerPanel order={order} userId={userId} onClose={close} />;
   if (kind === 'expenseClaim') return <ExpenseClaimPanel order={order} userId={userId} onClose={close} />;

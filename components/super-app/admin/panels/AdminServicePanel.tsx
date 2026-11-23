@@ -9,6 +9,8 @@ import { OrderField, OrderSelect, fieldControlClass } from '@/components/modals/
 import { PicturePicker } from '../PicturePicker';
 import { AdminServiceInput, adminService } from '@/services/admin.service';
 import { servicesService } from '@/services/services.service';
+import { VariantsEditor } from './AdminCatalogPanel';
+import { useAdminCatalog } from '../useAdminCatalog';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { PriceUnit, Service } from '@/types/service.types';
 
@@ -26,8 +28,8 @@ const apiErrorMessage = (error: unknown) => {
 
 function Toggle({ label, isOn, onChange }: { label: string; isOn: boolean; onChange: (isOn: boolean) => void }) {
   return (
-    <label className="flex cursor-pointer items-center gap-[8px] text-[14px] font-semibold text-[#202939]">
-      <input type="checkbox" checked={isOn} onChange={(event) => onChange(event.target.checked)} className="size-[18px] accent-[#1daa61]" />
+    <label className="flex cursor-pointer items-center gap-[8px] text-[14px] font-semibold text-ink">
+      <input type="checkbox" checked={isOn} onChange={(event) => onChange(event.target.checked)} className="size-[18px] accent-primary" />
       {label}
     </label>
   );
@@ -89,6 +91,8 @@ export function AdminServicePanel({ service, defaultCategoryId, onClose }: Admin
       toast.success(service ? 'Service saved' : 'Service created');
       queryClient.invalidateQueries({ queryKey: ['admin-services'] });
       queryClient.invalidateQueries({ queryKey: ['order-catalog'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-catalog-tree'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-catalog-ungrouped'] });
       // After creating, the panel stays open on the new service so it can be refined.
       openPanel(savedId, 'adminService');
     },
@@ -143,11 +147,32 @@ export function AdminServicePanel({ service, defaultCategoryId, onClose }: Admin
           </div>
 
           <div className="mt-[28px] flex justify-center">
-            <button type="submit" disabled={!isReady || save.isPending} className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="submit" disabled={!isReady || save.isPending} className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled">
               {save.isPending ? 'Saving...' : service ? 'Save changes' : 'Create service'}
             </button>
           </div>
       </form>
+      {service && <ServiceContentSection serviceId={service.id} />}
     </SidePanelShell>
+  );
+}
+
+/* The priced options of this sub-service. Overview, FAQ, How to order, Review and Details belong to its main service. */
+function ServiceContentSection({ serviceId }: { serviceId: string }) {
+  const { mains } = useAdminCatalog();
+  const main = mains.find((item) => item.services.some((sub) => sub.id === serviceId));
+  const sub = main?.services.find((item) => item.id === serviceId);
+  if (!main || !sub) return null;
+
+  return (
+    <div className="flex flex-col gap-[16px] pb-[24px]">
+      <section className="flex flex-col gap-[10px] rounded-[16px] bg-surface p-[14px]">
+        <div>
+          <p className="text-[15px] font-semibold text-ink">Options ও দাম</p>
+          <p className="text-[12px] text-muted">কাস্টমার এগুলো থেকে বেছে কার্টে যোগ করে।</p>
+        </div>
+        <VariantsEditor sub={sub} />
+      </section>
+    </div>
   );
 }

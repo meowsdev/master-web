@@ -61,13 +61,13 @@ export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, 
         profileSlot={<ProviderProfileHeader user={user} />}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[8px]">
+      <div className="min-h-0 flex-1 overflow-y-auto px-[16px] pb-[8px]">
         <div className="pt-[8px]">
           <SupportChatRow userId={user.id} isActive={isSupportOpen} onOpen={onOpenSupport} />
         </div>
-        {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-[#697586]">Loading orders...</p>}
+        {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-muted">Loading orders...</p>}
         {!isLoading && visibleOrders.length === 0 && (
-          <p className="p-[24px] text-center text-[14px] font-medium text-[#697586]">{orders.length === 0 ? 'No orders yet.' : 'No orders match.'}</p>
+          <p className="p-[24px] text-center text-[14px] font-medium text-muted">{orders.length === 0 ? 'No orders yet.' : 'No orders match.'}</p>
         )}
         {visibleOrders.map((order) => (
           <OrderHistoryListItem

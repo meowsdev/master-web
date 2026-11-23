@@ -9,6 +9,7 @@ import { User } from '@/types/auth.types';
 import { Order } from '@/types/order.types';
 import { ChatSession } from '@/types/chat.types';
 import { ordersService } from '@/services/orders.service';
+import { orderMainServiceId } from '@/lib/main-service';
 import { ServiceListItem } from './ServiceListItem';
 import { SupportChatRow } from './support/SupportChatRow';
 
@@ -71,8 +72,8 @@ export function ServiceList({
     const hasRoomToCollapse = scrollHeight - clientHeight > 200;
     if (delta > 6 && hasRoomToCollapse) onScrollIntent('collapse');
   };
-  const textPrimary = isDarkMode ? 'text-[#e9edef]' : 'text-[#111b21]';
-  const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
+  const textPrimary = isDarkMode ? 'text-muted' : 'text-[#111b21]';
+  const textSecondary = isDarkMode ? 'text-muted' : 'text-muted';
 
   // Fetch customer orders (shares 'my-orders-drawer' cache) to detect running revisions
   const { data: customerOrders = [], refetch } = useQuery<Order[]>({
@@ -93,7 +94,7 @@ export function ServiceList({
         ) ||
         customerOrders.some(
           (o) =>
-            o.serviceId === a.id &&
+            orderMainServiceId(o) === a.id &&
             o.revisions?.some(
               (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
             )
@@ -106,7 +107,7 @@ export function ServiceList({
         ) ||
         customerOrders.some(
           (o) =>
-            o.serviceId === b.id &&
+            orderMainServiceId(o) === b.id &&
             o.revisions?.some(
               (r) => r.revisionStatus === 'REQUESTED' || r.revisionStatus === 'ACCEPTED'
             )
@@ -120,15 +121,15 @@ export function ServiceList({
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* Scrollable List Container */}
-      <div className="flex-1 overflow-y-auto" onScroll={handleScroll}>
+      <div className="flex-1 overflow-y-auto px-[16px]" onScroll={handleScroll}>
         {isAuthenticated && user && onOpenSupport && (
-          <div className="px-[8px] pt-[8px]">
+          <div className="pt-[8px]">
             <SupportChatRow userId={user.id} isActive={isSupportOpen} onOpen={onOpenSupport} />
           </div>
         )}
         {isLoading ? (
           <div className="p-6 text-center space-y-3">
-            <div className="w-8 h-8 border-2 border-[#25D366] border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
             <p className={`text-xs ${textSecondary}`}>Loading services from database...</p>
           </div>
         ) : allDbServicesCount === 0 ? (
@@ -161,8 +162,8 @@ export function ServiceList({
                 onClick={onClearSearch}
                 className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                   isDarkMode
-                    ? 'bg-[#005c4b] text-white hover:bg-[#25D366]'
-                    : 'bg-[#e7fce3] text-[#075E54] border border-[#25D366]/30 hover:bg-[#25D366] hover:text-white'
+                    ? 'bg-[#005c4b] text-white hover:bg-primary'
+                    : 'bg-secondary text-ink border border-primary/30 hover:bg-primary hover:text-white'
                 }`}
               >
                 Clear search
@@ -183,7 +184,7 @@ export function ServiceList({
             // DB order revision check
             const dbOrderWithRev = customerOrders.find(
               (o) =>
-                o.serviceId === service.id &&
+                orderMainServiceId(o) === service.id &&
                 o.revisions?.some(
                   (r) => r.revisionStatus !== 'COMPLETED' // Only check for non-completed revisions
                 )
@@ -201,11 +202,13 @@ export function ServiceList({
               undefined;
 
             // Active running order check
-            const activeDbRunningOrder = customerOrders.find(
+            // Several orders of one main service can run at once; each is its own tab in the chat.
+            const runningDbOrders = customerOrders.filter(
               (o) =>
-                o.serviceId === service.id &&
-                ['ACCEPTED', 'ASSIGNED', 'IN_PROGRESS', 'CONFIRMED'].includes(o.orderStatus)
+                orderMainServiceId(o) === service.id &&
+                ['PENDING', 'ACCEPTED', 'ASSIGNED', 'IN_PROGRESS', 'CONFIRMED'].includes(o.orderStatus)
             );
+            const activeDbRunningOrder = runningDbOrders[runningDbOrders.length - 1];
 
             const isRunning =
               hasActiveRevision ||
@@ -215,7 +218,7 @@ export function ServiceList({
             const runningOrderId =
               (hasActiveRevision && (dbOrderWithRev?.id ? dbOrderWithRev.id.slice(0, 8).toUpperCase() : inChatOrderCard?.orderId)) ||
               inChatOrderCard?.orderId ||
-              (activeDbRunningOrder?.id ? activeDbRunningOrder.id.slice(0, 8).toUpperCase() : null);
+              (activeDbRunningOrder ? activeDbRunningOrder.referenceCode ?? activeDbRunningOrder.id.slice(0, 8).toUpperCase() : null);
 
             const conv = conversationByServiceId?.get(service.id);
             const unreadCount = conv?.unreadCount ?? 0;
@@ -227,6 +230,7 @@ export function ServiceList({
                 isSelected={service.id === activeServiceId}
                 isRunning={isRunning}
                 runningOrderId={runningOrderId}
+                runningCount={runningDbOrders.length}
                 hasActiveRevision={hasActiveRevision}
                 revisionIssue={revisionIssue}
                 lastMessage={lastMsg}
@@ -241,13 +245,13 @@ export function ServiceList({
 
       {/* Signed-in profile footer; guests log in through the header's "Join Now" */}
       {/* {isAuthenticated && (
-        <div className="p-3 border-t flex items-center shrink-0 bg-[#f7f5f3] border-[#e5e5e5]">
+        <div className="p-3 border-t flex items-center shrink-0 bg-surface border-line">
           <div
             onClick={onOpenProfile}
             className="flex items-center gap-2.5 min-w-0 cursor-pointer group hover:opacity-90 transition-opacity"
             title="Click to view & edit Profile"
           >
-            <div className="w-8 h-8 rounded-full overflow-hidden bg-[#1daa61] text-white flex items-center justify-center text-xs font-bold shrink-0">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
               {user?.profilePhoto ? (
                 <Image src={user.profilePhoto} alt="User" width={32} height={32} unoptimized className="object-cover w-full h-full" />
               ) : (
@@ -256,7 +260,7 @@ export function ServiceList({
             </div>
             <div className="min-w-0">
               <p className={`text-xs font-bold truncate ${textPrimary}`}>{user?.name}</p>
-              <p className="text-[11px] text-[#1daa61] font-bold">{activeRole || 'CUSTOMER'}</p>
+              <p className="text-[11px] text-primary font-bold">{activeRole || 'CUSTOMER'}</p>
             </div>
           </div>
         </div>
