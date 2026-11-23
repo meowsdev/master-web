@@ -36,23 +36,23 @@ export function OrderRevisionModal({
   const setDesc = onIssueDescriptionChange ?? onDescChange ?? (() => {});
   const submitting = isSubmitting ?? isPending ?? false;
 
-  const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
+  const textSecondary = isDarkMode ? 'text-muted' : 'text-muted';
 
   return (
     <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
       <div
         className={`w-full max-w-sm rounded-2xl p-5 shadow-2xl border space-y-4 ${
-          isDarkMode ? 'bg-[#202c33] border-[#2f3b43]' : 'bg-white border-[#e9edef]'
+          isDarkMode ? 'bg-[#202c33] border-[#2f3b43]' : 'bg-white border-line'
         }`}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[#008069] dark:text-[#25D366] font-bold text-sm">
+          <div className="flex items-center gap-2 text-primary dark:text-[#38C792] font-bold text-sm">
             <RotateCcw className="w-4 h-4" />
             <span>7-Day Warranty Revision</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-full text-[#8696a0] hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
+            className="p-1 rounded-full text-muted hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -69,8 +69,8 @@ export function OrderRevisionModal({
           rows={3}
           className={`w-full p-3 rounded-xl text-xs border outline-none resize-none ${
             isDarkMode
-              ? 'bg-[#111b21] border-[#2f3b43] text-white placeholder:text-[#8696a0]'
-              : 'bg-[#f0f2f5] border-[#d1d7db] text-black placeholder:text-[#667781]'
+              ? 'bg-[#111b21] border-[#2f3b43] text-white placeholder:text-muted'
+              : 'bg-surface border-line text-black placeholder:text-muted'
           }`}
         />
 
@@ -78,7 +78,7 @@ export function OrderRevisionModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 rounded-xl text-xs font-semibold text-[#8696a0] hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
+            className="flex-1 py-2 rounded-xl text-xs font-semibold text-muted hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
           >
             Cancel
           </button>
@@ -86,7 +86,7 @@ export function OrderRevisionModal({
             type="button"
             disabled={!desc.trim() || submitting}
             onClick={onSubmit}
-            className="flex-1 py-2 rounded-xl bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+            className="flex-1 py-2 rounded-xl bg-primary hover:bg-primary dark:bg-[#38C792] dark:hover:bg-[#38C792] text-white dark:text-[#111b21] text-xs font-bold transition-all disabled:bg-primary-disabled cursor-pointer"
           >
             {submitting ? 'Submitting...' : 'Submit Revision'}
           </button>

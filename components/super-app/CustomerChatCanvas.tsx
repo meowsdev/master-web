@@ -95,7 +95,7 @@ export function CustomerChatCanvas({
               }
             }}
             disabled={isCompletingBanner}
-            className="shrink-0 ml-2 px-3 py-1 bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold rounded-full text-xs shadow-xs cursor-pointer transition-colors disabled:opacity-60 flex items-center gap-1.5"
+            className="shrink-0 ml-2 px-3 py-1 bg-primary hover:bg-primary dark:bg-[#38C792] dark:hover:bg-[#38C792] text-white dark:text-[#111b21] font-bold rounded-full text-xs shadow-xs cursor-pointer transition-colors disabled:bg-primary-disabled flex items-center gap-1.5"
           >
             {isCompletingBanner ? (
               <>
@@ -123,7 +123,7 @@ export function CustomerChatCanvas({
               // If there's no order card yet, let user open orders drawer or create/complete
               if (onOpenOrders) onOpenOrders();
             }}
-            className="px-3 py-1 bg-[#008069] hover:bg-[#00705c] text-white font-bold rounded-full text-xs cursor-pointer shadow-xs"
+            className="px-3 py-1 bg-primary hover:bg-primary text-white font-bold rounded-full text-xs cursor-pointer shadow-xs"
           >
             Manage Orders & Revision
           </button>

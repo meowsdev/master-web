@@ -7,10 +7,11 @@ import { Cancel01Icon, CheckmarkCircle02Icon, Delete02Icon } from '@hugeicons/co
 import { toast } from 'sonner';
 import { orderErrorMessage } from '@/hooks/useOrderPlaceFields';
 import { AdminFaq, catalogAdminService } from '@/services/catalog-admin.service';
+import { ChipRow } from '@/components/super-app/ChipRow';
 
-export const inputClass = 'w-full rounded-[8px] border border-[#e5e5e5] bg-white px-[10px] py-[8px] text-[14px] text-[#202939] outline-none placeholder:text-[#9aa4b2] focus:border-[#1daa61]';
+export const inputClass = 'w-full rounded-[8px] border border-line bg-white px-[10px] py-[8px] text-[14px] text-ink outline-none placeholder:text-muted focus:border-primary';
 export const smallButton = 'cursor-pointer rounded-[8px] px-[12px] py-[7px] text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50';
-const primaryButton = `${smallButton} self-start bg-[#1daa61] text-white hover:bg-[#189452]`;
+const primaryButton = `${smallButton} self-start bg-primary text-white hover:bg-primary/90`;
 const lines = (text: string) => text.split('\n').map((line) => line.trim()).filter(Boolean);
 
 /** Every catalog read the customer app caches; refreshed after each admin change so edits show at once. */
@@ -58,25 +59,15 @@ export function ServiceContentEditor({ kind, id, initial, faqs }: ServiceContent
   const [tab, setTab] = useState<TabId>('overview');
   return (
     <div className="flex flex-col gap-[12px]">
-      <div role="tablist" className="flex flex-wrap gap-[6px]">
-        {TABS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === item.id}
-            onClick={() => setTab(item.id)}
-            className={`cursor-pointer rounded-full border px-[12px] py-[5px] text-[13px] font-semibold transition-colors ${
-              tab === item.id ? 'border-[#1daa61] bg-[#e7fce3] text-[#15803d]' : 'border-[#e5e5e5] bg-white text-[#364152] hover:bg-[#efefef]'
-            }`}
-          >
-            {item.label}
-            {item.id === 'faq' && faqs.length > 0 ? ` (${faqs.length})` : ''}
-          </button>
-        ))}
-      </div>
+      <ChipRow
+        label="content tabs"
+        chips={TABS.map((item) => ({ id: item.id, label: item.id === 'faq' && faqs.length > 0 ? `${item.label} (${faqs.length})` : item.label }))}
+        activeId={tab}
+        onSelect={setTab}
+        rowClassName="py-[2px]"
+      />
 
-      <div className="rounded-[12px] border border-[#e5e5e5] bg-white p-[12px]">
+      <div className="rounded-[12px] border border-line bg-white p-[12px]">
         {tab === 'overview' && <OverviewTab key={id} kind={kind} id={id} included={initial.included} excluded={initial.excluded} />}
         {tab === 'faq' && <FaqTab faqs={faqs} owner={kind === 'main' ? { categoryId: id } : { serviceId: id }} kind={kind} />}
         {tab === 'how-to-order' && (kind === 'main' ? <HowToOrderTab key={id} id={id} steps={initial.howToOrder ?? []} /> : <SubHowToOrderNote />)}
@@ -89,19 +80,19 @@ export function ServiceContentEditor({ kind, id, initial, faqs }: ServiceContent
 function TabHeading({ title, hint }: { title: string; hint: string }) {
   return (
     <div className="mb-[10px]">
-      <p className="border-l-[3px] border-[#1daa61] pl-[8px] text-[14px] font-semibold text-[#202939]">{title}</p>
-      <p className="mt-[4px] text-[12px] text-[#697586]">{hint}</p>
+      <p className="border-l-[3px] border-primary pl-[8px] text-[14px] font-semibold text-ink">{title}</p>
+      <p className="mt-[4px] text-[12px] text-muted">{hint}</p>
     </div>
   );
 }
 
-const fallbackHint = (kind: 'main' | 'sub') => (kind === 'sub' ? ' খালি রাখলে main service-এরটা দেখাবে।' : ' এটা এর সব sub-service-এ দেখাবে।');
+const fallbackHint = (kind: 'main' | 'sub') => (kind === 'sub' ? ' শুধু এই package-এ, option-গুলোর নিচে দেখাবে।' : ' এটা এর সব sub-service-এ দেখাবে।');
 
 function save(kind: 'main' | 'sub', id: string, body: { included?: string[]; excluded?: string[]; details?: string; howToOrder?: string[] }) {
   return kind === 'main' ? catalogAdminService.updateMainService(id, body) : catalogAdminService.updateSubService(id, body);
 }
 
-function OverviewTab({ kind, id, included, excluded }: { kind: 'main' | 'sub'; id: string; included: string[]; excluded: string[] }) {
+export function OverviewTab({ kind, id, included, excluded }: { kind: 'main' | 'sub'; id: string; included: string[]; excluded: string[] }) {
   const [inText, setInText] = useState(included.join('\n'));
   const [outText, setOutText] = useState(excluded.join('\n'));
   const action = useAction(() => save(kind, id, { included: lines(inText), excluded: lines(outText) }), 'Overview saved');
@@ -109,13 +100,13 @@ function OverviewTab({ kind, id, included, excluded }: { kind: 'main' | 'sub'; i
     <div className="flex flex-col gap-[10px]">
       <TabHeading title="Overview" hint={`কী কী কাজ থাকছে আর কী থাকছে না। প্রতি লাইনে একটা।${fallbackHint(kind)}`} />
       <label className="flex flex-col gap-[4px]">
-        <span className="flex items-center gap-[6px] text-[13px] font-semibold text-[#202939]">
-          <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="text-[#1daa61]" /> যা থাকছে (Included)
+        <span className="flex items-center gap-[6px] text-[13px] font-semibold text-ink">
+          <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="text-primary" /> যা থাকছে (Included)
         </span>
         <textarea value={inText} onChange={(event) => setInText(event.target.value)} rows={4} placeholder={'যেমন:\nফিল্টার পরিষ্কার\nগ্যাস প্রেশার চেক'} className={inputClass} />
       </label>
       <label className="flex flex-col gap-[4px]">
-        <span className="flex items-center gap-[6px] text-[13px] font-semibold text-[#202939]">
+        <span className="flex items-center gap-[6px] text-[13px] font-semibold text-ink">
           <HugeiconsIcon icon={Cancel01Icon} size={16} className="text-[#d64545]" /> যা থাকছে না (Excluded)
         </span>
         <textarea value={outText} onChange={(event) => setOutText(event.target.value)} rows={3} placeholder={'যেমন:\nপার্টস-এর দাম'} className={inputClass} />
@@ -127,7 +118,7 @@ function OverviewTab({ kind, id, included, excluded }: { kind: 'main' | 'sub'; i
   );
 }
 
-function HowToOrderTab({ id, steps }: { id: string; steps: string[] }) {
+export function HowToOrderTab({ id, steps }: { id: string; steps: string[] }) {
   const [text, setText] = useState(steps.join('\n'));
   const action = useAction(() => save('main', id, { howToOrder: lines(text) }), 'How to order saved');
   const preview = lines(text);
@@ -138,8 +129,8 @@ function HowToOrderTab({ id, steps }: { id: string; steps: string[] }) {
       {preview.length > 0 && (
         <ol className="flex flex-col gap-[6px]">
           {preview.map((step, index) => (
-            <li key={index} className="flex items-center gap-[8px] text-[13px] text-[#364152]">
-              <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-[#1daa61] text-[12px] font-bold text-white">{index + 1}</span>
+            <li key={index} className="flex items-center gap-[8px] text-[13px] text-ink">
+              <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-primary text-[12px] font-bold text-white">{index + 1}</span>
               {step}
             </li>
           ))}
@@ -160,7 +151,7 @@ function SubHowToOrderNote() {
   );
 }
 
-function DetailsTab({ kind, id, details }: { kind: 'main' | 'sub'; id: string; details: string }) {
+export function DetailsTab({ kind, id, details }: { kind: 'main' | 'sub'; id: string; details: string }) {
   const [text, setText] = useState(details);
   const action = useAction(() => save(kind, id, { details: text.trim() }), 'Details saved');
   return (
@@ -174,7 +165,7 @@ function DetailsTab({ kind, id, details }: { kind: 'main' | 'sub'; id: string; d
   );
 }
 
-function FaqTab({ faqs, owner, kind }: { faqs: AdminFaq[]; owner: { categoryId?: string; serviceId?: string }; kind: 'main' | 'sub' }) {
+export function FaqTab({ faqs, owner, kind }: { faqs: Array<Pick<AdminFaq, 'id' | 'question' | 'answer'>>; owner: { categoryId?: string; serviceId?: string }; kind: 'main' | 'sub' }) {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const create = useAction(() => catalogAdminService.createFaq({ ...owner, question: question.trim(), answer: answer.trim() }), 'FAQ added');
@@ -183,13 +174,13 @@ function FaqTab({ faqs, owner, kind }: { faqs: AdminFaq[]; owner: { categoryId?:
   return (
     <div className="flex flex-col gap-[10px]">
       <TabHeading title="FAQ" hint={kind === 'sub' ? 'এই সার্ভিসের প্রশ্ন-উত্তর। এগুলো main service-এর FAQ-এর আগে দেখাবে।' : 'প্রশ্ন-উত্তর। এগুলো এর সব sub-service-এ দেখাবে।'} />
-      {faqs.length === 0 && <p className="rounded-[8px] bg-[#f7f5f3] p-[10px] text-center text-[13px] text-[#697586]">এখনো কোনো FAQ নেই</p>}
+      {faqs.length === 0 && <p className="rounded-[8px] bg-surface p-[10px] text-center text-[13px] text-muted">এখনো কোনো FAQ নেই</p>}
       <ul className="flex flex-col gap-[6px]">
         {faqs.map((faq) => (
-          <li key={faq.id} className="flex items-start gap-[6px] rounded-[8px] bg-[#f7f5f3] p-[8px] text-[13px]">
+          <li key={faq.id} className="flex items-start gap-[6px] rounded-[8px] bg-surface p-[8px] text-[13px]">
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-[#202939]">প্র: {faq.question}</p>
-              <p className="mt-[2px] text-[#697586]">উ: {faq.answer}</p>
+              <p className="font-semibold text-ink">প্র: {faq.question}</p>
+              <p className="mt-[2px] text-muted">উ: {faq.answer}</p>
             </div>
             <button type="button" aria-label="Delete FAQ" onClick={() => remove.mutate(faq.id)} className="cursor-pointer rounded-full p-[4px] text-[#d64545] hover:bg-[#fdecec]">
               <HugeiconsIcon icon={Delete02Icon} size={15} />
@@ -198,7 +189,7 @@ function FaqTab({ faqs, owner, kind }: { faqs: AdminFaq[]; owner: { categoryId?:
         ))}
       </ul>
       <form
-        className="flex flex-col gap-[6px] border-t border-[#efefef] pt-[10px]"
+        className="flex flex-col gap-[6px] border-t border-line pt-[10px]"
         onSubmit={(event) => {
           event.preventDefault();
           if (question.trim() && answer.trim())
@@ -210,7 +201,7 @@ function FaqTab({ faqs, owner, kind }: { faqs: AdminFaq[]; owner: { categoryId?:
             });
         }}
       >
-        <span className="text-[13px] font-semibold text-[#202939]">নতুন FAQ</span>
+        <span className="text-[13px] font-semibold text-ink">নতুন FAQ</span>
         <input value={question} onChange={(event) => setQuestion(event.target.value)} maxLength={300} placeholder="প্রশ্ন" className={inputClass} />
         <textarea value={answer} onChange={(event) => setAnswer(event.target.value)} rows={2} maxLength={5000} placeholder="উত্তর" className={inputClass} />
         <button type="submit" disabled={!question.trim() || !answer.trim() || create.isPending} className={primaryButton}>

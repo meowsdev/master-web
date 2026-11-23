@@ -100,7 +100,7 @@ export function SuperAppSidebar({
   const isTechnician = activeRole === 'TECHNICIAN';
   const { canManageServices, canChatWithMembers, canManageStaff } = useStaffPermissions();
   const memberChatRole = canChatWithMembers ? supportRoleForTab(activeRailTab) : null;
-  const bgSidebar = isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]';
+  const bgSidebar = isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-line';
   const openAuth = () => onOpenAuth('LOGIN');
 
   return (

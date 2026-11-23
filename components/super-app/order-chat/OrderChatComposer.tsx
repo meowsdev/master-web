@@ -22,7 +22,7 @@ export function OrderChatComposer({ draft, onDraftChange, onSubmit, canSend, isD
         event.preventDefault();
         onSubmit();
       }}
-      className="flex shrink-0 items-center gap-[10px] bg-[#f7f5f3] px-[16px] pb-[16px] pt-[8px]"
+      className="flex shrink-0 items-center gap-[10px] bg-surface px-[16px] pb-[16px] pt-[8px]"
     >
       <input
         value={draft}
@@ -30,13 +30,13 @@ export function OrderChatComposer({ draft, onDraftChange, onSubmit, canSend, isD
         maxLength={1000}
         disabled={isDisabled}
         placeholder={isDisabled && disabledHint ? disabledHint : 'Type a message'}
-        className="h-[44px] min-w-0 flex-1 rounded-[22px] bg-white px-[18px] text-[14px] font-medium text-[#202939] outline-none placeholder:text-[#9aa4b2]"
+        className="h-[44px] min-w-0 flex-1 rounded-[22px] bg-white px-[18px] text-[14px] font-medium text-ink outline-none placeholder:text-muted"
       />
       <button
         type="submit"
         disabled={!canSend || isDisabled}
         aria-label="Send message"
-        className="flex size-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1daa61] text-white disabled:opacity-50"
+        className="flex size-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-white disabled:bg-primary-disabled"
       >
         <HugeiconsIcon icon={SentIcon} size={20} />
       </button>

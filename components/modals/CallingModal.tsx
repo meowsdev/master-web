@@ -51,26 +51,26 @@ export function CallingModal({
       >
         {/* Caller Avatar */}
         <div className="relative mx-auto w-24 h-24">
-          <div className="w-24 h-24 overflow-hidden rounded-full bg-[#202c33] border-4 border-[#25D366] flex items-center justify-center text-4xl shadow-xl">
+          <div className="w-24 h-24 overflow-hidden rounded-full bg-[#202c33] border-4 border-primary flex items-center justify-center text-4xl shadow-xl">
             <EntityPicture source={service.category?.iconUrl} />
           </div>
-          <span className="absolute bottom-1 right-1 w-4 h-4 bg-[#25D366] rounded-full border-2 border-[#111b21] animate-pulse" />
+          <span className="absolute bottom-1 right-1 w-4 h-4 bg-primary rounded-full border-2 border-[#111b21] animate-pulse" />
         </div>
 
         {/* Caller Info */}
         <div className="space-y-1">
           <h3 className="text-xl font-bold">{service.name} Counselor</h3>
-          <p className="text-xs text-[#25D366] font-medium uppercase tracking-wider">
+          <p className="text-xs text-primary font-medium uppercase tracking-wider">
             {callType === 'video' ? 'Super app Video Call' : 'WhatsApp Voice Call'}
           </p>
-          <p className="text-sm text-[#8696a0] font-mono pt-1">
+          <p className="text-sm text-muted font-mono pt-1">
             {formatDuration(callDuration)}
           </p>
         </div>
 
         {/* Video Canvas Simulation */}
         {callType === 'video' && (
-          <div className="w-full h-36 rounded-2xl bg-[#202c33] border border-[#2f3b43] flex flex-col items-center justify-center text-xs text-[#8696a0] space-y-2 relative overflow-hidden">
+          <div className="w-full h-36 rounded-2xl bg-[#202c33] border border-[#2f3b43] flex flex-col items-center justify-center text-xs text-muted space-y-2 relative overflow-hidden">
             <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white">
               <Video className="w-6 h-6 animate-pulse" />
             </div>
@@ -86,7 +86,7 @@ export function CallingModal({
           <button
             onClick={() => setIsMuted(!isMuted)}
             className={`w-12 h-12 rounded-full flex items-center justify-center cursor-pointer transition-all ${
-              isMuted ? 'bg-rose-500 text-white' : 'bg-[#202c33] text-[#e9edef] hover:bg-[#2a3942]'
+              isMuted ? 'bg-rose-500 text-white' : 'bg-[#202c33] text-muted hover:bg-[#2a3942]'
             }`}
             title={isMuted ? 'Unmute' : 'Mute'}
           >

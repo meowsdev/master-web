@@ -9,7 +9,7 @@ export function QrLoginCard({ onOtpLogin }: QrLoginCardProps) {
   return (
     <div className="relative size-[500px] shrink-0 overflow-clip rounded-[12px] bg-white">
       {/* Soft brand-green wash rising from the bottom edge */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#1daa61]/10 to-[#1daa61]/0" />
+      <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-primary/0" />
 
       <div className="absolute left-1/2 top-[calc(50%+0.5px)] flex w-[250px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-[12px]">
         <Image
@@ -21,14 +21,14 @@ export function QrLoginCard({ onOtpLogin }: QrLoginCardProps) {
         />
 
         <div className="flex w-full flex-col items-center gap-[12px] text-center text-[18px]">
-          <p className="w-full whitespace-nowrap font-semibold tracking-[-0.36px] text-[#202939]">
-            Login with QR from <span className="text-[#1daa61]">Mobile App</span>
+          <p className="w-full whitespace-nowrap font-semibold tracking-[-0.36px] text-ink">
+            Login with QR from <span className="text-primary">Mobile App</span>
           </p>
-          <p className="w-full font-medium text-[#697586]">or</p>
+          <p className="w-full font-medium text-muted">or</p>
           <button
             type="button"
             onClick={onOtpLogin}
-            className="w-full cursor-pointer font-semibold tracking-[-0.36px] text-[#697586] underline"
+            className="w-full cursor-pointer font-semibold tracking-[-0.36px] text-muted underline"
           >
             OTP Login
           </button>

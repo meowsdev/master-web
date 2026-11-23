@@ -64,16 +64,16 @@ export function TechnicianOrdersSidebar({ user, onOrderOpened, onOpenAuth, onOpe
               // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary upload hosts
               <img src={user.profilePhoto} alt="" className="size-[44px] shrink-0 rounded-full object-cover" />
             ) : (
-              <span className="flex size-[44px] shrink-0 items-center justify-center rounded-full bg-[#d7fdd2] text-[18px] font-semibold text-[#205737]">{(user.name || '?').charAt(0).toUpperCase()}</span>
+              <span className="flex size-[44px] shrink-0 items-center justify-center rounded-full bg-secondary text-[18px] font-semibold text-ink">{(user.name || '?').charAt(0).toUpperCase()}</span>
             )}
             <div className="flex min-w-0 flex-col">
               <div className="flex items-center gap-[8px]">
-                <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{user.name || 'My account'}</span>
+                <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-ink">{user.name || 'My account'}</span>
                 {/* Opens "আমার রিভিউ": what customers said about the jobs this technician did. */}
                 <MyRatingButton userId={user.id} role="TECHNICIAN" />
               </div>
               {/* Name and role only: the phone number is not shown in the technician's header. */}
-              <span className="mt-[2px] w-fit rounded-full bg-[#202939] px-[8px] py-[1px] text-[11px] font-semibold text-white">Technician</span>
+              <span className="mt-[2px] w-fit rounded-full bg-ink px-[8px] py-[1px] text-[11px] font-semibold text-white">Technician</span>
             </div>
           </div>
         }
@@ -83,9 +83,9 @@ export function TechnicianOrdersSidebar({ user, onOrderOpened, onOpenAuth, onOpe
         <div className="pt-[8px]">
           <SupportChatRow userId={user.id} isActive={isSupportOpen} onOpen={onOpenSupport} />
         </div>
-        {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-[#697586]">Loading your jobs...</p>}
+        {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-muted">Loading your jobs...</p>}
         {!isLoading && visibleOrders.length === 0 && (
-          <p className="p-[24px] text-center text-[14px] font-medium text-[#697586]">{orders.length === 0 ? 'No jobs yet. Your provider will assign orders to you.' : 'No jobs match.'}</p>
+          <p className="p-[24px] text-center text-[14px] font-medium text-muted">{orders.length === 0 ? 'No jobs yet. Your provider will assign orders to you.' : 'No jobs match.'}</p>
         )}
         {visibleOrders.map((order) => (
           <OrderHistoryListItem

@@ -5,12 +5,19 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { CheckmarkCircle02Icon, Cancel01Icon, MinusSignIcon, PlusSignIcon, StarIcon } from '@hugeicons/core-free-icons';
+import { CheckmarkCircle02Icon, Delete02Icon, InformationCircleIcon, MinusSignIcon, PencilEdit01Icon, PlusSignIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
 import { SidePanelShell } from '@/components/modals/SidePanelShell';
-import { formatTaka } from '@/components/modals/place-order/format-taka';
+import { DetailsTab, useAction } from '@/components/super-app/admin/panels/ServiceContentEditor';
+import { PublishToggle } from '@/components/super-app/admin/panels/PublishToggle';
+import { useAdminCatalog } from '@/components/super-app/admin/useAdminCatalog';
+import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 import { catalogService } from '@/services/catalog.service';
+import { catalogAdminService } from '@/services/catalog-admin.service';
 import { useCartStore } from '@/store/useCartStore';
-import { CatalogReviewPage, CatalogSubServiceDetail, CatalogVariant } from '@/types/catalog.types';
+import { CatalogVariant } from '@/types/catalog.types';
+import { PriceUnit } from '@/types/service.types';
+import { MainServiceInfo, useMainServiceView } from './MainServiceDetailsPanel';
+import { ScheduleCta } from './ScheduleCta';
 
 interface SubServiceDetailsPanelProps {
   mainServiceId: string;
@@ -18,188 +25,219 @@ interface SubServiceDetailsPanelProps {
   onClose: () => void;
 }
 
-const SECTIONS = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'faq', label: 'FAQ' },
-  { id: 'how-to-order', label: 'How to Order' },
-  { id: 'review', label: 'Review' },
-  { id: 'details', label: 'Details' },
-] as const;
-type SectionId = (typeof SECTIONS)[number]['id'];
-
 /** Most a single option can be ordered at once, by how it is priced (the backend enforces the same limits). */
 const MAX_QUANTITY = { FIXED: 1, PER_UNIT: 10, PER_SQFT: 10_000 } as const;
 const isImageSource = (value?: string | null) => Boolean(value && /^(https?:)?\/\/|^\//.test(value));
+/** "৳500": option prices keep plain digits. */
+const plainTaka = (amount: number) => `৳${Number(amount.toFixed(2)).toLocaleString('en-US')}`;
+const unitLabel = (unit: PriceUnit) => (unit === 'PER_SQFT' ? '/ sqft' : unit === 'PER_UNIT' ? '/ per' : '');
+
+/** What the panel shows of a package: from the customer read, or (for staff) the full catalog with unpublished options. */
+interface PackageView {
+  id: string;
+  name: string;
+  imageUrl?: string | null;
+  description?: string | null;
+  /** The package's own notes or disclaimer. */
+  packageDetails?: string | null;
+  variants: OptionView[];
+}
+type OptionView = CatalogVariant & { isActive?: boolean };
 
 /*
- * Right-hand details of one sub-service (opened from its card in the Services tab): the options with price, old
- * price, quantity and Add; then Overview, FAQ, How to Order, Review and Details, reachable from the tab row.
+ * Right-hand panel of one package (sub-service), top to bottom: its options as cards (quantity, Add), the package's own
+ * notes or disclaimer, then its main service's rating, Overview, FAQ, How to Order, Review and Details. Tap to Schedule
+ * (ScheduleCta) stays pinned at the bottom. Staff see the same panel with publish, edit and delete.
  */
 export function SubServiceDetailsPanel({ mainServiceId, subServiceId, onClose }: SubServiceDetailsPanelProps) {
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { canManageServices: canEdit } = useStaffPermissions();
+  const customerRead = useQuery({
     queryKey: ['catalog-sub-service', subServiceId],
     queryFn: () => catalogService.getSubService(subServiceId),
     staleTime: 30_000,
+    enabled: !canEdit,
   });
+  const staffRead = useAdminCatalog({ enabled: canEdit });
+  const staffSub = staffRead.mains.flatMap((main) => main.services).find((sub) => sub.id === subServiceId);
+  const main = useMainServiceView(mainServiceId);
+
+  const view: PackageView | undefined = canEdit
+    ? staffSub && {
+        id: staffSub.id,
+        name: staffSub.nameBn || staffSub.name,
+        imageUrl: staffSub.imageUrl,
+        description: staffSub.description,
+        packageDetails: staffSub.details,
+        variants: staffSub.variants,
+      }
+    : customerRead.data && { ...customerRead.data, name: customerRead.data.nameBn || customerRead.data.name };
+  const isLoading = canEdit ? staffRead.isLoading : customerRead.isLoading;
+  const optionCount = view?.variants.filter((variant) => variant.id && variant.isActive !== false).length ?? 0;
 
   return (
-    <SidePanelShell title={data?.name ?? 'Service details'} onClose={onClose}>
+    <SidePanelShell
+      title={view?.name ?? 'Service details'}
+      titleNote={view ? `( ${optionCount} ${optionCount === 1 ? 'Option' : 'Options'} available)` : undefined}
+      onClose={onClose}
+      footer={<ScheduleCta mainServiceId={mainServiceId} />}
+    >
       {isLoading ? (
-        <div className="animate-pulse space-y-[16px]">
-          <div className="aspect-[2/1] rounded-[12px] bg-[#ececec]" />
-          <div className="h-[24px] w-2/3 rounded bg-[#ececec]" />
-          <div className="h-[120px] rounded-[12px] bg-[#ececec]" />
+        <div className="grid animate-pulse grid-cols-2 gap-[14px]">
+          <div className="h-[280px] rounded-[14px] bg-surface" />
+          <div className="h-[280px] rounded-[14px] bg-surface" />
         </div>
-      ) : isError || !data ? (
+      ) : !view ? (
         <div className="py-[40px] text-center">
-          <p className="text-[14px] text-[#697586]">তথ্য লোড হয়নি।</p>
-          <button type="button" onClick={() => refetch()} className="mt-[8px] cursor-pointer font-semibold text-[#1daa61] underline">আবার চেষ্টা করুন</button>
+          <p className="text-[14px] text-muted">এই সার্ভিসটা এখন পাওয়া যাচ্ছে না।</p>
+          {!canEdit && (
+            <button type="button" onClick={() => customerRead.refetch()} className="mt-[8px] cursor-pointer font-semibold text-primary underline">আবার চেষ্টা করুন</button>
+          )}
         </div>
       ) : (
-        <Details key={data.id} data={data} mainServiceId={mainServiceId} />
+        <div className="flex flex-col gap-[24px] pb-[8px]">
+          <Options key={view.id} view={view} mainServiceId={mainServiceId} canEdit={canEdit} />
+          <PackageNotes view={view} canEdit={canEdit} />
+          {main.data && (
+            <>
+              <div className="h-px bg-surface" />
+              <MainServiceInfo key={main.data.id} data={main.data} embedded />
+            </>
+          )}
+        </div>
       )}
     </SidePanelShell>
   );
 }
 
-function Details({ data, mainServiceId }: { data: CatalogSubServiceDetail; mainServiceId: string }) {
-  // Sections are found by DOM id: the tab row scrolls the panel to them.
-  const [activeSection, setActiveSection] = useState<SectionId>('overview');
-  const reviewCount = data.reviews.summary.count;
-
-  const jumpTo = (id: SectionId) => {
-    setActiveSection(id);
-    document.getElementById(`service-section-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+function Options({ view, mainServiceId, canEdit }: { view: PackageView; mainServiceId: string; canEdit: boolean }) {
+  const [isAdding, setIsAdding] = useState(false);
+  const remove = useAction((id: string) => catalogAdminService.deleteVariant(id), 'Option deleted');
+  const publish = useAction(({ id, isActive }: { id: string; isActive: boolean }) => catalogAdminService.updateVariant(id, { isActive }), 'Saved');
+  // An older package without options shows its base price to customers; staff add real options instead.
+  const variants = view.variants.filter((variant) => variant.id || !canEdit);
+  // A package keeps at least one option: the last one can be unpublished, not deleted.
+  const isLastOption = variants.length <= 1;
 
   return (
-    <div className="flex flex-col gap-[20px] pb-[16px]">
-      <div className="relative aspect-[2/1] w-full overflow-hidden rounded-[12px] bg-gradient-to-b from-[#d7fdd2] to-[#f7f5f3]">
-        {isImageSource(data.imageUrl) ? (
-          <Image src={data.imageUrl!} alt={data.name} fill sizes="530px" unoptimized className="object-cover" />
-        ) : (
-          <span className="flex size-full items-center justify-center text-[64px]" aria-hidden>🛠️</span>
-        )}
-      </div>
-
-      <div>
-        <p className="text-[12px] font-semibold uppercase tracking-[0.6px] text-[#1daa61]">{data.mainService.name}</p>
-        <h2 className="border-l-[4px] border-[#1daa61] pl-[12px] text-[22px] font-semibold leading-tight tracking-[-0.44px] text-[#202939]">{data.nameBn || data.name}</h2>
-        <div className="mt-[6px] flex flex-wrap items-center gap-x-[8px] text-[14px] text-[#364152]">
-          <span className="flex items-center gap-[4px] font-bold">
-            <HugeiconsIcon icon={StarIcon} size={16} className="fill-[#f5a623] text-[#f5a623]" />
-            {data.reviews.summary.average != null ? data.reviews.summary.average.toFixed(2) : 'New'}
-          </span>
-          {data.servedCount > 0 && <span>• {data.servedCount}+ served</span>}
-          {reviewCount > 0 && <span className="text-[#697586]">({reviewCount} reviews)</span>}
-        </div>
-        {data.description && <p className="mt-[8px] text-[14px] leading-relaxed text-[#364152]">{data.description}</p>}
-      </div>
-
-      <section aria-label="Options">
-        <h3 className="mb-[10px] text-[16px] font-semibold text-[#202939]">
-          {data.name} <span className="text-[13px] font-normal text-[#697586]">({data.variants.length} {data.variants.length === 1 ? 'option' : 'options'} available)</span>
-        </h3>
-        <div className="grid grid-cols-1 gap-[12px] sm:grid-cols-2">
-          {data.variants.map((variant) => (
-            <VariantCard key={variant.id ?? variant.name} variant={variant} subService={data} mainServiceId={mainServiceId} />
-          ))}
-        </div>
-      </section>
-
-      <nav aria-label="Service information" className="no-scrollbar sticky top-[-20px] z-10 -mx-[20px] flex gap-[8px] overflow-x-auto bg-white px-[20px] py-[10px]">
-        {SECTIONS.map((section) => (
-          <button
-            key={section.id}
-            type="button"
-            onClick={() => jumpTo(section.id)}
-            className={`shrink-0 cursor-pointer rounded-full border px-[14px] py-[6px] text-[13px] font-semibold transition-colors ${
-              activeSection === section.id ? 'border-[#1daa61] bg-[#e7fce3] text-[#15803d]' : 'border-[#e5e5e5] bg-[#f7f5f3] text-[#364152] hover:bg-[#efefef]'
-            }`}
-          >
-            {section.label}
-          </button>
+    <section aria-label="Options">
+      <p className="mb-[10px] text-[13px] font-semibold uppercase tracking-[0.6px] text-muted">অপশন বাছুন</p>
+      <div className="grid grid-cols-2 gap-[14px]">
+        {variants.map((variant) => (
+          <VariantCard
+            key={variant.id ?? variant.name}
+            variant={variant}
+            subService={view}
+            mainServiceId={mainServiceId}
+            staff={
+              canEdit && variant.id
+                ? {
+                    canDelete: !isLastOption,
+                    onDelete: () => {
+                      if (window.confirm(`"${variant.name}" delete করবেন?`)) remove.mutate(variant.id!);
+                    },
+                    onPublish: (isActive) => publish.mutate({ id: variant.id!, isActive }),
+                  }
+                : undefined
+            }
+          />
         ))}
-      </nav>
-
-      <Section id="overview" title={`Overview of ${data.name}`}>
-        <Checklist title="What's included?" items={data.overview.included} isIncluded />
-        <Checklist title="What's excluded?" items={data.overview.excluded} isIncluded={false} />
-        {data.overview.included.length === 0 && data.overview.excluded.length === 0 && <Empty text="এখনো কোনো তথ্য যোগ হয়নি।" />}
-      </Section>
-
-      <Section id="faq" title="FAQ">
-        {data.faqs.length === 0 ? (
-          <Empty text="এখনো কোনো প্রশ্ন যোগ হয়নি।" />
-        ) : (
-          <div className="divide-y divide-[#e5e5e5] rounded-[12px] border border-[#e5e5e5]">
-            {data.faqs.map((faq) => (
-              <details key={faq.id} className="group px-[14px] py-[12px]">
-                <summary className="flex cursor-pointer list-none items-start justify-between gap-[12px] text-[14px] font-semibold text-[#202939]">
-                  {faq.questionBn || faq.question}
-                  <span className="shrink-0 text-[18px] leading-none text-[#697586] transition-transform group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-[8px] text-[14px] leading-relaxed text-[#364152]">{faq.answerBn || faq.answer}</p>
-              </details>
-            ))}
-          </div>
-        )}
-      </Section>
-
-      <Section id="how-to-order" title="How to order">
-        <ol className="flex flex-col gap-[12px]">
-          {data.howToOrder.map((step, index) => {
-            const [head, ...rest] = step.split(':');
-            return (
-              <li key={step} className="flex gap-[12px]">
-                <span className="flex size-[28px] shrink-0 items-center justify-center rounded-full bg-[#1daa61] text-[13px] font-bold text-white">{index + 1}</span>
-                <p className="pt-[3px] text-[14px] leading-relaxed text-[#364152]">
-                  {rest.length ? (
-                    <>
-                      <span className="font-semibold text-[#202939]">{head}</span>
-                      {':' + rest.join(':')}
-                    </>
-                  ) : (
-                    step
-                  )}
-                </p>
-              </li>
-            );
-          })}
-        </ol>
-      </Section>
-
-      <Section id="review" title={`Review of ${data.name}`}>
-        <Reviews subServiceId={data.id} first={data.reviews} />
-      </Section>
-
-      <Section id="details" title="Details">
-        {data.details ? <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#364152]">{data.details}</p> : <Empty text="এখনো বিস্তারিত যোগ হয়নি।" />}
-        {data.features.length > 0 && (
-          <ul className="mt-[10px] list-disc space-y-[4px] pl-[20px] text-[14px] text-[#364152]">
-            {data.features.map((feature, index) => (
-              <li key={`${index}-${feature}`}>{feature}</li>
-            ))}
-          </ul>
-        )}
-      </Section>
-    </div>
+        {canEdit &&
+          (isAdding ? (
+            <VariantForm subServiceId={view.id} onDone={() => setIsAdding(false)} />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsAdding(true)}
+              className="flex min-h-[240px] cursor-pointer flex-col items-center justify-center gap-[8px] rounded-[14px] border-2 border-dashed border-secondary bg-secondary text-primary transition-colors hover:border-primary hover:bg-secondary"
+            >
+              <span className="btn-raised flex size-[44px] items-center justify-center rounded-full bg-primary text-white">
+                <HugeiconsIcon icon={PlusSignIcon} size={22} strokeWidth={2} />
+              </span>
+              <span className="text-[15px] font-semibold">Add New</span>
+            </button>
+          ))}
+      </div>
+    </section>
   );
 }
 
-function VariantCard({ variant, subService, mainServiceId }: { variant: CatalogVariant; subService: CatalogSubServiceDetail; mainServiceId: string }) {
+/* The package's own notes or disclaimer, under its options. Staff edit it in place; customers see it only when set. */
+function PackageNotes({ view, canEdit }: { view: PackageView; canEdit: boolean }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const notes = view.packageDetails?.trim();
+  if (!canEdit && !notes && !view.description) return null;
+
+  return (
+    <section className="rounded-[14px] border border-secondary bg-secondary p-[16px]">
+      <div className="mb-[8px] flex items-center justify-between gap-[8px]">
+        <p className="flex items-center gap-[8px] text-[15px] font-semibold text-ink">
+          <HugeiconsIcon icon={InformationCircleIcon} size={20} className="text-primary" />
+          এই প্যাকেজ সম্পর্কে
+        </p>
+        {canEdit && (
+          <button
+            type="button"
+            onClick={() => setIsEditing((value) => !value)}
+            className="flex cursor-pointer items-center gap-[4px] rounded-full px-[10px] py-[4px] text-[13px] font-semibold text-primary transition-colors hover:bg-secondary"
+          >
+            {isEditing ? (
+              'Done'
+            ) : (
+              <>
+                <HugeiconsIcon icon={PencilEdit01Icon} size={16} strokeWidth={1.8} /> Edit
+              </>
+            )}
+          </button>
+        )}
+      </div>
+      {isEditing ? (
+        <DetailsTab kind="sub" id={view.id} details={view.packageDetails ?? ''} />
+      ) : (
+        <>
+          {view.description && <p className="text-[14px] leading-relaxed text-ink">{view.description}</p>}
+          {notes ? (
+            <p className={`whitespace-pre-line text-[14px] leading-relaxed text-ink ${view.description ? 'mt-[8px] border-t border-secondary pt-[8px]' : ''}`}>{notes}</p>
+          ) : (
+            canEdit && <p className="text-[13px] text-muted">এই package-এর নিজস্ব details বা disclaimer এখনো লেখা হয়নি। Edit চেপে লিখুন।</p>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+const iconButton = 'flex size-[30px] cursor-pointer items-center justify-center rounded-full text-ink transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-30';
+const stepButton = 'flex size-[28px] cursor-pointer items-center justify-center rounded-full text-ink transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-30';
+
+interface VariantCardProps {
+  variant: OptionView;
+  subService: PackageView;
+  mainServiceId: string;
+  /** Staff only: publish switch, edit, and delete (off for the last option). */
+  staff?: { canDelete: boolean; onDelete: () => void; onPublish: (isActive: boolean) => void };
+}
+
+function VariantCard({ variant, subService, mainServiceId, staff }: VariantCardProps) {
   const addToCart = useCartStore((state) => state.add);
+  const setCartQuantity = useCartStore((state) => state.setQuantity);
+  const removeFromCart = useCartStore((state) => state.remove);
   const inCart = useCartStore((state) => state.carts[mainServiceId]?.find((line) => line.variantId === variant.id));
   const [quantity, setQuantity] = useState(1);
+  const [isEditing, setIsEditing] = useState(false);
   const isCountable = variant.priceUnit !== 'FIXED';
   const max = MAX_QUANTITY[variant.priceUnit] ?? 1;
   const price = Number(variant.price);
   const original = variant.originalPrice != null ? Number(variant.originalPrice) : null;
-  const unitLabel = variant.priceUnit === 'PER_SQFT' ? '/ sqft' : variant.priceUnit === 'PER_UNIT' ? '/ per' : '';
+  const percentOff = original && original > price ? Math.round(((original - price) / original) * 100) : null;
+  const unit = unitLabel(variant.priceUnit);
+  const picture = variant.imageUrl ?? subService.imageUrl;
+  const isPublished = variant.isActive !== false;
+
+  if (isEditing && variant.id) return <VariantForm subServiceId={subService.id} variant={variant} onDone={() => setIsEditing(false)} />;
 
   const add = () => {
     if (!variant.id) {
-      toast.error('এই সার্ভিসের দাম এখনো ঠিক হয়নি। Custom দিয়ে অর্ডার করুন।');
+      toast.error('এই অপশনটা এখন অর্ডার করা যাচ্ছে না।');
       return;
     }
     addToCart(mainServiceId, {
@@ -210,151 +248,160 @@ function VariantCard({ variant, subService, mainServiceId }: { variant: CatalogV
       unitPrice: price,
       priceUnit: variant.priceUnit,
       quantity: isCountable ? quantity : 1,
-      imageUrl: variant.imageUrl ?? subService.imageUrl ?? null,
+      imageUrl: picture ?? null,
     });
-    toast.success(`${subService.name} (${variant.name}) কার্টে যোগ হয়েছে`);
+    toast.success(`${subService.name} (${variant.nameBn || variant.name}) কার্টে যোগ হয়েছে`);
+  };
+  // In the cart the stepper changes the cart itself; before that it only sets how many to add.
+  const shown = inCart ? inCart.quantity : quantity;
+  const change = (next: number) => {
+    const value = Math.min(max, Math.max(1, next));
+    if (inCart && variant.id) setCartQuantity(mainServiceId, variant.id, value);
+    else setQuantity(value);
   };
 
   return (
-    <div className={`overflow-hidden rounded-[12px] border bg-white ${inCart ? 'border-[#1daa61]' : 'border-[#e5e5e5]'}`}>
-      <div className="relative aspect-[16/10] w-full bg-gradient-to-b from-[#d7fdd2] to-[#f7f5f3]">
-        {isImageSource(variant.imageUrl ?? subService.imageUrl) ? (
-          <Image src={(variant.imageUrl ?? subService.imageUrl)!} alt="" fill sizes="260px" unoptimized className="object-cover" />
-        ) : (
-          <span className="flex size-full items-center justify-center text-[36px]" aria-hidden>🛠️</span>
-        )}
-        <div className="absolute inset-x-[8px] bottom-[8px] flex items-center justify-between gap-[6px]">
-          {isCountable ? (
-            <div className="flex items-center gap-[2px] rounded-full bg-white px-[6px] py-[4px] shadow-sm">
-              <button type="button" aria-label="Fewer" onClick={() => setQuantity((value) => Math.max(1, value - 1))} className="flex size-[22px] cursor-pointer items-center justify-center rounded-full hover:bg-[#f0f0f0]">
-                <HugeiconsIcon icon={MinusSignIcon} size={14} />
-              </button>
-              <span className="min-w-[20px] text-center text-[13px] font-semibold">{quantity}</span>
-              <button type="button" aria-label="More" onClick={() => setQuantity((value) => Math.min(max, value + 1))} className="flex size-[22px] cursor-pointer items-center justify-center rounded-full hover:bg-[#f0f0f0]">
-                <HugeiconsIcon icon={PlusSignIcon} size={14} />
-              </button>
-            </div>
-          ) : (
-            <span />
-          )}
-          <button type="button" onClick={add} className="cursor-pointer rounded-full bg-[#d6336c] px-[16px] py-[6px] text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-[#c2255c]">
-            {inCart ? 'Add more' : 'Add'}
-          </button>
-        </div>
-      </div>
-      <div className="p-[10px]">
-        <p className="text-[14px] font-semibold text-[#202939]">{variant.nameBn || variant.name}</p>
-        <p className="text-[14px]">
-          <span className="font-semibold text-[#15803d]">{formatTaka(price)}</span>
-          {original !== null && original > price && <span className="ml-[6px] text-[#9aa4b2] line-through">{formatTaka(original)}</span>}
-          {unitLabel && <span className="ml-[4px] text-[12px] text-[#697586]">{unitLabel}</span>}
-        </p>
-        {inCart && <p className="mt-[2px] text-[12px] font-medium text-[#1daa61]">কার্টে আছে{inCart.priceUnit !== 'FIXED' ? ` (${inCart.quantity})` : ''}</p>}
-      </div>
-    </div>
-  );
-}
-
-function Reviews({ subServiceId, first }: { subServiceId: string; first: CatalogReviewPage }) {
-  const [pages, setPages] = useState<CatalogReviewPage[]>([first]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const { summary } = first;
-  const items = pages.flatMap((page) => page.items);
-  const hasMore = items.length < summary.count;
-
-  const loadMore = async () => {
-    setIsLoadingMore(true);
-    try {
-      // The details came with the newest five; the reviews endpoint pages by ten, so page 1 is fetched again and merged.
-      const nextPage = Math.floor(items.length / 10) + 1;
-      const page = await catalogService.getSubServiceReviews(subServiceId, nextPage);
-      setPages((previous) => {
-        const seen = new Set(previous.flatMap((entry) => entry.items.map((item) => item.id)));
-        return [...previous, { ...page, items: page.items.filter((item) => !seen.has(item.id)) }];
-      });
-    } catch {
-      toast.error('আরো রিভিউ লোড হয়নি');
-    } finally {
-      setIsLoadingMore(false);
-    }
-  };
-
-  if (summary.count === 0) return <Empty text="এখনো কোনো রিভিউ নেই। প্রথম অর্ডারের পর এখানে দেখা যাবে।" />;
-
-  return (
-    <div className="flex flex-col gap-[16px]">
-      <div className="flex items-center gap-[20px] rounded-[12px] bg-[#f7f5f3] p-[14px]">
-        <div className="text-center">
-          <p className="text-[32px] font-bold leading-none text-[#202939]">{summary.average?.toFixed(2)}</p>
-          <p className="mt-[4px] text-[14px] text-[#f5a524]">{'★'.repeat(Math.round(summary.average ?? 0))}</p>
-          <p className="text-[12px] text-[#697586]">{summary.count} reviews</p>
-        </div>
-        <div className="flex flex-1 flex-col gap-[4px]">
-          {[5, 4, 3, 2, 1].map((star) => {
-            const count = summary.breakdown[star - 1];
-            return (
-              <div key={star} className="flex items-center gap-[8px] text-[12px] text-[#697586]">
-                <span className="w-[10px]">{star}</span>
-                <div className="h-[6px] flex-1 overflow-hidden rounded-full bg-[#e5e5e5]">
-                  <div className="h-full rounded-full bg-[#f5a524]" style={{ width: `${summary.count ? (count / summary.count) * 100 : 0}%` }} />
-                </div>
-                <span className="w-[24px] text-right">{count}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <ul className="flex flex-col gap-[10px]">
-        {items.map((review) => (
-          <li key={review.id} className="border-b border-[#efefef] pb-[10px]">
-            <div className="flex items-center justify-between gap-[8px]">
-              <p className="text-[14px] font-semibold text-[#202939]">{review.reviewerName}</p>
-              <p className="text-[13px] text-[#f5a524]" aria-label={`${review.rating} out of 5`}>
-                {'★'.repeat(review.rating)}
-                <span className="text-[#cecece]">{'★'.repeat(Math.max(0, 5 - review.rating))}</span>
-              </p>
-            </div>
-            <p className="text-[12px] text-[#697586]">Taken on {new Date(review.takenOn ?? review.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-            {review.comment && <p className="mt-[4px] text-[14px] text-[#364152]">{review.comment}</p>}
-          </li>
-        ))}
-      </ul>
-      {hasMore && (
-        <button type="button" onClick={loadMore} disabled={isLoadingMore} className="cursor-pointer self-start text-[14px] font-semibold text-[#1daa61] underline disabled:opacity-50">
-          {isLoadingMore ? 'Loading...' : 'View more reviews'}
-        </button>
-      )}
-    </div>
-  );
-}
-
-function Section({ id, title, children }: { id: SectionId; title: string; children: React.ReactNode }) {
-  return (
-    <section
-      id={`service-section-${id}`}
-      className="scroll-mt-[60px] rounded-[12px] border border-[#efefef] p-[16px]"
+    <article
+      className={`flex flex-col overflow-hidden rounded-[14px] border bg-white transition-shadow hover:shadow-[0_4px_14px_rgba(32,41,57,0.08)] ${
+        inCart ? 'border-primary ring-1 ring-primary/40' : 'border-line'
+      }`}
     >
-      <h3 className="mb-[12px] text-[18px] font-semibold text-[#202939]">{title}</h3>
-      {children}
-    </section>
+      <div className={`relative aspect-[4/3] w-full bg-gradient-to-br from-secondary via-secondary to-surface ${isPublished ? '' : 'opacity-50'}`}>
+        {isImageSource(picture) ? (
+          <Image src={picture!} alt="" fill sizes="260px" unoptimized className="object-cover" />
+        ) : (
+          <span className="flex size-full items-center justify-center" aria-hidden>
+            <span className="flex size-[56px] items-center justify-center rounded-full bg-white/80 text-primary shadow-sm">
+              <HugeiconsIcon icon={Wrench01Icon} size={28} strokeWidth={1.6} />
+            </span>
+          </span>
+        )}
+        {percentOff !== null && (
+          <span className="absolute left-[8px] top-[8px] rounded-full bg-primary px-[8px] py-[2px] text-[11px] font-bold text-white">{percentOff}% OFF</span>
+        )}
+        {inCart && (
+          <span className="absolute right-[8px] top-[8px] flex items-center gap-[4px] rounded-full bg-primary px-[8px] py-[2px] text-[11px] font-bold text-white">
+            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} strokeWidth={2.2} /> কার্টে
+          </span>
+        )}
+        {!isPublished && <span className="absolute right-[8px] top-[8px] rounded-full bg-ink px-[8px] py-[2px] text-[11px] font-bold text-white">Unpublished</span>}
+      </div>
+
+      <div className="flex flex-1 flex-col gap-[6px] p-[12px]">
+        <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink">{variant.nameBn || variant.name}</p>
+        <p className="flex flex-wrap items-baseline gap-x-[6px]">
+          <span className="text-[18px] font-bold text-primary">{plainTaka(price)}</span>
+          {original !== null && original > price && <span className="text-[13px] text-muted line-through">{plainTaka(original)}</span>}
+          {unit && <span className="text-[12px] text-muted">{unit}</span>}
+        </p>
+
+        <div className="mt-auto flex items-center gap-[8px] pt-[6px]">
+          {isCountable && (
+            <div className="flex h-[34px] items-center rounded-full border border-line px-[2px]">
+              <button type="button" aria-label="Fewer" disabled={shown <= 1} onClick={() => change(shown - 1)} className={stepButton}>
+                <HugeiconsIcon icon={MinusSignIcon} size={14} strokeWidth={2} />
+              </button>
+              <span className="min-w-[20px] text-center text-[14px] font-semibold text-ink">{shown}</span>
+              <button type="button" aria-label="More" disabled={shown >= max} onClick={() => change(shown + 1)} className={stepButton}>
+                <HugeiconsIcon icon={PlusSignIcon} size={14} strokeWidth={2} />
+              </button>
+            </div>
+          )}
+          {inCart ? (
+            <button
+              type="button"
+              onClick={() => {
+                removeFromCart(mainServiceId, variant.id!);
+                setQuantity(1);
+              }}
+              className="flex h-[34px] flex-1 cursor-pointer items-center justify-center gap-[4px] rounded-full border border-line text-[13px] font-semibold text-[#d64545] transition-colors hover:bg-[#fdecec]"
+            >
+              <HugeiconsIcon icon={Delete02Icon} size={14} /> সরান
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={add}
+              disabled={!isPublished}
+              className="h-[34px] flex-1 cursor-pointer rounded-full bg-primary text-[14px] font-semibold text-white shadow-sm transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
+            >
+              Add
+            </button>
+          )}
+        </div>
+      </div>
+
+      {staff && (
+        <div className="flex items-center justify-between gap-[6px] border-t border-line bg-surface px-[10px] py-[6px]">
+          <PublishToggle isPublished={isPublished} onChange={staff.onPublish} />
+          <div className="flex items-center gap-[2px]">
+            <button type="button" aria-label={`Edit ${variant.name}`} onClick={() => setIsEditing(true)} className={iconButton}>
+              <HugeiconsIcon icon={PencilEdit01Icon} size={17} strokeWidth={1.7} />
+            </button>
+            <button
+              type="button"
+              aria-label={`Delete ${variant.name}`}
+              disabled={!staff.canDelete}
+              title={staff.canDelete ? undefined : 'একটা option থাকতেই হবে। লুকাতে চাইলে Unpublish করুন।'}
+              onClick={staff.onDelete}
+              className={iconButton}
+            >
+              <HugeiconsIcon icon={Delete02Icon} size={17} strokeWidth={1.7} />
+            </button>
+          </div>
+        </div>
+      )}
+    </article>
   );
 }
 
-function Checklist({ title, items, isIncluded }: { title: string; items: string[]; isIncluded: boolean }) {
-  if (items.length === 0) return null;
+const fieldClass = 'w-full rounded-[6px] border border-line px-[8px] py-[6px] text-[14px] text-ink outline-none focus:border-primary';
+const UNITS: Array<{ value: PriceUnit; label: string }> = [
+  { value: 'FIXED', label: 'Fixed' },
+  { value: 'PER_UNIT', label: '/ per' },
+  { value: 'PER_SQFT', label: '/ sqft' },
+];
+
+/* Staff only: one option's name, price, old price and unit, in the card's place. Without a variant it adds a new one. */
+function VariantForm({ subServiceId, variant, onDone }: { subServiceId: string; variant?: CatalogVariant; onDone: () => void }) {
+  const [name, setName] = useState(variant?.name ?? '');
+  const [price, setPrice] = useState(variant ? String(Number(variant.price)) : '');
+  const [originalPrice, setOriginalPrice] = useState(variant?.originalPrice != null ? String(Number(variant.originalPrice)) : '');
+  const [priceUnit, setPriceUnit] = useState<PriceUnit>(variant?.priceUnit ?? 'FIXED');
+  const body = { name: name.trim(), price: Number(price), originalPrice: originalPrice ? Number(originalPrice) : null, priceUnit };
+  const save = useAction(
+    () => (variant?.id ? catalogAdminService.updateVariant(variant.id, body) : catalogAdminService.createVariant({ ...body, serviceId: subServiceId })),
+    variant ? 'Option saved' : 'Option added',
+  );
+  const isValid = name.trim() !== '' && price !== '' && Number(price) >= 0;
+
   return (
-    <div className="mb-[12px]">
-      <p className="mb-[6px] text-[15px] font-semibold text-[#202939]">{title}</p>
-      <ul className="flex flex-col gap-[6px]">
-        {items.map((item) => (
-          <li key={item} className="flex items-start gap-[8px] text-[14px] text-[#364152]">
-            <HugeiconsIcon icon={isIncluded ? CheckmarkCircle02Icon : Cancel01Icon} size={18} className={`mt-[1px] shrink-0 ${isIncluded ? 'text-[#1daa61]' : 'text-[#d64545]'}`} />
-            {item}
-          </li>
+    <form
+      className="flex flex-col gap-[6px] rounded-[14px] border border-primary bg-white p-[12px]"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (isValid) save.mutate(undefined, { onSuccess: onDone });
+      }}
+    >
+      <p className="text-[14px] font-semibold text-ink">{variant ? 'Edit option' : 'New option'}</p>
+      <input value={name} onChange={(event) => setName(event.target.value)} maxLength={100} placeholder="নাম (যেমন: 1 - 1.5 Ton)" className={fieldClass} />
+      <input value={price} onChange={(event) => setPrice(event.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal" placeholder="দাম" className={fieldClass} />
+      <input value={originalPrice} onChange={(event) => setOriginalPrice(event.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal" placeholder="আগের দাম (optional)" className={fieldClass} />
+      <select value={priceUnit} onChange={(event) => setPriceUnit(event.target.value as PriceUnit)} className={fieldClass}>
+        {UNITS.map((unit) => (
+          <option key={unit.value} value={unit.value}>
+            {unit.label}
+          </option>
         ))}
-      </ul>
-    </div>
+      </select>
+      <div className="mt-[4px] flex gap-[6px]">
+        <button type="submit" disabled={!isValid || save.isPending} className="flex-1 cursor-pointer rounded-[6px] bg-primary py-[6px] text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-primary-disabled">
+          {save.isPending ? 'Saving...' : 'Save'}
+        </button>
+        <button type="button" onClick={onDone} className="flex-1 cursor-pointer rounded-[6px] border border-line py-[6px] text-[13px] font-semibold text-ink">
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
-
-const Empty = ({ text }: { text: string }) => <p className="text-[14px] text-[#697586]">{text}</p>;

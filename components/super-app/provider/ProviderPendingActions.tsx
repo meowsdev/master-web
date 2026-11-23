@@ -66,18 +66,18 @@ export function ProviderPendingActions({ order, userId, onUpdateStatus, isUpdati
         </p>
       )}
       {hasDue ? (
-        <button type="button" disabled={isBusy || payDue.isPending} onClick={() => setIsPayOpen(true)} className="cursor-pointer rounded-[10px] bg-[#1daa61] px-[18px] py-[8px] text-[14px] font-semibold text-white hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" disabled={isBusy || payDue.isPending} onClick={() => setIsPayOpen(true)} className="cursor-pointer rounded-[10px] bg-primary px-[18px] py-[8px] text-[14px] font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled">
           Pay due {formatTaka(dueAmount)}
         </button>
       ) : (
-        <button type="button" disabled={isBusy} onClick={() => onUpdateStatus(OrderStatus.IN_PROGRESS)} className="cursor-pointer rounded-[10px] bg-[#1daa61] px-[18px] py-[8px] text-[14px] font-semibold text-white hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" disabled={isBusy} onClick={() => onUpdateStatus(OrderStatus.IN_PROGRESS)} className="cursor-pointer rounded-[10px] bg-primary px-[18px] py-[8px] text-[14px] font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled">
           Accept
         </button>
       )}
-      <button type="button" disabled={isBusy} onClick={() => decline.mutate()} className="cursor-pointer rounded-[10px] border border-[#cecece] bg-white px-[18px] py-[8px] text-[14px] font-semibold text-[#202939] hover:bg-[#f7f5f3] disabled:cursor-not-allowed disabled:opacity-50">
+      <button type="button" disabled={isBusy} onClick={() => decline.mutate()} className="cursor-pointer rounded-[10px] border border-line bg-white px-[18px] py-[8px] text-[14px] font-semibold text-ink hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50">
         Decline
       </button>
-      {timeLeft && <span className="text-[13px] font-medium text-[#697586]">Respond within {timeLeft}</span>}
+      {timeLeft && <span className="text-[13px] font-medium text-muted">Respond within {timeLeft}</span>}
       {isPayOpen && (
         <ProviderPayDueDialog
           dueAmount={dueAmount}

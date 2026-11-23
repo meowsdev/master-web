@@ -1,156 +1,327 @@
 'use client';
 
 import Image from 'next/image';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { PencilEdit02Icon, StarIcon } from '@hugeicons/core-free-icons';
+import { ArrowDown01Icon, Calendar03Icon, Delete02Icon, PencilEdit01Icon, PencilEdit02Icon, PlusSignIcon } from '@hugeicons/core-free-icons';
+import { useTapToSchedule } from '@/components/modals/catalog/ScheduleDialogHost';
+import { PublishToggle } from '@/components/super-app/admin/panels/PublishToggle';
+import { useAction } from '@/components/super-app/admin/panels/ServiceContentEditor';
+import { useAdminCatalog } from '@/components/super-app/admin/useAdminCatalog';
 import { catalogService } from '@/services/catalog.service';
+import { adminService } from '@/services/admin.service';
+import { AdminSubService, catalogAdminService } from '@/services/catalog-admin.service';
+import { useCartStore } from '@/store/useCartStore';
 import { useCatalogPanelStore } from '@/store/useCatalogPanelStore';
-import { CatalogSubServiceCard } from '@/types/catalog.types';
-import { formatTaka } from '@/components/modals/place-order/format-taka';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
+import { CatalogSubServiceCard, CatalogVariant } from '@/types/catalog.types';
 import { CartBar } from './CartBar';
 
 interface ServicesTabProps {
   mainServiceId: string;
   isAuthenticated: boolean;
   onRequireAuth: () => void;
+  /** Staff who manage services also see unpublished packages, with publish, edit, delete and "Add New Package". */
+  canEdit?: boolean;
+}
+
+/** One package card, whether it came from the customer read or the staff catalog. */
+interface PackageCard {
+  id: string;
+  name: string;
+  nameBn?: string | null;
+  imageUrl?: string | null;
+  startsFrom: number;
+  discount: number | null;
+  isPublished: boolean;
+  /** Published options only: what a customer can add. */
+  variants: CatalogVariant[];
 }
 
 const isImageSource = (value?: string | null) => Boolean(value && /^(https?:)?\/\/|^\//.test(value));
+/** "৳299.63": the cards show plain digits, as in the design. */
+export const plainTaka = (amount: number) => `৳${Number(amount.toFixed(2))}`;
+
+const fromCustomerCard = (service: CatalogSubServiceCard): PackageCard => ({
+  id: service.id,
+  name: service.name,
+  nameBn: service.nameBn,
+  imageUrl: service.imageUrl,
+  startsFrom: service.startsFrom,
+  discount: service.discount,
+  isPublished: true,
+  variants: service.variants,
+});
+
+function fromStaffCatalog(sub: AdminSubService): PackageCard {
+  const live = sub.variants.filter((variant) => variant.isActive);
+  const cheapest = live.reduce<(typeof live)[number] | null>((low, variant) => (!low || Number(variant.price) < Number(low.price) ? variant : low), null);
+  const price = cheapest ? Number(cheapest.price) : Number(sub.basePrice);
+  const original = cheapest?.originalPrice != null ? Number(cheapest.originalPrice) : null;
+  return {
+    id: sub.id,
+    name: sub.name,
+    nameBn: sub.nameBn,
+    imageUrl: sub.imageUrl,
+    startsFrom: price,
+    discount: original !== null && original > price ? original - price : null,
+    isPublished: sub.isActive,
+    variants: live.map((variant) => ({ ...variant, priceUnit: variant.priceUnit })),
+  };
+}
 
 /*
- * The "Services" tab of a main service's chat (wireframe: Custom card first, then the sub-service cards in a grid).
- * Picking a card opens its details on the right; the cart of this main service sits at the bottom.
+ * The "Services" tab of a main service: its packages as cards in two columns. A card opens its options on the right;
+ * its Tap to Schedule opens the calendar for the cart. Everyone sees the same screen; staff with service rights also
+ * publish / unpublish, edit, delete and add.
  */
-export function ServicesTab({ mainServiceId, isAuthenticated, onRequireAuth }: ServicesTabProps) {
-  const { data, isLoading, isError, refetch } = useQuery({
+export function ServicesTab({ mainServiceId, isAuthenticated, onRequireAuth, canEdit = false }: ServicesTabProps) {
+  const customerRead = useQuery({
     queryKey: ['catalog-main-service', mainServiceId],
     queryFn: () => catalogService.getMainService(mainServiceId),
     staleTime: 30_000,
+    enabled: !canEdit,
   });
+  // Staff read the full catalog, so unpublished packages show too.
+  const staffRead = useAdminCatalog({ enabled: canEdit });
+  const staffMain = staffRead.mains.find((main) => main.id === mainServiceId);
+
   const openSubService = useCatalogPanelStore((state) => state.openSubService);
   const openCustom = useCatalogPanelStore((state) => state.openCustom);
-  const selectedId = useCatalogPanelStore((state) => (state.mainServiceId === mainServiceId ? state.subServiceId : null));
-  const isCustomOpen = useCatalogPanelStore((state) => state.kind === 'custom' && state.mainServiceId === mainServiceId);
+  const selectedId = useCatalogPanelStore((state) => (state.mainServiceId === mainServiceId && state.kind === 'subService' ? state.subServiceId : null));
+  const isPanelOpen = useCatalogPanelStore((state) => state.kind !== null && state.mainServiceId === mainServiceId);
+  const openAdminPanel = useOrderPanelStore((state) => state.open);
+  const cartLines = useCartStore((state) => state.carts[mainServiceId]);
+  const addToCart = useCartStore((state) => state.add);
+  const tapToSchedule = useTapToSchedule(onRequireAuth);
+  const queryClient = useQueryClient();
+
+  const remove = useMutation({
+    mutationFn: (id: string) => adminService.deleteService(id),
+    onSuccess: () => {
+      toast.success('Package deleted');
+      ['catalog-main-service', 'admin-catalog-tree', 'admin-services', 'super-app-services'].forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
+    },
+    onError: () => toast.error('Package delete হয়নি'),
+  });
+  const publish = useAction(({ id, isActive }: { id: string; isActive: boolean }) => catalogAdminService.updateSubService(id, { isActive }), 'Saved');
+
+  const isLoading = canEdit ? staffRead.isLoading : customerRead.isLoading;
+  const isError = canEdit ? !staffRead.isLoading && !staffMain : customerRead.isError || (!customerRead.isLoading && !customerRead.data);
+  const fallbackIcon = canEdit ? staffMain?.iconUrl : customerRead.data?.iconUrl;
+  const packages: PackageCard[] = canEdit ? (staffMain?.services ?? []).map(fromStaffCatalog) : (customerRead.data?.services ?? []).map(fromCustomerCard);
+  // Two columns, filled left, right, left...; one column on small screens.
+  const columns = [packages.filter((_, index) => index % 2 === 0), packages.filter((_, index) => index % 2 === 1)];
+
+  /*
+   * Tap to Schedule on a card: the calendar opens once this package is in the cart. A package with a single option
+   * goes in by itself; with several, its options open on the right so one can be picked first.
+   */
+  const scheduleFrom = (card: PackageCard) => {
+    if (cartLines?.some((line) => line.subServiceId === card.id)) {
+      tapToSchedule(mainServiceId);
+      return;
+    }
+    const options = card.variants.filter((variant) => variant.id);
+    if (options.length === 1) {
+      const [only] = options;
+      addToCart(mainServiceId, {
+        variantId: only.id!,
+        subServiceId: card.id,
+        subServiceName: card.name,
+        variantName: only.name,
+        unitPrice: Number(only.price),
+        priceUnit: only.priceUnit,
+        quantity: 1,
+        imageUrl: only.imageUrl ?? card.imageUrl ?? null,
+      });
+      tapToSchedule(mainServiceId);
+      return;
+    }
+    openSubService(mainServiceId, card.id);
+    toast.info('আগে একটা option বেছে Add করুন, তারপর Tap to Schedule');
+  };
+
+  const renderCard = (card: PackageCard) => (
+    <SubServiceCard
+      key={card.id}
+      card={card}
+      fallbackIcon={fallbackIcon}
+      isSelected={card.id === selectedId}
+      onSelect={() => openSubService(mainServiceId, card.id)}
+      onSchedule={() => scheduleFrom(card)}
+      staff={
+        canEdit
+          ? {
+              onEdit: () => openAdminPanel(card.id, 'adminService'),
+              onDelete: () => {
+                if (window.confirm(`"${card.nameBn || card.name}" delete করবেন?`)) remove.mutate(card.id);
+              },
+              onPublish: (isActive) => publish.mutate({ id: card.id, isActive }),
+            }
+          : undefined
+      }
+    />
+  );
+  const addPackage = canEdit && (
+    <button
+      type="button"
+      onClick={() => openAdminPanel(`new:${mainServiceId}`, 'adminService')}
+      className="btn-raised mx-auto mt-[24px] flex h-[40px] cursor-pointer items-center gap-[6px] rounded-[10px] bg-primary px-[16px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90"
+    >
+      <HugeiconsIcon icon={PlusSignIcon} size={18} strokeWidth={2.5} />
+      Add New Package
+    </button>
+  );
+  const customCard = !canEdit && <CustomServiceCard onSelect={() => (isAuthenticated ? openCustom(mainServiceId) : onRequireAuth())} />;
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#f7f5f3]">
-      <div className="flex-1 overflow-y-auto px-[16px] py-[20px] md:px-[24px]">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-surface">
+      <div className="flex-1 overflow-y-auto px-[16px] py-[32px] md:px-[32px]">
         {isLoading ? (
-          <GridSkeleton />
-        ) : isError || !data ? (
+          <ListSkeleton />
+        ) : isError ? (
           <div className="py-[60px] text-center">
-            <p className="text-[14px] font-medium text-[#697586]">সার্ভিসগুলো লোড হয়নি।</p>
-            <button type="button" onClick={() => refetch()} className="mt-[8px] cursor-pointer text-[14px] font-semibold text-[#1daa61] underline">
+            <p className="text-[14px] font-medium text-muted">সার্ভিসগুলো লোড হয়নি।</p>
+            <button type="button" onClick={() => customerRead.refetch()} className="mt-[8px] cursor-pointer text-[14px] font-semibold text-primary underline">
               আবার চেষ্টা করুন
             </button>
           </div>
         ) : (
           <>
-            <header className="mb-[20px]">
-              {data.group && <p className="text-[12px] font-semibold uppercase tracking-[0.6px] text-[#1daa61]">{data.group.name}</p>}
-              <h2 className="text-[24px] font-semibold leading-tight tracking-[-0.48px] text-[#202939] md:text-[28px]">{data.name}</h2>
-              <div className="mt-[6px] flex flex-wrap items-center gap-x-[10px] gap-y-[4px] text-[14px] text-[#364152]">
-                <span className="flex items-center gap-[4px] font-bold text-[#202939]">
-                  <HugeiconsIcon icon={StarIcon} size={18} className="fill-[#f5a623] text-[#f5a623]" />
-                  {data.rating?.average != null ? data.rating.average.toFixed(2) : 'New'}
-                </span>
-                {(data.servedCount ?? 0) > 0 && <span>• {data.servedCount}+ served</span>}
-                <span className="text-[#697586]">
-                  ({data.rating?.count ?? 0} reviews on {data.services.length} services)
-                </span>
-              </div>
-            </header>
-
-            <div className="grid grid-cols-2 gap-[12px] sm:gap-[16px] lg:grid-cols-3">
-              <CustomServiceCard isSelected={isCustomOpen} onSelect={() => (isAuthenticated ? openCustom(mainServiceId) : onRequireAuth())} />
-              {data.services.map((service) => (
-                <SubServiceCard
-                  key={service.id}
-                  service={service}
-                  fallbackIcon={data.iconUrl}
-                  isSelected={service.id === selectedId}
-                  onSelect={() => openSubService(mainServiceId, service.id)}
-                />
+            {canEdit && staffMain && !staffMain.isActive && (
+              <p className="mb-[16px] rounded-[8px] bg-amber-50 px-[12px] py-[8px] text-[13px] font-medium text-amber-800">
+                এই main service unpublished, তাই customer এর কিছুই দেখতে পায় না।
+              </p>
+            )}
+            {/* Phones: one column. */}
+            <div className="flex flex-col gap-[22px] lg:hidden">
+              {packages.map(renderCard)}
+              {customCard}
+              {addPackage}
+            </div>
+            {/* Wider screens: two columns side by side, each on its own grey panel, like the design. */}
+            <div className="hidden items-start gap-[34px] lg:grid lg:grid-cols-2">
+              {columns.map((column, index) => (
+                <div key={index} className="flex flex-col">
+                  {(column.length > 0 || (index === 1 && customCard)) && (
+                    <div className="flex flex-col gap-[22px]">
+                      {column.map(renderCard)}
+                      {index === 1 && customCard}
+                    </div>
+                  )}
+                  {index === 1 && addPackage}
+                </div>
               ))}
             </div>
-            {data.services.length === 0 && (
-              <p className="mt-[16px] text-center text-[13px] text-[#697586]">এই সার্ভিসে এখনো কোনো অপশন যোগ হয়নি। Custom দিয়ে আপনার সমস্যা লিখে পাঠান।</p>
+            {packages.length === 0 && (
+              <p className="mt-[16px] text-center text-[13px] text-muted">
+                {canEdit ? 'এই main service-এ এখনো কোনো package নেই। Add New Package দিয়ে যোগ করুন।' : 'এই সার্ভিসে এখনো কোনো অপশন যোগ হয়নি। Custom দিয়ে আপনার সমস্যা লিখে পাঠান।'}
+              </p>
             )}
           </>
         )}
       </div>
 
-      <CartBar mainServiceId={mainServiceId} isAuthenticated={isAuthenticated} onRequireAuth={onRequireAuth} />
+      {/* One Tap to Schedule: it lives in the right-hand panel; this bar only stands in while that panel is closed. */}
+      {!canEdit && !isPanelOpen && <CartBar mainServiceId={mainServiceId} isAuthenticated={isAuthenticated} onRequireAuth={onRequireAuth} />}
     </div>
   );
 }
 
-function SubServiceCard({ service, fallbackIcon, isSelected, onSelect }: { service: CatalogSubServiceCard; fallbackIcon?: string | null; isSelected: boolean; onSelect: () => void }) {
+interface SubServiceCardProps {
+  card: PackageCard;
+  fallbackIcon?: string | null;
+  isSelected: boolean;
+  onSelect: () => void;
+  onSchedule: () => void;
+  staff?: { onEdit: () => void; onDelete: () => void; onPublish: (isActive: boolean) => void };
+}
+
+const iconButton = 'flex size-[30px] cursor-pointer items-center justify-center rounded-full text-ink transition-colors hover:bg-surface';
+
+function SubServiceCard({ card, fallbackIcon, isSelected, onSelect, onSchedule, staff }: SubServiceCardProps) {
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={isSelected}
-      className={`group flex cursor-pointer flex-col overflow-hidden rounded-[16px] border bg-white text-left transition-all hover:shadow-md ${
-        isSelected ? 'border-[#1daa61] ring-2 ring-[#1daa61]/30' : 'border-[#e5e5e5]'
-      }`}
-    >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-b from-[#d7fdd2] to-[#f7f5f3]">
-        {isImageSource(service.imageUrl) ? (
-          <Image src={service.imageUrl!} alt="" fill sizes="(min-width: 1024px) 260px, 45vw" unoptimized className="object-cover transition-transform group-hover:scale-[1.03]" />
-        ) : (
-          <span className="flex size-full items-center justify-center text-[44px]" aria-hidden>
-            {fallbackIcon && !isImageSource(fallbackIcon) ? fallbackIcon : '🛠️'}
-          </span>
-        )}
-        {service.discount !== null && (
-          <span className="absolute bottom-[8px] left-[8px] rounded-[6px] bg-[#c2410c] px-[6px] py-[2px] text-[11px] font-bold text-white">
-            {formatTaka(service.discount)} OFF
-          </span>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col gap-[4px] p-[12px]">
-        <span className="line-clamp-2 text-[14px] font-semibold leading-snug text-[#202939] md:text-[15px]">{service.nameBn || service.name}</span>
-        <span className="mt-auto text-[12px] text-[#697586] md:text-[13px]">
-          Starts from <span className="font-semibold text-[#15803d]">{formatTaka(service.startsFrom)}</span>
-          {service.startsFromOriginal !== null && <span className="ml-[4px] text-[#9aa4b2] line-through">{formatTaka(service.startsFromOriginal)}</span>}
+    <div className={`rounded-[4px] border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06)] ${isSelected ? 'border-primary' : 'border-line'}`}>
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-pressed={isSelected}
+        className={`flex w-full cursor-pointer items-center gap-[12px] p-[12px] text-left ${card.isPublished ? '' : 'opacity-50'}`}
+      >
+        <span className="relative size-[64px] shrink-0 overflow-hidden rounded-[2px] bg-gradient-to-b from-secondary to-surface">
+          {isImageSource(card.imageUrl) ? (
+            <Image src={card.imageUrl!} alt="" fill sizes="64px" unoptimized className="object-cover" />
+          ) : (
+            <span className="flex size-full items-center justify-center text-[28px]" aria-hidden>
+              {fallbackIcon && !isImageSource(fallbackIcon) ? fallbackIcon : '🛠️'}
+            </span>
+          )}
+          {card.discount !== null && (
+            <span className="absolute inset-x-0 bottom-0 truncate bg-primary px-[3px] text-[10px] font-bold leading-[14px] text-white">
+              {Math.round(card.discount)} BDT OFF
+            </span>
+          )}
         </span>
+        <span className="flex min-w-0 flex-1 flex-col gap-[6px]">
+          <span className="truncate text-[14px] font-semibold leading-[20px] tracking-[0.1px] text-ink">{card.nameBn || card.name}</span>
+          <span className="text-[14px] leading-[20px] tracking-[0.1px] text-ink">
+            Starts from <span className="font-bold text-primary">{plainTaka(card.startsFrom)}</span>
+          </span>
+        </span>
+        <span aria-hidden className={`flex size-[14px] shrink-0 items-center justify-center rounded-full border ${isSelected ? 'border-ink' : 'border-muted'}`}>
+          {isSelected && <span className="size-[8px] rounded-full bg-ink" />}
+        </span>
+      </button>
+
+      <div className="flex h-[44px] items-center justify-between gap-[8px] border-t border-line px-[14px]">
+        <button type="button" onClick={onSchedule} className="flex cursor-pointer items-center gap-[10px] text-ink">
+          <HugeiconsIcon icon={Calendar03Icon} size={18} strokeWidth={1.6} />
+          <span className="text-[11px] font-medium text-ink">Tap to Schedule</span>
+          <HugeiconsIcon icon={ArrowDown01Icon} size={16} strokeWidth={1.8} />
+        </button>
+        {staff && (
+          <div className="flex items-center gap-[12px]">
+            <PublishToggle isPublished={card.isPublished} onChange={staff.onPublish} />
+            <button type="button" aria-label={`Edit ${card.name}`} onClick={staff.onEdit} className={iconButton}>
+              <HugeiconsIcon icon={PencilEdit01Icon} size={22} strokeWidth={1.6} />
+            </button>
+            <button type="button" aria-label={`Delete ${card.name}`} onClick={staff.onDelete} className={iconButton}>
+              <HugeiconsIcon icon={Delete02Icon} size={22} strokeWidth={1.6} />
+            </button>
+          </div>
+        )}
       </div>
-    </button>
+    </div>
   );
 }
 
-/* Always the first card: for a problem the list does not have. The provider visits for free and sends a price. */
-function CustomServiceCard({ isSelected, onSelect }: { isSelected: boolean; onSelect: () => void }) {
+/* Customers only: for a problem the list does not have. The provider visits for free and sends a price. */
+function CustomServiceCard({ onSelect }: { onSelect: () => void }) {
   return (
     <button
       type="button"
       onClick={onSelect}
-      aria-pressed={isSelected}
-      className={`flex cursor-pointer flex-col items-center justify-center gap-[10px] rounded-[16px] border-2 border-dashed bg-gradient-to-b from-white to-[#e7fce3] p-[16px] text-center transition-shadow hover:shadow-md ${
-        isSelected ? 'border-[#1daa61]' : 'border-[#9fd8b4]'
-      }`}
+      className="flex cursor-pointer items-center gap-[12px] rounded-[4px] border border-dashed border-secondary bg-white p-[12px] text-left transition-shadow hover:shadow-md"
     >
-      <span className="flex size-[48px] items-center justify-center rounded-full border-[1.5px] border-[#1daa61] text-[#1daa61]">
-        <HugeiconsIcon icon={PencilEdit02Icon} size={22} strokeWidth={1.8} />
+      <span className="flex size-[64px] shrink-0 items-center justify-center rounded-[2px] bg-secondary text-primary">
+        <HugeiconsIcon icon={PencilEdit02Icon} size={26} strokeWidth={1.8} />
       </span>
-      <span className="text-[15px] font-semibold text-[#202939]">Custom</span>
-      <span className="text-[12px] leading-snug text-[#697586]">লিস্টে নেই? সমস্যা লিখুন, প্রোভাইডার ভিজিট করে দাম জানাবে। ভিজিট ফ্রি।</span>
+      <span className="flex min-w-0 flex-col gap-[4px]">
+        <span className="text-[14px] font-semibold text-ink">Custom</span>
+        <span className="text-[12px] leading-snug text-muted">লিস্টে নেই? সমস্যা লিখুন, প্রোভাইডার ভিজিট করে দাম জানাবে। ভিজিট ফ্রি।</span>
+      </span>
     </button>
   );
 }
 
-function GridSkeleton() {
+function ListSkeleton() {
   return (
-    <div className="animate-pulse">
-      <div className="mb-[8px] h-[28px] w-[200px] rounded bg-[#e5e5e5]" />
-      <div className="mb-[20px] h-[16px] w-[260px] rounded bg-[#ececec]" />
-      <div className="grid grid-cols-2 gap-[16px] lg:grid-cols-3">
-        {Array.from({ length: 6 }, (_, index) => (
-          <div key={index} className="aspect-[4/5] rounded-[16px] bg-[#ececec]" />
-        ))}
-      </div>
+    <div className="grid animate-pulse gap-[22px] lg:grid-cols-2 lg:gap-[34px]">
+      {Array.from({ length: 6 }, (_, index) => (
+        <div key={index} className="h-[134px] rounded-[4px] bg-panel" />
+      ))}
     </div>
   );
 }

@@ -16,7 +16,7 @@ const MAX_TIP = 5000;
 
 function Line({ icon, children }: { icon: IconSvgElement; children: React.ReactNode }) {
   return (
-    <li className="flex items-center gap-[10px] text-[14px] font-semibold text-[#202939]">
+    <li className="flex items-center gap-[10px] text-[14px] font-semibold text-ink">
       <HugeiconsIcon icon={icon} size={18} className="shrink-0" />
       <span className="min-w-0">{children}</span>
     </li>
@@ -52,7 +52,7 @@ export function CompletionCard({ order, userId }: { order: Order; userId: string
 
   return (
     // Unpaid: a card asking the customer to act.
-    <article className="w-full max-w-[460px] self-center rounded-[16px] bg-gradient-to-b from-white to-[#eefaf5] p-[16px] text-[#202939] shadow-sm">
+    <article className="w-full max-w-[460px] self-center rounded-[16px] bg-gradient-to-b from-white to-secondary p-[16px] text-ink shadow-sm">
       <h3 className="text-[14px] font-semibold">সার্ভিস সফলভাবে সম্পন্ন হয়েছে!</h3>
 
       <ul className="mt-[14px] flex flex-col gap-[12px]">
@@ -72,7 +72,7 @@ export function CompletionCard({ order, userId }: { order: Order; userId: string
               }}
               aria-pressed={selectedPreset === preset && !customTip}
               className={`cursor-pointer rounded-[8px] px-[10px] py-[4px] text-[13px] font-semibold ${
-                selectedPreset === preset && !customTip ? 'bg-[#1daa61] text-white' : 'bg-[#a9e5cf]'
+                selectedPreset === preset && !customTip ? 'bg-primary text-white' : 'bg-secondary'
               }`}
             >
               {formatTaka(preset)}
@@ -88,7 +88,7 @@ export function CompletionCard({ order, userId }: { order: Order; userId: string
               setSelectedPreset(null);
             }}
             placeholder="৳ ২৫০..."
-            className="w-[90px] border-b border-[#202939] bg-transparent text-[13px] outline-none"
+            className="w-[90px] border-b border-ink bg-transparent text-[13px] outline-none"
           />
         </li>
       </ul>
@@ -108,7 +108,7 @@ export function CompletionCard({ order, userId }: { order: Order; userId: string
             if (!isChoosingMethod) return setIsChoosingMethod(true);
             if (method) pay.mutate({ method, tipAmount });
           }}
-          className="cursor-pointer rounded-[10px] bg-black px-[18px] py-[10px] text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#202939]/30"
+          className="cursor-pointer rounded-[10px] bg-black px-[18px] py-[10px] text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-ink/30"
         >
           {isChoosingMethod ? (pay.isPending ? 'Processing...' : `Pay- ${formatTaka(payableAmount)}`) : `Accept & Pay- ${formatTaka(payableAmount)}`}
         </button>

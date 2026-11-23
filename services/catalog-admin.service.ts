@@ -29,6 +29,7 @@ export interface AdminSubService {
   name: string;
   nameBn?: string | null;
   imageUrl?: string | null;
+  description?: string | null;
   basePrice: string | number;
   isActive: boolean;
   sortOrder: number;
@@ -93,9 +94,9 @@ export const catalogAdminService = {
   updateGroup: async (id: string, body: Partial<{ name: string; nameBn: string; iconUrl: string; isActive: boolean }>) => (await apiClient.patch(`/catalog/admin/groups/${id}`, body)).data,
   deleteGroup: async (id: string) => (await apiClient.delete(`/catalog/admin/groups/${id}`)).data,
 
-  updateMainService: async (id: string, body: Partial<{ groupId: string; included: string[]; excluded: string[]; howToOrder: string[]; details: string }>) =>
+  updateMainService: async (id: string, body: Partial<{ groupId: string; included: string[]; excluded: string[]; howToOrder: string[]; details: string; isActive: boolean }>) =>
     (await apiClient.patch(`/catalog/admin/main-services/${id}`, body)).data,
-  updateSubService: async (id: string, body: Partial<{ included: string[]; excluded: string[]; details: string }>) =>
+  updateSubService: async (id: string, body: Partial<{ included: string[]; excluded: string[]; details: string; isActive: boolean }>) =>
     (await apiClient.patch(`/catalog/admin/sub-services/${id}`, body)).data,
 
   createVariant: async (body: VariantInput) => (await apiClient.post('/catalog/admin/variants', body)).data,

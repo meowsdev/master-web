@@ -39,12 +39,12 @@ export function PicturePicker({ value, onChange }: PicturePickerProps) {
     }
   };
 
-  const buttonClass = 'cursor-pointer rounded-[8px] border border-[#cecece] bg-white px-[12px] py-[7px] text-[13px] font-semibold text-[#202939] hover:bg-[#f7f5f3] disabled:cursor-not-allowed disabled:opacity-50';
+  const buttonClass = 'cursor-pointer rounded-[8px] border border-line bg-white px-[12px] py-[7px] text-[13px] font-semibold text-ink hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50';
 
   return (
     <div className="pt-[22px]">
       <div className="flex items-center gap-[14px]">
-        <span className="flex size-[64px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#a9e5cf] text-[28px]">
+        <span className="flex size-[64px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-[28px]">
           {value && isImageSource(value) ? (
             // eslint-disable-next-line @next/next/no-img-element -- picture links come from the backend's uploads or any host
             <img src={value} alt="" className="size-full object-cover" />

@@ -58,13 +58,13 @@ export function PlaceOrderPanel({ initialServiceId, onClose, onPlaced }: PlaceOr
             type="button"
             onClick={state.submit}
             disabled={!state.isReady || state.isSubmitting}
-            className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
+            className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
           >
             {state.isSubmitting ? 'Placing order...' : 'Confirm & Chat'}
           </button>
         </div>
         {!state.isReady && state.missingFields.length > 0 && (
-          <p className="mt-[10px] text-center text-[12px] font-medium text-[#697586]">বাকি আছে: {state.missingFields.join(', ')}</p>
+          <p className="mt-[10px] text-center text-[12px] font-medium text-muted">বাকি আছে: {state.missingFields.join(', ')}</p>
         )}
       </div>
     </SidePanelShell>

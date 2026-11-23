@@ -204,7 +204,7 @@ function AuthDrawer({ onClose }: { onClose: () => void }) {
               placeholder="Password (default: 123456)"
               required
             />
-            <p className="pl-[36px] text-[12px] font-medium text-[#697586]">Default technician password: 123456</p>
+            <p className="pl-[36px] text-[12px] font-medium text-muted">Default technician password: 123456</p>
           </div>
           <AuthPrimaryButton disabled={isTechLoggingIn}>
             {isTechLoggingIn ? 'Logging in...' : 'Login as Technician'}

@@ -46,9 +46,9 @@ export function CustomerRatingCard({ order, userId }: { order: Order; userId: st
   const shownRating = isRated ? saved.rating! : rating;
 
   return (
-    <article className="w-full max-w-[460px] self-center rounded-[16px] bg-gradient-to-b from-white to-[#eefaf5] p-[16px] text-[#202939]">
+    <article className="w-full max-w-[460px] self-center rounded-[16px] bg-gradient-to-b from-white to-secondary p-[16px] text-ink">
       <h3 className="text-[13px] font-semibold">কাস্টমারকে রেটিং দিন</h3>
-      <p className="mt-[2px] text-[12px] font-medium text-[#697586]">
+      <p className="mt-[2px] text-[12px] font-medium text-muted">
         {isRated && saved.ratedBy && !saved.ratedBy.isMe
           ? `${saved.ratedBy.name ?? (saved.ratedBy.role === 'TECHNICIAN' ? 'আপনার টেকনিশিয়ান' : 'প্রোভাইডার')} রেটিং দিয়েছেন।`
           : 'প্রোভাইডার বা টেকনিশিয়ান, যেকোনো একজন দিলেই হবে।'}
@@ -57,7 +57,7 @@ export function CustomerRatingCard({ order, userId }: { order: Order; userId: st
       <div role="radiogroup" aria-label="Customer rating" className="mt-[10px] flex justify-center gap-[6px]">
         {RATING_STEPS.map((step) => (
           <button key={step} type="button" role="radio" aria-checked={shownRating === step} aria-label={`${step} star`} disabled={isRated} onClick={() => setRating(step)} className="cursor-pointer disabled:cursor-default">
-            <HugeiconsIcon icon={StarIcon} size={26} className={step <= shownRating ? 'text-[#f5a524]' : 'text-[#cecece]'} fill={step <= shownRating ? 'currentColor' : 'none'} />
+            <HugeiconsIcon icon={StarIcon} size={26} className={step <= shownRating ? 'text-[#f5a524]' : 'text-muted'} fill={step <= shownRating ? 'currentColor' : 'none'} />
           </button>
         ))}
       </div>
@@ -66,14 +66,14 @@ export function CustomerRatingCard({ order, userId }: { order: Order; userId: st
         <span className="flex h-[22px] shrink-0 items-center">
           <HugeiconsIcon icon={Comment01Icon} size={18} />
         </span>
-        <span className="flex min-w-0 flex-1 border-b border-[#202939]/60 pb-[6px]">
+        <span className="flex min-w-0 flex-1 border-b border-ink/60 pb-[6px]">
           <input
             value={isRated ? saved.comment ?? '' : comment}
             onChange={(event) => setComment(event.target.value)}
             readOnly={isRated}
             maxLength={300}
             placeholder="মতামত দিন..."
-            className="min-w-0 flex-1 bg-transparent text-[14px] font-medium outline-none placeholder:text-[#9aa4b2]"
+            className="min-w-0 flex-1 bg-transparent text-[14px] font-medium outline-none placeholder:text-muted"
           />
         </span>
       </label>
@@ -83,7 +83,7 @@ export function CustomerRatingCard({ order, userId }: { order: Order; userId: st
           type="button"
           disabled={isRated || rating === 0 || submit.isPending}
           onClick={() => submit.mutate()}
-          className="cursor-pointer rounded-[10px] bg-black px-[18px] py-[10px] text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#202939]/30"
+          className="cursor-pointer rounded-[10px] bg-black px-[18px] py-[10px] text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-ink/30"
         >
           {isRated ? 'Rating Sent' : 'Submit Rating'}
         </button>

@@ -109,19 +109,19 @@ export function SchedulePickerDialog({ timeSlots, initialDate, initialTimeSlot, 
       }}
     >
       <div role="dialog" aria-modal="true" aria-labelledby="schedule-title" className="flex max-h-[calc(100dvh-32px)] w-full max-w-[680px] flex-col overflow-hidden rounded-[16px] bg-white shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
-        <header className="flex items-center justify-between border-b border-[#e5e5e5] px-[20px] py-[14px]">
-          <h2 id="schedule-title" className="text-[17px] font-semibold text-[#202939]">সময় নির্বাচন করুন</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="flex size-[32px] cursor-pointer items-center justify-center rounded-full text-[#697586] hover:bg-[#f7f5f3]">
+        <header className="flex items-center justify-between border-b border-line px-[20px] py-[14px]">
+          <h2 id="schedule-title" className="text-[17px] font-semibold text-ink">সময় নির্বাচন করুন</h2>
+          <button type="button" onClick={onClose} aria-label="Close" className="flex size-[32px] cursor-pointer items-center justify-center rounded-full text-muted hover:bg-surface">
             <HugeiconsIcon icon={Cancel01Icon} size={20} />
           </button>
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-[20px] py-[20px]">
-          <p className="text-center text-[18px] font-semibold text-[#202939]">কখন সার্ভিস নিতে চান?</p>
-          <p className="mt-[6px] text-center text-[13px] font-medium text-[#697586]">তারিখ বেছে নিন</p>
+          <p className="text-center text-[18px] font-semibold text-ink">কখন সার্ভিস নিতে চান?</p>
+          <p className="mt-[6px] text-center text-[13px] font-medium text-muted">তারিখ বেছে নিন</p>
 
           <div className="relative mt-[14px]">
-            <button type="button" onClick={() => scrollStrip(-1)} aria-label="Earlier dates" className="absolute left-0 top-1/2 z-10 hidden size-[32px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white text-[#202939] shadow-[0_2px_8px_rgba(0,0,0,0.15)] hover:bg-[#f7f5f3] sm:flex">
+            <button type="button" onClick={() => scrollStrip(-1)} aria-label="Earlier dates" className="absolute left-0 top-1/2 z-10 hidden size-[32px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white text-ink shadow-[0_2px_8px_rgba(0,0,0,0.15)] hover:bg-surface sm:flex">
               <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
             </button>
             <div ref={stripRef} className="flex snap-x gap-[8px] overflow-x-auto scroll-smooth px-[4px] pb-[4px] [scrollbar-width:none] sm:px-[36px] [&::-webkit-scrollbar]:hidden">
@@ -134,22 +134,22 @@ export function SchedulePickerDialog({ timeSlots, initialDate, initialTimeSlot, 
                     aria-pressed={isSelected}
                     aria-label={`${day.weekday} ${day.day} ${day.month}`}
                     onClick={() => pickDate(day.iso)}
-                    className={`flex h-[80px] w-[62px] shrink-0 snap-start cursor-pointer flex-col items-center justify-center rounded-[10px] border transition-colors ${isSelected ? 'border-[#1daa61] bg-[#e7fce3]' : 'border-[#e5e5e5] bg-white hover:border-[#1daa61]/50'}`}
+                    className={`flex h-[80px] w-[62px] shrink-0 snap-start cursor-pointer flex-col items-center justify-center rounded-[10px] border transition-colors ${isSelected ? 'border-primary bg-secondary' : 'border-line bg-white hover:border-primary/50'}`}
                   >
-                    <span className={`text-[26px] font-semibold leading-none ${isSelected ? 'text-[#1daa61]' : 'text-[#202939]'}`}>{day.day}</span>
-                    <span className={`mt-[6px] text-[11px] font-semibold tracking-[0.4px] ${isSelected ? 'text-[#1daa61]' : 'text-[#697586]'}`}>{day.isToday ? 'TODAY' : day.weekday}</span>
+                    <span className={`text-[26px] font-semibold leading-none ${isSelected ? 'text-primary' : 'text-ink'}`}>{day.day}</span>
+                    <span className={`mt-[6px] text-[11px] font-semibold tracking-[0.4px] ${isSelected ? 'text-primary' : 'text-muted'}`}>{day.isToday ? 'TODAY' : day.weekday}</span>
                   </button>
                 );
               })}
             </div>
-            <button type="button" onClick={() => scrollStrip(1)} aria-label="Later dates" className="absolute right-0 top-1/2 z-10 hidden size-[32px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white text-[#202939] shadow-[0_2px_8px_rgba(0,0,0,0.15)] hover:bg-[#f7f5f3] sm:flex">
+            <button type="button" onClick={() => scrollStrip(1)} aria-label="Later dates" className="absolute right-0 top-1/2 z-10 hidden size-[32px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white text-ink shadow-[0_2px_8px_rgba(0,0,0,0.15)] hover:bg-surface sm:flex">
               <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
             </button>
           </div>
 
           {date && (
             <>
-              <p className="mt-[24px] text-center text-[13px] font-medium text-[#697586]">সময় বেছে নিন, এক্সপার্ট এই সময়ের মধ্যে পৌঁছাবেন</p>
+              <p className="mt-[24px] text-center text-[13px] font-medium text-muted">সময় বেছে নিন, এক্সপার্ট এই সময়ের মধ্যে পৌঁছাবেন</p>
               {hasNoSlotsLeft ? (
                 <p className="mt-[14px] rounded-[10px] bg-[#fff4e5] p-[12px] text-center text-[13px] font-medium text-[#b7791f]">আজকের সব সময় পার হয়ে গেছে। অন্য একটি তারিখ বেছে নিন।</p>
               ) : (
@@ -167,9 +167,9 @@ export function SchedulePickerDialog({ timeSlots, initialDate, initialTimeSlot, 
                         aria-label={slot}
                         disabled={isPast}
                         onClick={() => setTimeSlot(slot)}
-                        className={`h-[44px] cursor-pointer rounded-[8px] border text-[15px] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${isSelected ? 'border-[#1daa61] bg-[#e7fce3] font-semibold text-[#1daa61]' : 'border-[#e5e5e5] bg-white font-medium text-[#202939] hover:border-[#1daa61]/50'}`}
+                        className={`h-[44px] cursor-pointer rounded-[8px] border text-[15px] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${isSelected ? 'border-primary bg-secondary font-semibold text-primary' : 'border-line bg-white font-medium text-ink hover:border-primary/50'}`}
                       >
-                        {label.range} <span className={isSelected ? 'text-[#1daa61]' : 'text-[#697586]'}>{label.period}</span>
+                        {label.range} <span className={isSelected ? 'text-primary' : 'text-muted'}>{label.period}</span>
                       </button>
                     );
                   })}
@@ -179,12 +179,12 @@ export function SchedulePickerDialog({ timeSlots, initialDate, initialTimeSlot, 
           )}
         </div>
 
-        <footer className="flex justify-center border-t border-[#e5e5e5] px-[20px] py-[14px]">
+        <footer className="flex justify-center border-t border-line px-[20px] py-[14px]">
           <button
             type="button"
             disabled={!date || !timeSlot}
             onClick={() => onConfirm(date, timeSlot)}
-            className="h-[44px] min-w-[180px] cursor-pointer rounded-[10px] bg-[#1daa61] px-[24px] text-[15px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-[44px] min-w-[180px] cursor-pointer rounded-[10px] bg-primary px-[24px] text-[15px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
           >
             Confirm
           </button>

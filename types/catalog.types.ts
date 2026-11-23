@@ -65,6 +65,12 @@ export interface CatalogSubServiceCard {
 
 export interface CatalogMainServiceDetail extends Omit<CatalogMainService, 'subServiceCount' | 'startsFrom' | 'isPopular' | 'shortDescription'> {
   services: CatalogSubServiceCard[];
+  /** The main service's own Overview, FAQ, How to order (never empty: the standard steps stand in) and Details. */
+  included: string[];
+  excluded: string[];
+  howToOrder: string[];
+  details?: string | null;
+  faqs: CatalogFaq[];
 }
 
 export interface CatalogFaq {
@@ -107,6 +113,8 @@ export interface CatalogSubServiceDetail {
   faqs: CatalogFaq[];
   howToOrder: string[];
   details: string | null;
+  /** The package's own notes or disclaimer (no fallback to the main service). */
+  packageDetails?: string | null;
   servedCount: number;
   reviews: CatalogReviewPage;
 }

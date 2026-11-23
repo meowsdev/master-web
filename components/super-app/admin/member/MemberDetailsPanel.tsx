@@ -23,15 +23,15 @@ export function MemberDetailsPanel({ adminId, memberId, onClose }: { adminId: st
 
   return (
     <SidePanelShell title={member ? ROLE_LABEL[member.role] : 'Details'} onClose={onClose}>
-      {isLoading && <p className="text-[14px] font-medium text-[#697586]">Loading details...</p>}
+      {isLoading && <p className="text-[14px] font-medium text-muted">Loading details...</p>}
       {isError && <p className="text-[14px] font-medium text-[#d64545]">Could not load the details.</p>}
       {member && (
         <div>
           <div className="flex items-center gap-[14px] pb-[16px]">
             <SupportAvatar name={member.name || member.mobileNumber} photo={member.profilePhoto} sizeClass="size-[64px]" />
             <div className="flex min-w-0 flex-col gap-[4px]">
-              <p className="truncate text-[18px] font-semibold tracking-[-0.36px] text-[#202939]">{member.name || 'No name yet'}</p>
-              {member.username && <p className="truncate text-[13px] font-medium text-[#697586]">@{member.username}</p>}
+              <p className="truncate text-[18px] font-semibold tracking-[-0.36px] text-ink">{member.name || 'No name yet'}</p>
+              {member.username && <p className="truncate text-[13px] font-medium text-muted">@{member.username}</p>}
               <StatusBadges status={member.status} isRestricted={member.isRestricted} />
             </div>
           </div>
@@ -62,9 +62,9 @@ export function MemberDetailsPanel({ adminId, memberId, onClose }: { adminId: st
             <Section title="History">
               <ul className="flex flex-col gap-[6px]">
                 {member.moderationLog.map((entry) => (
-                  <li key={`${entry.action}-${entry.createdAt}`} className="text-[13px] font-medium text-[#202939]">
+                  <li key={`${entry.action}-${entry.createdAt}`} className="text-[13px] font-medium text-ink">
                     <span className="font-semibold">{entry.action}</span> · {formatDate(entry.createdAt)}
-                    {entry.reason && <span className="text-[#697586]"> · {entry.reason}</span>}
+                    {entry.reason && <span className="text-muted"> · {entry.reason}</span>}
                   </li>
                 ))}
               </ul>

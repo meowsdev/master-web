@@ -36,7 +36,7 @@ export function AdminSupportCanvas({ userId, role, onBack, onSwitchAccount }: Ad
     return (
       <>
         <ChatEmptyHeader onSwitchAccount={onSwitchAccount} menuItems={[]} />
-        <div className="flex flex-1 items-center justify-center bg-[#f7f5f3] text-[14px] font-medium text-[#697586]">
+        <div className="flex flex-1 items-center justify-center bg-surface text-[14px] font-medium text-muted">
           Choose a {role.toLowerCase()} to start chatting.
         </div>
       </>

@@ -25,6 +25,7 @@ import { MainCanvasArea } from '@/components/super-app/MainCanvasArea';
 import { ServicePreviewPanel } from '@/components/modals/ServicePreviewPanel';
 import { SuperAppModals } from '@/components/super-app/SuperAppModals';
 import { CatalogPanels } from '@/components/modals/catalog/CatalogPanels';
+import { useCatalogPanelStore } from '@/store/useCatalogPanelStore';
 
 const emptySubscribe = () => () => {};
 
@@ -183,13 +184,13 @@ export default function SuperAppPage() {
 
   if (!isMounted) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#efeae2] dark:bg-[#0b141a]">
-        <div className="w-10 h-10 rounded-full border-3 border-[#008069] border-t-transparent animate-spin" />
+      <div className="flex h-screen w-screen items-center justify-center bg-surface dark:bg-[#0b141a]">
+        <div className="w-10 h-10 rounded-full border-3 border-primary border-t-transparent animate-spin" />
       </div>
     );
   }
 
-  const bgMain = isDarkMode ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#f0f2f5] text-[#111b21]';
+  const bgMain = isDarkMode ? 'bg-[#0b141a] text-muted' : 'bg-surface text-[#111b21]';
   // The + buttons open the Place Order panel; the customer picks the service inside it.
   const handleStartNewOrder = () => {
     setActiveRailTab('CHATS');
@@ -248,7 +249,16 @@ export default function SuperAppPage() {
         isServicesLoading={isServicesLoading}
         activeServiceId={activeServiceId}
         // Everyone opens the main service's chat: guests see its Services tab (cards, details, cart) and log in to order.
-        onSelectService={(service) => { leaveSupportChat(); if (isAuthenticated) return handleSelectServiceWithReadSync(service); modals.closeSidePanels(); handleSelectService(service); }}
+        // Opening a main service's chat also opens its Overview, FAQ, How to Order, Review and Details on the right.
+        onSelectService={(service) => {
+          leaveSupportChat();
+          if (isAuthenticated) handleSelectServiceWithReadSync(service);
+          else {
+            modals.closeSidePanels();
+            handleSelectService(service);
+          }
+          if (service.isMainService) useCatalogPanelStore.getState().openMainService(service.id);
+        }}
         serviceMessages={serviceMessages}
         conversationByServiceId={conversationByServiceId}
       />

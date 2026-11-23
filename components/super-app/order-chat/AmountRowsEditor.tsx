@@ -55,7 +55,7 @@ export function AmountRowsEditor({ rows, onChange, labelPlaceholder, addLabel, m
       ))}
 
       {rows.length < maxRows && (
-        <button type="button" onClick={() => onChange([...rows, EMPTY_AMOUNT_ROW])} className="mt-[14px] flex cursor-pointer items-center gap-[6px] text-[14px] font-semibold text-[#1daa61]">
+        <button type="button" onClick={() => onChange([...rows, EMPTY_AMOUNT_ROW])} className="mt-[14px] flex cursor-pointer items-center gap-[6px] text-[14px] font-semibold text-primary">
           <HugeiconsIcon icon={Add01Icon} size={16} /> {addLabel}
         </button>
       )}

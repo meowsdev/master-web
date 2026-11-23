@@ -64,7 +64,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onLocationChange }) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 transition-all">
+    <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-line dark:border-zinc-800 transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
@@ -72,23 +72,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onLocationChange }) => {
             <Sparkles className="w-5 h-5" />
           </div>
           <div className="flex flex-col">
-            <span className="text-lg font-bold tracking-tight text-zinc-900 dark:text-white leading-tight">
-              Master<span className="text-emerald-600">Services</span>
+            <span className="text-lg font-bold tracking-tight text-ink dark:text-white leading-tight">
+              Master<span className="text-primary">Services</span>
             </span>
-            <span className="text-[10px] text-zinc-500 font-medium tracking-wide">
+            <span className="text-[10px] text-muted font-medium tracking-wide">
               ON-DEMAND PLATFORM
             </span>
           </div>
         </Link>
 
         {/* GPS Location Pill */}
-        <div className="hidden md:flex items-center gap-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full px-3 py-1.5 text-xs text-zinc-700 dark:text-zinc-300">
-          <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+        <div className="hidden md:flex items-center gap-2 bg-surface dark:bg-zinc-900 border border-line dark:border-zinc-800 rounded-full px-3 py-1.5 text-xs text-ink dark:text-zinc-300">
+          <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
           <span className="truncate max-w-[140px]">{currentLocation}</span>
           <button
             onClick={handleDetectLocation}
             disabled={isDetecting}
-            className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 underline underline-offset-2 ml-1 cursor-pointer"
+            className="text-[11px] font-semibold text-primary hover:text-primary dark:text-emerald-400 underline underline-offset-2 ml-1 cursor-pointer"
           >
             {isDetecting ? 'Locating...' : 'Auto Detect'}
           </button>
@@ -101,18 +101,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onLocationChange }) => {
               {/* Chat Link */}
               <Link
                 href="/chat"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink dark:text-zinc-300 hover:text-primary dark:hover:text-primary bg-surface dark:bg-zinc-900 hover:bg-secondary dark:hover:bg-emerald-950/30 rounded-lg transition-colors"
               >
-                <MessageSquare className="w-4 h-4 text-emerald-600" />
+                <MessageSquare className="w-4 h-4 text-primary" />
                 <span className="hidden sm:inline">Live Chat</span>
               </Link>
 
               {/* Orders Link */}
               <Link
                 href="/orders"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink dark:text-zinc-300 hover:text-primary dark:hover:text-primary bg-surface dark:bg-zinc-900 hover:bg-secondary dark:hover:bg-emerald-950/30 rounded-lg transition-colors"
               >
-                <Package className="w-4 h-4 text-emerald-600" />
+                <Package className="w-4 h-4 text-primary" />
                 <span className="hidden sm:inline">Orders</span>
               </Link>
 
@@ -120,7 +120,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onLocationChange }) => {
               {(activeRole === UserRole.PROVIDER || user?.role === UserRole.PROVIDER) && (
                 <Link
                   href="/provider/dashboard"
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-900/40 hover:bg-emerald-200/80 rounded-lg transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-primary dark:text-emerald-300 bg-secondary/80 dark:bg-emerald-900/40 hover:bg-secondary/80 rounded-lg transition-colors"
                 >
                   <Wrench className="w-4 h-4" />
                   <span className="hidden sm:inline">Provider Hub</span>
@@ -131,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onLocationChange }) => {
               <select
                 value={activeRole || user?.role || UserRole.CUSTOMER}
                 onChange={(e) => handleSwitchRole(e.target.value as UserRole)}
-                className="text-xs bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-800 dark:text-zinc-200 font-medium focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                className="text-xs bg-surface dark:bg-zinc-900 border border-line dark:border-zinc-800 rounded-lg px-2.5 py-1.5 text-ink dark:text-zinc-200 font-medium focus:ring-1 focus:ring-primary cursor-pointer"
               >
                 {(
                   user?.availableRoles || [
@@ -159,7 +159,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onLocationChange }) => {
                   logout();
                   toast.success('Logged out successfully');
                 }}
-                className="p-1.5 text-zinc-500 hover:text-rose-600 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+                className="p-1.5 text-muted hover:text-rose-600 rounded-lg hover:bg-surface dark:hover:bg-zinc-900 transition-colors"
                 title="Logout"
               >
                 <LogOut className="w-4 h-4" />
@@ -169,7 +169,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onLocationChange }) => {
             <div className="flex items-center gap-2">
               <Link
                 href="/auth/login"
-                className="px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm shadow-emerald-600/30 transition-all hover:shadow-emerald-600/50"
+                className="px-4 py-2 text-xs font-semibold text-white bg-primary hover:bg-primary rounded-xl shadow-sm shadow-emerald-600/30 transition-all hover:shadow-emerald-600/50"
               >
                 Login / Register
               </Link>

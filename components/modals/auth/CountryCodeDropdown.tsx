@@ -79,7 +79,7 @@ export function CountryCodeDropdown({ value, onChange, options, disabled, readOn
 
   return (
     <div ref={rootRef} className="relative flex w-[160px] shrink-0 items-center gap-[12px]">
-      <Phone className="size-[24px] shrink-0 text-[#202939]" strokeWidth={1.5} />
+      <Phone className="size-[24px] shrink-0 text-ink" strokeWidth={1.5} />
       <button
         type="button"
         disabled={isLocked}
@@ -87,24 +87,24 @@ export function CountryCodeDropdown({ value, onChange, options, disabled, readOn
         aria-expanded={isOpen}
         aria-label="Country code"
         onClick={() => setIsOpen((open) => !open)}
-        className="flex flex-1 cursor-pointer items-center justify-between gap-[4px] whitespace-nowrap border-b border-[#cecece] pb-[8px] text-[18px] tracking-[-0.36px] text-[#697586] transition-colors focus-visible:border-[#1daa61] disabled:cursor-default"
+        className="flex flex-1 cursor-pointer items-center justify-between gap-[4px] whitespace-nowrap border-b border-line pb-[8px] text-[18px] tracking-[-0.36px] text-muted transition-colors focus-visible:border-primary disabled:cursor-default"
       >
         <span>
           {value} {dialCodeOf(value)}
         </span>
-        {!isLocked && <ChevronDown className="size-[24px] shrink-0 text-[#202939]" strokeWidth={1.5} />}
+        {!isLocked && <ChevronDown className="size-[24px] shrink-0 text-ink" strokeWidth={1.5} />}
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full z-30 mt-[8px] w-[300px] overflow-hidden rounded-[12px] border border-[#e5e5e5] bg-white shadow-xl">
-          <label className="flex items-center gap-[8px] border-b border-[#e5e5e5] px-[12px] py-[10px]">
-            <Search className="size-[16px] shrink-0 text-[#697586]" />
+        <div className="absolute left-0 top-full z-30 mt-[8px] w-[300px] overflow-hidden rounded-[12px] border border-line bg-white shadow-xl">
+          <label className="flex items-center gap-[8px] border-b border-line px-[12px] py-[10px]">
+            <Search className="size-[16px] shrink-0 text-muted" />
             <input
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search country or code"
-              className="w-full bg-transparent text-[14px] text-[#202939] outline-none placeholder:text-[#697586]"
+              className="w-full bg-transparent text-[14px] text-ink outline-none placeholder:text-muted"
             />
           </label>
           <ul role="listbox" className="max-h-[260px] overflow-y-auto py-[4px]">
@@ -115,20 +115,20 @@ export function CountryCodeDropdown({ value, onChange, options, disabled, readOn
                   <button
                     type="button"
                     onClick={() => selectCountry(option.value!)}
-                    className={`flex w-full cursor-pointer items-center gap-[8px] px-[12px] py-[8px] text-left text-[14px] hover:bg-[#f7f5f3] ${
-                      isSelected ? 'bg-[#d7fdd2] text-[#205737]' : 'text-[#202939]'
+                    className={`flex w-full cursor-pointer items-center gap-[8px] px-[12px] py-[8px] text-left text-[14px] hover:bg-surface ${
+                      isSelected ? 'bg-secondary text-ink' : 'text-ink'
                     }`}
                   >
-                    <span className="w-[28px] shrink-0 font-semibold text-[#697586]">{option.value}</span>
+                    <span className="w-[28px] shrink-0 font-semibold text-muted">{option.value}</span>
                     <span className="flex-1 truncate">{option.label}</span>
-                    <span className="shrink-0 text-[#697586]">{dialCodeOf(option.value)}</span>
-                    {isSelected && <Check className="size-[14px] shrink-0 text-[#1daa61]" />}
+                    <span className="shrink-0 text-muted">{dialCodeOf(option.value)}</span>
+                    {isSelected && <Check className="size-[14px] shrink-0 text-primary" />}
                   </button>
                 </li>
               );
             })}
             {visibleCountries.length === 0 && (
-              <li className="px-[12px] py-[12px] text-[14px] text-[#697586]">No country found</li>
+              <li className="px-[12px] py-[12px] text-[14px] text-muted">No country found</li>
             )}
           </ul>
         </div>

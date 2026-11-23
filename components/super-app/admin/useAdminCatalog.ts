@@ -7,9 +7,10 @@ export interface AdminMainEntry extends AdminMainService {
 }
 
 /* The whole catalog as the admin sees it, hidden rows included: categories, and every main service with its category. */
-export function useAdminCatalog() {
-  const tree = useQuery({ queryKey: ['admin-catalog-tree'], queryFn: catalogAdminService.tree });
-  const { data: ungrouped = [] } = useQuery({ queryKey: ['admin-catalog-ungrouped'], queryFn: catalogAdminService.ungrouped });
+export function useAdminCatalog({ enabled = true }: { enabled?: boolean } = {}) {
+  // Off for customers: these are staff-only reads.
+  const tree = useQuery({ queryKey: ['admin-catalog-tree'], queryFn: catalogAdminService.tree, enabled });
+  const { data: ungrouped = [] } = useQuery({ queryKey: ['admin-catalog-ungrouped'], queryFn: catalogAdminService.ungrouped, enabled });
   const groups = tree.data ?? [];
   const mains: AdminMainEntry[] = [
     ...groups.flatMap((group) => group.categories.map((main) => ({ ...main, group }))),

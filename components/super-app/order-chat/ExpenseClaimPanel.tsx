@@ -25,19 +25,19 @@ export function ExpenseClaimPanel({ order, userId, onClose }: { order: Order; us
 
   return (
     <SidePanelShell title="পার্টস / খরচের হিসাব" onClose={onClose}>
-      <p className="text-[13px] font-medium leading-relaxed text-[#697586]">
+      <p className="text-[13px] font-medium leading-relaxed text-muted">
         এই কাজে কত টাকার পার্টস কিনেছেন বা অন্য কী খরচ হয়েছে লিখুন। এডমিন রিভিউ করে অনুমোদন দিলে মোট বিল থেকে এই খরচ বাদ দিয়ে কমিশন হিসাব হবে।
       </p>
 
       <AmountRowsEditor rows={rows} onChange={setRows} labelPlaceholder="যেমন: ক্যাপাসিটর কেনা" addLabel="আরেকটি খরচ যোগ করুন" maxRows={20} />
 
-      <div className="mt-[20px] rounded-[12px] border border-[#e5e5e5] bg-[#f7f5f3] p-[14px]">
-        <div className="flex justify-between text-[13px] font-medium text-[#697586]"><span>অর্ডারের মোট বিল</span><span>{formatTaka(order.totalPrice)}</span></div>
-        <div className="mt-[8px] flex justify-between border-t border-[#e5e5e5] pt-[8px] text-[15px] font-semibold text-[#202939]"><span>মোট খরচ</span><span>{formatTaka(total)}</span></div>
+      <div className="mt-[20px] rounded-[12px] border border-line bg-surface p-[14px]">
+        <div className="flex justify-between text-[13px] font-medium text-muted"><span>অর্ডারের মোট বিল</span><span>{formatTaka(order.totalPrice)}</span></div>
+        <div className="mt-[8px] flex justify-between border-t border-line pt-[8px] text-[15px] font-semibold text-ink"><span>মোট খরচ</span><span>{formatTaka(total)}</span></div>
       </div>
 
       <div className="mt-[28px] flex justify-center">
-        <button type="button" onClick={send} disabled={submit.isPending} className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" onClick={send} disabled={submit.isPending} className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled">
           {submit.isPending ? 'পাঠানো হচ্ছে...' : 'এডমিনের কাছে পাঠান'}
         </button>
       </div>

@@ -1,5 +1,7 @@
 'use client';
 
+import { HugeiconsIcon } from '@hugeicons/react';
+import { HandHelpingIcon, StarIcon, Tick02Icon } from '@hugeicons/core-free-icons';
 import React from 'react';
 import Image from 'next/image';
 import { CheckCheck, RotateCcw } from 'lucide-react';
@@ -59,11 +61,11 @@ export function ServiceListItem({
     <div
       onClick={() => onSelect(service)}
       className={`flex h-[92px] cursor-pointer select-none items-center gap-[14px] rounded-[16px] px-[20px] transition-colors ${
-        isSelected ? 'bg-[#f7f5f3]' : 'hover:bg-[#faf9f8]'
+        isSelected ? 'bg-surface' : 'hover:bg-surface'
       }`}
     >
       <div className="relative size-[56px] shrink-0">
-        <div className="flex size-[56px] items-center justify-center overflow-hidden rounded-full bg-[#efefef] text-2xl">
+        <div className="flex size-[56px] items-center justify-center overflow-hidden rounded-full bg-surface text-2xl">
           {isImageUrl(categoryIcon) ? (
             <Image src={categoryIcon} alt="" width={56} height={56} unoptimized className="size-full object-cover" />
           ) : (
@@ -73,7 +75,7 @@ export function ServiceListItem({
         {showOnlineDot && (
           <span
             className={`absolute bottom-0 right-0 size-[12px] rounded-full border-2 border-white ${
-              hasActiveRevision || isRunning ? 'bg-amber-500' : 'bg-[#1daa61]'
+              hasActiveRevision || isRunning ? 'bg-amber-500' : 'bg-primary'
             }`}
           />
         )}
@@ -82,7 +84,7 @@ export function ServiceListItem({
       <div className="flex min-w-0 flex-1 flex-col gap-[4px]">
         <div className="flex items-center justify-between gap-[12px]">
           <div className="flex min-w-0 items-center gap-[12px]">
-            <span className="truncate text-[16px] font-semibold tracking-[-0.36px] text-[#202939]">
+            <span className="truncate text-[16px] font-semibold tracking-[-0.36px] text-ink">
               {service.name}
             </span>
             {service.isPopular && (
@@ -92,8 +94,8 @@ export function ServiceListItem({
             )}
           </div>
           <div className="flex shrink-0 items-center gap-[4px]">
-            <Image src="/chat-list/star.svg" alt="" width={13.333} height={12.667} />
-            <span className="text-[14px] font-bold leading-[16px] text-[#1a1c1c]">
+            <HugeiconsIcon icon={StarIcon} size={14} className="shrink-0 fill-[#f5a524] text-[#f5a524]" />
+            <span className="text-[14px] font-bold leading-[16px] text-ink">
               {averageRating !== null ? averageRating.toFixed(1) : 'New'}
             </span>
           </div>
@@ -112,7 +114,7 @@ export function ServiceListItem({
           />
 
           {unreadCount > 0 ? (
-            <span className="flex h-[19px] min-w-[19px] shrink-0 items-center justify-center rounded-full bg-[#1daa61] px-[6px] text-[11px] font-bold text-white">
+            <span className="flex h-[19px] min-w-[19px] shrink-0 items-center justify-center rounded-full bg-primary px-[6px] text-[11px] font-bold text-white">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           ) : (
@@ -120,9 +122,9 @@ export function ServiceListItem({
               <div className="flex shrink-0 items-center gap-[4px]">
                 {/* The exported check glyph is white; Figma seats it in a black badge */}
                 <span className="flex size-[20px] items-center justify-center rounded-full border-2 border-white bg-black p-[2px]">
-                  <Image src="/chat-list/completed-check.svg" alt="" width={11} height={10.5} />
+                  <HugeiconsIcon icon={Tick02Icon} size={11} strokeWidth={3} className="text-white" />
                 </span>
-                <span className="text-[12px] font-medium leading-[16px] tracking-[0.5px] text-[#707a6c]">
+                <span className="text-[12px] font-medium leading-[16px] tracking-[0.5px] text-muted">
                   {completedCount}+ Completed
                 </span>
               </div>
@@ -189,7 +191,7 @@ function PreviewLine({
 
   if (lastMessage) {
     return (
-      <div className={`${baseClass} text-[#697586]`}>
+      <div className={`${baseClass} text-muted`}>
         {lastMessage.sender === 'me' && <CheckCheck className="size-[16px] shrink-0 text-[#53bdeb]" />}
         <span className="truncate">{lastMessage.text}</span>
       </div>
@@ -197,8 +199,8 @@ function PreviewLine({
   }
 
   return (
-    <div className={`${baseClass} text-[#697586]`}>
-      <Image src="/chat-list/provider.svg" alt="" width={20} height={20} className="shrink-0" />
+    <div className={`${baseClass} text-muted`}>
+      <HugeiconsIcon icon={HandHelpingIcon} size={18} strokeWidth={1.7} className="shrink-0 text-muted" />
       <span className="truncate">
         {providerNames.length > 0 ? providerNames.join(', ') : fallbackText || 'Providers coming soon'}
       </span>

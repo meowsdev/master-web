@@ -1,8 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { PlusSignIcon } from '@hugeicons/core-free-icons';
+import { PlusSignIcon, Tick02Icon } from '@hugeicons/core-free-icons';
 import { useQuery } from '@tanstack/react-query';
 import { ordersService } from '@/services/orders.service';
 import { Order, OrderStatus } from '@/types/order.types';
@@ -36,15 +35,15 @@ export function CustomerProfileHeader({ user, onStartNewOrder }: CustomerProfile
         <ProfileAvatar user={user} />
         <div className="flex min-w-0 flex-col">
           <div className="flex items-center gap-[8px]">
-            <span className="truncate text-[16px] font-semibold tracking-[-0.32px] text-[#202939]">
+            <span className="truncate text-[16px] font-semibold tracking-[-0.32px] text-ink">
               {user.name || 'My account'}
             </span>
             {/* Opens "আমার রিভিউ": what each provider said about this customer. */}
             <MyRatingButton userId={user.id} role="CUSTOMER" storedRating={storedRating} />
           </div>
-          <span className="flex items-center gap-[4px] text-[12px] font-medium text-[#697586]">
-            <span className="flex size-[16px] items-center justify-center rounded-full bg-[#1daa61]">
-              <Image src="/chat-list/completed-check.svg" alt="" width={9} height={8.6} />
+          <span className="flex items-center gap-[4px] text-[12px] font-medium text-muted">
+            <span className="flex size-[16px] items-center justify-center rounded-full bg-primary">
+              <HugeiconsIcon icon={Tick02Icon} size={10} strokeWidth={3} className="text-white" />
             </span>
             {completedCount}+ Completed
           </span>
@@ -56,7 +55,7 @@ export function CustomerProfileHeader({ user, onStartNewOrder }: CustomerProfile
         onClick={onStartNewOrder}
         title="Start a new order"
         aria-label="Start a new order"
-        className="flex size-[40px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1daa61] text-white transition-transform hover:scale-105"
+        className="btn-raised flex size-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-white transition-transform hover:scale-105"
       >
         <HugeiconsIcon icon={PlusSignIcon} size={22} strokeWidth={2.5} />
       </button>
@@ -71,7 +70,7 @@ function ProfileAvatar({ user }: { user: User }) {
     return <img src={user.profilePhoto} alt="" className="size-[44px] shrink-0 rounded-full object-cover" />;
   }
   return (
-    <span className="flex size-[44px] shrink-0 items-center justify-center rounded-full bg-[#d7fdd2] text-[18px] font-semibold text-[#205737]">
+    <span className="flex size-[44px] shrink-0 items-center justify-center rounded-full bg-secondary text-[18px] font-semibold text-ink">
       {(user.name || '?').charAt(0).toUpperCase()}
     </span>
   );

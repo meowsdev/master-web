@@ -12,15 +12,15 @@ export function OrderField({ icon, children }: { icon: IconSvgElement; children:
   return (
     <div className="flex items-start gap-[12px] pt-[22px]">
       <span className="flex h-[22px] shrink-0 items-center">
-        <HugeiconsIcon icon={icon} size={20} className="text-[#202939]" />
+        <HugeiconsIcon icon={icon} size={20} className="text-ink" />
       </span>
-      <div className="flex min-w-0 flex-1 items-center gap-[12px] border-b border-[#202939]/60 pb-[8px]">{children}</div>
+      <div className="flex min-w-0 flex-1 items-center gap-[12px] border-b border-ink/60 pb-[8px]">{children}</div>
     </div>
   );
 }
 
 export const fieldControlClass =
-  'min-w-0 flex-1 bg-transparent text-[14px] font-medium text-[#202939] outline-none placeholder:text-[#9aa4b2] disabled:text-[#9aa4b2]';
+  'min-w-0 flex-1 bg-transparent text-[14px] font-medium text-ink outline-none placeholder:text-muted disabled:text-muted';
 
 interface SelectOption {
   value: string | number;
@@ -53,7 +53,7 @@ export function OrderSelect({ icon, placeholder, value, options, onChange, disab
           </option>
         ))}
       </select>
-      <HugeiconsIcon icon={ArrowDown01Icon} size={18} className="pointer-events-none shrink-0 text-[#202939]" />
+      <HugeiconsIcon icon={ArrowDown01Icon} size={18} className="pointer-events-none shrink-0 text-ink" />
     </OrderField>
   );
 }

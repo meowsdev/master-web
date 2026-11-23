@@ -15,8 +15,8 @@ export default function LoginPage() {
   }, [router]);
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center bg-[#efeae2] dark:bg-[#0b141a]">
-      <div className="w-8 h-8 border-2 border-[#25D366] border-t-transparent rounded-full animate-spin" />
+    <div className="flex h-screen w-screen items-center justify-center bg-surface dark:bg-[#0b141a]">
+      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }

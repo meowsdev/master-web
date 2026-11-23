@@ -24,7 +24,7 @@ export function AdminCatalogPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <SidePanelShell title="Catalog editor" onClose={onClose}>
-      <p className="truncate text-[18px] font-semibold tracking-[-0.36px] text-[#202939]">Category </p>
+      <p className="truncate text-[18px] font-semibold tracking-[-0.36px] text-ink">Category </p>
 
       <form
         className="mt-[16px] flex gap-[8px]"
@@ -34,12 +34,12 @@ export function AdminCatalogPanel({ onClose }: { onClose: () => void }) {
         }}
       >
         <input value={newGroup} onChange={(event) => setNewGroup(event.target.value)} maxLength={100} placeholder="নতুন Category (যেমন: Cleaning Solution)" className={inputClass} />
-        <button type="submit" disabled={!newGroup.trim() || create.isPending} className={`${smallButton} shrink-0 bg-[#1daa61] text-white`}>
+        <button type="submit" disabled={!newGroup.trim() || create.isPending} className={`${smallButton} shrink-0 bg-primary text-white`}>
           Add
         </button>
       </form>
 
-      {isLoading && <p className="mt-[20px] text-center text-[14px] text-[#697586]">Loading...</p>}
+      {isLoading && <p className="mt-[20px] text-center text-[14px] text-muted">Loading...</p>}
 
       <div className="mt-[16px] flex flex-col gap-[12px]">
         {groups.map((group, index) => (
@@ -86,25 +86,25 @@ function GroupCard({ group, groups, onMove, canMoveUp, canMoveDown }: { group: A
   };
 
   return (
-    <section className={`rounded-[12px] border ${group.isActive ? 'border-[#e5e5e5]' : 'border-dashed border-[#cecece] opacity-70'}`}>
+    <section className={`rounded-[12px] border ${group.isActive ? 'border-line' : 'border-dashed border-line opacity-70'}`}>
       <div className="flex items-center gap-[6px] p-[10px]">
         <button type="button" onClick={() => setIsOpen((value) => !value)} className="min-w-0 flex-1 cursor-pointer text-left">
-          <p className="truncate text-[15px] font-semibold text-[#202939]">{group.name}</p>
-          <p className="text-[12px] text-[#697586]">{group.categories.length} main services{group.isActive ? '' : ' · hidden'}</p>
+          <p className="truncate text-[15px] font-semibold text-ink">{group.name}</p>
+          <p className="text-[12px] text-muted">{group.categories.length} main services{group.isActive ? '' : ' · hidden'}</p>
         </button>
         <MoveButtons onMove={onMove} canMoveUp={canMoveUp} canMoveDown={canMoveDown} />
       </div>
 
       {isOpen && (
-        <div className="border-t border-[#efefef] p-[10px]">
+        <div className="border-t border-line p-[10px]">
           <div className="flex gap-[6px]">
             <input value={name} onChange={(event) => setName(event.target.value)} maxLength={100} className={inputClass} />
-            <button type="button" disabled={!name.trim() || name === group.name} onClick={() => update.mutate({ name: name.trim() })} className={`${smallButton} shrink-0 bg-[#1daa61] text-white`}>
+            <button type="button" disabled={!name.trim() || name === group.name} onClick={() => update.mutate({ name: name.trim() })} className={`${smallButton} shrink-0 bg-primary text-white`}>
               Rename
             </button>
           </div>
           <div className="mt-[8px] flex gap-[6px]">
-            <button type="button" onClick={() => update.mutate({ isActive: !group.isActive })} className={`${smallButton} border border-[#e5e5e5] text-[#364152]`}>
+            <button type="button" onClick={() => update.mutate({ isActive: !group.isActive })} className={`${smallButton} border border-line text-ink`}>
               {group.isActive ? 'Hide' : 'Show'}
             </button>
             <button
@@ -122,7 +122,7 @@ function GroupCard({ group, groups, onMove, canMoveUp, canMoveDown }: { group: A
             {group.categories.map((main, index) => (
               <MainServiceEditor key={main.id} main={main} groups={groups} onMove={(direction) => moveMain(index, direction)} canMoveUp={index > 0} canMoveDown={index < group.categories.length - 1} />
             ))}
-            {group.categories.length === 0 && <p className="text-[13px] text-[#697586]">নতুন main service বানাতে Services তালিকার + → New Category ব্যবহার করুন, তারপর এখানে Category বাছুন।</p>}
+            {group.categories.length === 0 && <p className="text-[13px] text-muted">নতুন main service বানাতে Services তালিকার + → New Category ব্যবহার করুন, তারপর এখানে Category বাছুন।</p>}
           </div>
         </div>
       )}
@@ -133,19 +133,19 @@ function GroupCard({ group, groups, onMove, canMoveUp, canMoveDown }: { group: A
 function MainServiceEditor({ main, groups, onMove, canMoveUp, canMoveDown }: { main: AdminMainService; groups: AdminGroup[]; onMove: (direction: -1 | 1) => void; canMoveUp: boolean; canMoveDown: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="rounded-[10px] bg-[#f7f5f3]">
+    <div className="rounded-[10px] bg-surface">
       <div className="flex items-center gap-[6px] p-[8px]">
         <button type="button" onClick={() => setIsOpen((value) => !value)} className="min-w-0 flex-1 cursor-pointer text-left">
-          <p className="truncate text-[14px] font-semibold text-[#202939]">
+          <p className="truncate text-[14px] font-semibold text-ink">
             {main.iconUrl && !main.iconUrl.startsWith('http') ? `${main.iconUrl} ` : ''}
             {main.name}
           </p>
-          <p className="text-[12px] text-[#697586]">{main.services.length} sub services</p>
+          <p className="text-[12px] text-muted">{main.services.length} sub services</p>
         </button>
         <MoveButtons onMove={onMove} canMoveUp={canMoveUp} canMoveDown={canMoveDown} />
       </div>
       {isOpen && (
-        <div className="flex flex-col gap-[10px] border-t border-[#e5e5e5] p-[8px]">
+        <div className="flex flex-col gap-[10px] border-t border-line p-[8px]">
           <MoveToGroup main={main} groups={groups} />
           <ServiceContentEditor
             kind="main"
@@ -153,7 +153,7 @@ function MainServiceEditor({ main, groups, onMove, canMoveUp, canMoveDown }: { m
             initial={{ included: main.included, excluded: main.excluded, details: main.details ?? '', howToOrder: main.howToOrder }}
             faqs={main.faqs}
           />
-          <p className="pt-[4px] text-[13px] font-semibold text-[#202939]">Sub services</p>
+          <p className="pt-[4px] text-[13px] font-semibold text-ink">Sub services</p>
           {main.services.map((sub) => (
             <SubServiceEditor key={sub.id} sub={sub} />
           ))}
@@ -166,7 +166,7 @@ function MainServiceEditor({ main, groups, onMove, canMoveUp, canMoveDown }: { m
 export function MoveToGroup({ main, groups }: { main: Pick<AdminMainService, 'id' | 'name' | 'groupId'>; groups: AdminGroup[] }) {
   const move = useAction((groupId: string) => catalogAdminService.updateMainService(main.id, { groupId }), 'Moved');
   return (
-    <label className="flex items-center gap-[8px] text-[13px] text-[#364152]">
+    <label className="flex items-center gap-[8px] text-[13px] text-ink">
       <span className="shrink-0">{main.groupId ? 'Category' : main.name}</span>
       <select value={main.groupId ?? ''} onChange={(event) => event.target.value && move.mutate(event.target.value)} className={inputClass}>
         <option value="">Category বাছুন</option>
@@ -184,15 +184,15 @@ function SubServiceEditor({ sub }: { sub: AdminSubService }) {
   const [isOpen, setIsOpen] = useState(false);
   const prices = sub.variants.map((variant) => Number(variant.price));
   return (
-    <div className="rounded-[8px] border border-[#e5e5e5] bg-white">
+    <div className="rounded-[8px] border border-line bg-white">
       <button type="button" onClick={() => setIsOpen((value) => !value)} className="flex w-full cursor-pointer items-center justify-between gap-[8px] p-[8px] text-left">
-        <span className="truncate text-[13px] font-semibold text-[#202939]">{sub.nameBn || sub.name}</span>
-        <span className="shrink-0 text-[12px] text-[#697586]">
+        <span className="truncate text-[13px] font-semibold text-ink">{sub.nameBn || sub.name}</span>
+        <span className="shrink-0 text-[12px] text-muted">
           {sub.variants.length} options{prices.length ? ` · from ${formatTaka(Math.min(...prices))}` : ''}
         </span>
       </button>
       {isOpen && (
-        <div className="flex flex-col gap-[10px] border-t border-[#efefef] p-[8px]">
+        <div className="flex flex-col gap-[10px] border-t border-line p-[8px]">
           <VariantsEditor sub={sub} />
           <ServiceContentEditor kind="sub" id={sub.id} initial={{ included: sub.included, excluded: sub.excluded, details: sub.details ?? '' }} faqs={sub.faqs} />
         </div>
@@ -225,7 +225,7 @@ export function VariantsEditor({ sub }: { sub: AdminSubService }) {
 
   return (
     <div>
-      <p className="mb-[6px] text-[13px] font-semibold text-[#202939]">Options (দাম)</p>
+      <p className="mb-[6px] text-[13px] font-semibold text-ink">Options (দাম)</p>
       <ul className="flex flex-col gap-[4px]">
         {sub.variants.map((variant) => (
           <VariantRow key={variant.id} variant={variant} onDelete={() => remove.mutate(variant.id)} />
@@ -248,7 +248,7 @@ export function VariantsEditor({ sub }: { sub: AdminSubService }) {
             </option>
           ))}
         </select>
-        <button type="submit" disabled={!isValid || create.isPending} className={`${smallButton} bg-[#1daa61] text-white`}>
+        <button type="submit" disabled={!isValid || create.isPending} className={`${smallButton} bg-primary text-white`}>
           Add
         </button>
       </form>
@@ -264,13 +264,13 @@ function VariantRow({ variant, onDelete }: { variant: AdminSubService['variants'
 
   return (
     <li className="flex items-center gap-[6px] text-[13px]">
-      <span className="min-w-0 flex-1 truncate text-[#202939]">
-        {variant.name} <span className="text-[11px] text-[#697586]">{variant.priceUnit !== 'FIXED' ? `(${variant.priceUnit === 'PER_UNIT' ? 'per unit' : 'per sqft'})` : ''}</span>
+      <span className="min-w-0 flex-1 truncate text-ink">
+        {variant.name} <span className="text-[11px] text-muted">{variant.priceUnit !== 'FIXED' ? `(${variant.priceUnit === 'PER_UNIT' ? 'per unit' : 'per sqft'})` : ''}</span>
       </span>
       <input aria-label="Price" value={price} onChange={(event) => setPrice(event.target.value)} inputMode="decimal" className={`${inputClass} w-[80px]`} />
       <input aria-label="Old price" value={originalPrice} onChange={(event) => setOriginalPrice(event.target.value)} placeholder="আগের" inputMode="decimal" className={`${inputClass} w-[80px]`} />
       {isChanged && (
-        <button type="button" onClick={() => save.mutate(undefined)} className={`${smallButton} bg-[#1daa61] text-white`}>
+        <button type="button" onClick={() => save.mutate(undefined)} className={`${smallButton} bg-primary text-white`}>
           Save
         </button>
       )}
@@ -282,7 +282,7 @@ function VariantRow({ variant, onDelete }: { variant: AdminSubService['variants'
 }
 
 function MoveButtons({ onMove, canMoveUp, canMoveDown }: { onMove: (direction: -1 | 1) => void; canMoveUp: boolean; canMoveDown: boolean }) {
-  const button = 'cursor-pointer rounded-full p-[4px] text-[#364152] hover:bg-[#efefef] disabled:cursor-not-allowed disabled:opacity-30';
+  const button = 'cursor-pointer rounded-full p-[4px] text-ink hover:bg-surface disabled:cursor-not-allowed disabled:opacity-30';
   return (
     <div className="flex shrink-0">
       <button type="button" aria-label="Move up" disabled={!canMoveUp} onClick={() => onMove(-1)} className={button}>

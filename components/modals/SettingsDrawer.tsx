@@ -55,8 +55,8 @@ export function SettingsDrawer({
 }: SettingsDrawerProps) {
   if (!isOpen) return null;
 
-  const textPrimary = isDarkMode ? 'text-[#e9edef]' : 'text-[#111b21]';
-  const textSecondary = isDarkMode ? 'text-[#8696a0]' : 'text-[#667781]';
+  const textPrimary = isDarkMode ? 'text-muted' : 'text-[#111b21]';
+  const textSecondary = isDarkMode ? 'text-muted' : 'text-muted';
 
   // Role details metadata
   const roleMeta: Record<string, { label: string; desc: string; icon: LucideIcon }> = {
@@ -106,7 +106,7 @@ export function SettingsDrawer({
       {/* Slide-in Drawer Container */}
       <div
         className={`relative z-10 ${SIDE_PANEL_CLASS} h-full shadow-2xl border-l flex flex-col overflow-hidden animate-in slide-in-from-right duration-200 ${
-          isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-[#e9edef]'
+          isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-line'
         }`}
       >
         {/* Top Header (Pinned) */}
@@ -127,7 +127,7 @@ export function SettingsDrawer({
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-black/5 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02]">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-[#008069] text-white flex items-center justify-center text-xl font-bold border-2 border-[#25D366] shrink-0">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-primary text-white flex items-center justify-center text-xl font-bold border-2 border-primary shrink-0">
                   {user?.profilePhoto ? (
                     <Image src={user.profilePhoto} alt="User" width={56} height={56} unoptimized className="object-cover w-full h-full" />
                   ) : (
@@ -141,7 +141,7 @@ export function SettingsDrawer({
                   <p className={`text-xs truncate ${textSecondary}`}>
                     {user?.mobileNumber || 'Not logged in'}
                   </p>
-                  <span className="inline-block mt-1 text-[11px] font-bold uppercase px-2 py-0.5 rounded-md bg-[#e7fce3] dark:bg-[#005c4b]/50 text-[#008069] dark:text-[#25D366]">
+                  <span className="inline-block mt-1 text-[11px] font-bold uppercase px-2 py-0.5 rounded-md bg-secondary dark:bg-[#005c4b]/50 text-primary dark:text-[#38C792]">
                     Role: {currentRole}
                   </span>
                 </div>
@@ -150,7 +150,7 @@ export function SettingsDrawer({
               {user && onOpenEditProfile && (
                 <button
                   onClick={onOpenEditProfile}
-                  className="px-2.5 py-1.5 rounded-xl bg-[#008069]/10 hover:bg-[#008069]/20 text-[#008069] dark:text-[#25D366] text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                  className="px-2.5 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary dark:text-[#38C792] text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0"
                   title="Edit Profile"
                 >
                   <Pencil className="w-3.5 h-3.5" />
@@ -167,7 +167,7 @@ export function SettingsDrawer({
                 className="p-3 rounded-2xl flex items-center justify-between border cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-black/5 dark:border-white/10"
               >
                 <div className="flex items-center gap-2.5 text-sm">
-                  {soundEnabled ? <Volume2 className="w-4 h-4 text-[#25D366]" /> : <VolumeX className="w-4 h-4" />}
+                  {soundEnabled ? <Volume2 className="w-4 h-4 text-primary" /> : <VolumeX className="w-4 h-4" />}
                   <span className={textPrimary}>Sound Notifications</span>
                 </div>
                 <span className={`text-xs ${textSecondary}`}>{soundEnabled ? 'ON' : 'OFF'}</span>
@@ -182,7 +182,7 @@ export function SettingsDrawer({
                 className="p-3 rounded-2xl flex items-center justify-between border cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-black/5 dark:border-white/10"
               >
                 <div className="flex items-center gap-2.5 text-sm">
-                  <Package className="w-4 h-4 text-[#008069] dark:text-[#25D366]" />
+                  <Package className="w-4 h-4 text-primary dark:text-[#38C792]" />
                   <span className={textPrimary}>My Orders & History</span>
                 </div>
                 <ChevronRight className={`w-4 h-4 ${textSecondary}`} />
@@ -197,12 +197,12 @@ export function SettingsDrawer({
 
               {user ? (
                 <div
-                  className={`p-3.5 rounded-2xl border space-y-3 ${isDarkMode ? 'bg-[#202c33]/60 border-[#2f3b43]' : 'bg-[#f0f2f5] border-[#e9edef]'
+                  className={`p-3.5 rounded-2xl border space-y-3 ${isDarkMode ? 'bg-[#202c33]/60 border-[#2f3b43]' : 'bg-surface border-line'
                     }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="p-2 rounded-xl bg-[#d9fdd3] dark:bg-[#005c4b]/50 text-[#008069] dark:text-[#25D366] shrink-0">
+                      <div className="p-2 rounded-xl bg-secondary dark:bg-[#005c4b]/50 text-primary dark:text-[#38C792] shrink-0">
                         <RoleIcon className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
@@ -214,7 +214,7 @@ export function SettingsDrawer({
                         </p>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#d9fdd3] dark:bg-[#005c4b]/60 text-[#008069] dark:text-[#25D366] shrink-0">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary dark:bg-[#005c4b]/60 text-primary dark:text-[#38C792] shrink-0">
                       <CheckCircle2 className="w-3 h-3" />
                       Single Role
                     </span>
@@ -223,8 +223,8 @@ export function SettingsDrawer({
                   {/* Single Role Policy Badge */}
                   <div
                     className={`p-2.5 rounded-xl border text-[11px] leading-relaxed space-y-1 ${isDarkMode
-                      ? 'bg-[#111b21] border-[#222e35] text-[#8696a0]'
-                      : 'bg-white border-[#e9edef] text-[#667781]'
+                      ? 'bg-[#111b21] border-[#222e35] text-muted'
+                      : 'bg-white border-line text-muted'
                       }`}
                   >
                     <div className="flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-400">
@@ -240,7 +240,7 @@ export function SettingsDrawer({
 
               ) : (
                 <div
-                  className={`p-3.5 rounded-2xl border text-center space-y-2.5 ${isDarkMode ? 'bg-[#202c33]/60 border-[#2f3b43]' : 'bg-[#f0f2f5] border-[#e9edef]'
+                  className={`p-3.5 rounded-2xl border text-center space-y-2.5 ${isDarkMode ? 'bg-[#202c33]/60 border-[#2f3b43]' : 'bg-surface border-line'
                     }`}
                 >
                   <p className={`text-xs ${textSecondary}`}>
@@ -251,7 +251,7 @@ export function SettingsDrawer({
                       onClose();
                       onOpenAuth();
                     }}
-                    className="px-4 py-2 rounded-xl bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-xl bg-primary hover:bg-primary dark:bg-[#38C792] dark:hover:bg-[#38C792] text-white dark:text-[#111b21] text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5"
                   >
                     <LogIn className="w-3.5 h-3.5" />
                     <span>Login / Register</span>
@@ -285,7 +285,7 @@ export function SettingsDrawer({
                 onClose();
                 onOpenAuth();
               }}
-              className="w-full py-3 bg-[#008069] hover:bg-[#00705c] dark:bg-[#25D366] dark:hover:bg-[#20ba5a] text-white dark:text-[#111b21] font-bold text-sm rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3 bg-primary hover:bg-primary dark:bg-[#38C792] dark:hover:bg-[#38C792] text-white dark:text-[#111b21] font-bold text-sm rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <LogIn className="w-4 h-4" />
               <span>Login to Account</span>

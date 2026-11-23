@@ -26,7 +26,7 @@ interface OtpVerifyRowProps {
 }
 
 const primaryButtonClass =
-  'cursor-pointer whitespace-nowrap rounded-[12px] bg-[#1daa61] px-[16px] py-[8px] text-[20px] font-semibold tracking-[-0.4px] text-white transition-opacity hover:bg-[#189452] disabled:cursor-not-allowed disabled:bg-[#1daa61]/50';
+  'cursor-pointer whitespace-nowrap rounded-[12px] bg-primary px-[16px] py-[8px] text-[20px] font-semibold tracking-[-0.4px] text-white transition-opacity hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary/50';
 
 /* Six code boxes, countdown and the Send OTP -> Verify button of the Figma login panel. */
 export function OtpVerifyRow({ otp, isPhoneValid }: OtpVerifyRowProps) {
@@ -45,7 +45,7 @@ export function OtpVerifyRow({ otp, isPhoneValid }: OtpVerifyRowProps) {
           onEnter={() => canVerify && otp.onVerify()}
         />
         <div className="ml-auto flex items-center gap-[12px]">
-          <span className="text-[18px] tracking-[-0.36px] text-[#697586]" aria-live="polite">
+          <span className="text-[18px] tracking-[-0.36px] text-muted" aria-live="polite">
             {formatCountdown(otp.secondsLeft).replace(':', '.')}
           </span>
           {isCodeSent ? (
@@ -65,7 +65,7 @@ export function OtpVerifyRow({ otp, isPhoneValid }: OtpVerifyRowProps) {
           type="button"
           onClick={otp.onSend}
           disabled={!canSendOtp}
-          className="cursor-pointer text-[14px] font-semibold text-[#1daa61] hover:underline disabled:cursor-not-allowed disabled:text-[#697586] disabled:no-underline"
+          className="cursor-pointer text-[14px] font-semibold text-primary hover:underline disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
         >
           {otp.isSending ? 'Sending...' : 'Resend OTP'}
           {otp.secondsLeft > 0 && ` in ${formatCountdown(otp.secondsLeft)}`}
@@ -75,7 +75,7 @@ export function OtpVerifyRow({ otp, isPhoneValid }: OtpVerifyRowProps) {
       {otp.serverCode && (
         <div
           onClick={otp.onUseServerCode}
-          className="flex w-full cursor-pointer items-center justify-between rounded-[12px] border border-[#bccdba] bg-[#d7fdd2] p-[10px] text-[14px] font-medium text-[#205737]"
+          className="flex w-full cursor-pointer items-center justify-between rounded-[12px] border border-secondary bg-secondary p-[10px] text-[14px] font-medium text-ink"
           title="Click to auto-fill"
         >
           <span>

@@ -45,10 +45,10 @@ export function AdvancePaymentPanel({ order, userId, onClose }: { order: Order; 
 
   return (
     <SidePanelShell title="Pay in advance" onClose={onClose}>
-      <div className="rounded-[12px] border border-[#e5e5e5] bg-[#f7f5f3] p-[14px]">
-        <div className="flex justify-between text-[13px] font-medium text-[#697586]"><span>Total bill</span><span>{formatTaka(order.totalPrice)}</span></div>
-        <div className="mt-[6px] flex justify-between text-[13px] font-medium text-[#697586]"><span>Already paid in advance</span><span>{formatTaka(paidSoFar)}</span></div>
-        <div className="mt-[8px] flex justify-between border-t border-[#e5e5e5] pt-[8px] text-[15px] font-semibold text-[#202939]"><span>Due now</span><span>{formatTaka(dueAmount)}</span></div>
+      <div className="rounded-[12px] border border-line bg-surface p-[14px]">
+        <div className="flex justify-between text-[13px] font-medium text-muted"><span>Total bill</span><span>{formatTaka(order.totalPrice)}</span></div>
+        <div className="mt-[6px] flex justify-between text-[13px] font-medium text-muted"><span>Already paid in advance</span><span>{formatTaka(paidSoFar)}</span></div>
+        <div className="mt-[8px] flex justify-between border-t border-line pt-[8px] text-[15px] font-semibold text-ink"><span>Due now</span><span>{formatTaka(dueAmount)}</span></div>
       </div>
 
       <OrderField icon={Wallet01Icon}>
@@ -64,26 +64,26 @@ export function AdvancePaymentPanel({ order, userId, onClose }: { order: Order; 
 
       <div className="mt-[14px] flex flex-wrap gap-[8px]">
         {QUICK_AMOUNTS.filter((quick) => quick < dueAmount).map((quick) => (
-          <button key={quick} type="button" onClick={() => setAmountText(String(quick))} className="cursor-pointer rounded-[8px] bg-[#a9e5cf] px-[12px] py-[6px] text-[13px] font-semibold text-[#202939]">
+          <button key={quick} type="button" onClick={() => setAmountText(String(quick))} className="cursor-pointer rounded-[8px] bg-secondary px-[12px] py-[6px] text-[13px] font-semibold text-ink">
             {formatTaka(quick)}
           </button>
         ))}
-        <button type="button" onClick={() => setAmountText(String(Math.floor(dueAmount)))} className="cursor-pointer rounded-[8px] bg-[#a9e5cf] px-[12px] py-[6px] text-[13px] font-semibold text-[#202939]">
+        <button type="button" onClick={() => setAmountText(String(Math.floor(dueAmount)))} className="cursor-pointer rounded-[8px] bg-secondary px-[12px] py-[6px] text-[13px] font-semibold text-ink">
           Full due
         </button>
       </div>
 
-      <p className="mt-[24px] text-[14px] font-semibold text-[#202939]">Pay with</p>
+      <p className="mt-[24px] text-[14px] font-semibold text-ink">Pay with</p>
       <div className="mt-[10px]"><PaymentMethodPicker selected={method} onSelect={setMethod} /></div>
 
-      <p className="mt-[16px] text-[12px] font-medium text-[#697586]">The final payment will ask only for what is left after this advance.</p>
+      <p className="mt-[16px] text-[12px] font-medium text-muted">The final payment will ask only for what is left after this advance.</p>
 
       <div className="mt-[28px] flex justify-center">
         <button
           type="button"
           disabled={!isAmountValid || !method || pay.isPending}
           onClick={() => pay.mutate()}
-          className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
+          className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
         >
           {pay.isPending ? 'Processing...' : `Pay ${formatTaka(amount)}`}
         </button>

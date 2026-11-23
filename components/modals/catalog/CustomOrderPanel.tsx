@@ -88,7 +88,7 @@ export function CustomOrderPanel({ mainServiceId, onClose, onPlaced }: CustomOrd
   return (
     <SidePanelShell title="Custom Request" onClose={onClose}>
       <div className="pb-[24px]">
-        <div className="rounded-[12px] bg-[#e7fce3] p-[12px] text-[13px] leading-relaxed text-[#15803d]">
+        <div className="rounded-[12px] bg-secondary p-[12px] text-[13px] leading-relaxed text-primary">
           লিস্টে আপনার সমস্যা নেই? লিখে পাঠান। প্রোভাইডার এসে দেখে দাম জানাবে, <b>ভিজিট ফ্রি</b>। দাম Accept করলে কাজ শুরু হবে, Reject করলে কোনো চার্জ নেই।
         </div>
 
@@ -116,12 +116,12 @@ export function CustomOrderPanel({ mainServiceId, onClose, onPlaced }: CustomOrd
             maxLength={1000}
             rows={4}
             placeholder="সমস্যাটা বিস্তারিত লিখুন (যেমন: এসি চালু হয় কিন্তু ঠান্ডা হয় না, আউটডোর থেকে শব্দ হয়)"
-            className="mt-[14px] w-full resize-none rounded-[8px] border border-[#e5e5e5] p-[10px] text-[14px] font-medium text-[#202939] outline-none placeholder:text-[#9aa4b2] focus:border-[#1daa61]"
+            className="mt-[14px] w-full resize-none rounded-[8px] border border-line p-[10px] text-[14px] font-medium text-ink outline-none placeholder:text-muted focus:border-primary"
           />
 
           <div className="mt-[10px] flex flex-wrap gap-[8px]">
             {imageUrls.map((url) => (
-              <div key={url} className="relative size-[64px] overflow-hidden rounded-[8px] border border-[#e5e5e5]">
+              <div key={url} className="relative size-[64px] overflow-hidden rounded-[8px] border border-line">
                 {/* eslint-disable-next-line @next/next/no-img-element -- uploaded files are served by the API host */}
                 <img src={`${API_ORIGIN}${url}`} alt="" className="size-full object-cover" />
                 <button type="button" aria-label="Remove photo" onClick={() => setImageUrls((previous) => previous.filter((item) => item !== url))} className="absolute right-[2px] top-[2px] cursor-pointer rounded-full bg-white/90 p-[2px]">
@@ -130,7 +130,7 @@ export function CustomOrderPanel({ mainServiceId, onClose, onPlaced }: CustomOrd
               </div>
             ))}
             {imageUrls.length < MAX_IMAGES && (
-              <label className={`flex size-[64px] cursor-pointer flex-col items-center justify-center gap-[2px] rounded-[8px] border border-dashed border-[#9fd8b4] text-[11px] text-[#1daa61] ${isUploading ? 'opacity-50' : ''}`}>
+              <label className={`flex size-[64px] cursor-pointer flex-col items-center justify-center gap-[2px] rounded-[8px] border border-dashed border-secondary text-[11px] text-primary ${isUploading ? 'opacity-50' : ''}`}>
                 <HugeiconsIcon icon={ImageAdd02Icon} size={20} />
                 {isUploading ? '...' : 'ছবি'}
                 <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" disabled={isUploading} onChange={(event) => upload(event.target.files)} />
@@ -146,12 +146,12 @@ export function CustomOrderPanel({ mainServiceId, onClose, onPlaced }: CustomOrd
             type="button"
             onClick={submit}
             disabled={!place.values || !isProblemDone || isSubmitting || isUploading}
-            className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
+            className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
           >
             {isSubmitting ? 'Sending...' : 'Send Request & Chat'}
           </button>
         </div>
-        {missing.length > 0 && <p className="mt-[10px] text-center text-[12px] font-medium text-[#697586]">বাকি আছে: {missing.join(', ')}</p>}
+        {missing.length > 0 && <p className="mt-[10px] text-center text-[12px] font-medium text-muted">বাকি আছে: {missing.join(', ')}</p>}
       </div>
     </SidePanelShell>
   );

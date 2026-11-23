@@ -1,105 +1,123 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PlusSignIcon } from '@hugeicons/core-free-icons';
-import { formatTaka } from '@/components/modals/place-order/format-taka';
+import { mainServiceToEntry } from '@/lib/main-service';
+import { catalogService } from '@/services/catalog.service';
+import { catalogAdminService } from '@/services/catalog-admin.service';
 import { useAdminCatalogStore } from '@/store/useAdminCatalogStore';
+import { useCatalogPanelStore } from '@/store/useCatalogPanelStore';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { User } from '@/types/auth.types';
+import { Service } from '@/types/service.types';
 import { CustomerSidebarTop } from '../CustomerSidebarTop';
-import { isImageSource, useAdminCatalog } from './useAdminCatalog';
+import { ServiceListItem } from '../ServiceListItem';
+import { filterChipClass } from '../ChipRow';
+import { useAction } from './panels/ServiceContentEditor';
+import { AdminMainEntry, useAdminCatalog } from './useAdminCatalog';
+import { StaffSidebarHeader } from './AdminProfileHeader';
 
 const NO_CATEGORY = 'Category নেই';
 
-function MainAvatar({ icon, name }: { icon?: string | null; name: string }) {
-  return (
-    <span className="flex size-[48px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#a9e5cf] text-[20px]">
-      {icon && isImageSource(icon) ? (
-        // eslint-disable-next-line @next/next/no-img-element -- image URLs come from arbitrary hosts
-        <img src={icon} alt="" className="size-full object-cover" />
-      ) : (
-        <span aria-hidden>{icon || name.charAt(0)}</span>
-      )}
-    </span>
-  );
+/* A main service customers cannot see yet (hidden, or in no category), shaped like a list row. */
+function hiddenEntry(main: AdminMainEntry): Service {
+  const now = new Date(0).toISOString();
+  return {
+    id: main.id,
+    categoryId: main.id,
+    name: main.name,
+    description: main.group ? 'Hidden' : NO_CATEGORY,
+    isFixedPrice: false,
+    basePrice: 0,
+    isActive: false,
+    isMainService: true,
+    groupId: main.groupId,
+    category: { id: main.id, name: main.group?.name ?? NO_CATEGORY, slug: main.id, iconUrl: main.iconUrl ?? null, isFixedPrice: false, basePrice: 0, isActive: false, createdAt: now, updatedAt: now },
+    createdAt: now,
+    updatedAt: now,
+  };
 }
 
-/* The + of the Services list: a new main service, a new service under the open one, or the category editor. */
-function CreateMenu({ onNewService, onNewMainService, onOpenCategories }: { onNewService: () => void; onNewMainService: () => void; onOpenCategories: () => void }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+/* The "Add" chip: turns into a small box for the new category's name. */
+function AddCategoryChip() {
+  const [isTyping, setIsTyping] = useState(false);
+  const [name, setName] = useState('');
+  const create = useAction((value: string) => catalogAdminService.createGroup({ name: value }), 'Category added');
+  // The same chip as the filters beside it.
+  const chipClass = filterChipClass(false);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const closeOnOutsideClick = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) setIsOpen(false);
-    };
-    document.addEventListener('mousedown', closeOnOutsideClick);
-    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
-  }, [isOpen]);
-
-  const itemClass = 'w-full cursor-pointer rounded-[8px] px-[12px] py-[10px] text-left text-[14px] font-semibold text-[#202939] hover:bg-[#f7f5f3]';
-  const pick = (action: () => void) => () => {
-    setIsOpen(false);
-    action();
-  };
-
-  return (
-    <div ref={menuRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen((wasOpen) => !wasOpen)}
-        title="Create"
-        aria-label="Create"
-        aria-expanded={isOpen}
-        className="flex size-[40px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1daa61] text-white transition-transform hover:scale-105"
-      >
-        <HugeiconsIcon icon={PlusSignIcon} size={22} strokeWidth={2.5} />
+  if (!isTyping) {
+    return (
+      <button type="button" onClick={() => setIsTyping(true)} className={`${chipClass} cursor-pointer hover:bg-surface`}>
+        Add
       </button>
-      {isOpen && (
-        <div role="menu" className="absolute right-0 top-[46px] z-30 w-[220px] rounded-[12px] border border-[#e5e5e5] bg-white p-[6px] shadow-lg">
-          <button type="button" role="menuitem" className={itemClass} onClick={pick(onNewMainService)}>New main service</button>
-          <button type="button" role="menuitem" className={itemClass} onClick={pick(onNewService)}>New service</button>
-          <button type="button" role="menuitem" className={itemClass} onClick={pick(onOpenCategories)}>Categories ও সাজানো</button>
-        </div>
-      )}
-    </div>
+    );
+  }
+  return (
+    <form
+      className="shrink-0"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (name.trim()) create.mutate(name.trim(), { onSuccess: () => { setName(''); setIsTyping(false); } });
+      }}
+    >
+      <input
+        autoFocus
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        onBlur={() => !name.trim() && setIsTyping(false)}
+        onKeyDown={(event) => event.key === 'Escape' && setIsTyping(false)}
+        maxLength={100}
+        placeholder="Category নাম, Enter"
+        className={`${chipClass} w-[180px] text-[14px] text-ink outline-none focus:border-primary`}
+      />
+    </form>
   );
 }
 
 /*
- * The Services view of the admin's sidebar, laid out like the customer's list: category chips on top, then one row
- * per main service. Choosing a row shows its sub-services in the middle, as cards, the way the customer sees them.
+ * The Services view of a staff member with service rights: the customer's list, row for row (category chips, one
+ * row per main service), plus what only staff may do: Add a category, + / Add New Services for a main service, and
+ * the main services customers cannot see yet at the end.
  */
 export function AdminServicesSidebar({ user, onServiceOpened, onOpenAuth }: { user: User; onServiceOpened: () => void; onOpenAuth: () => void }) {
-  const { groups, mains, isLoading } = useAdminCatalog();
+  const { data: publicEntries = [], isLoading } = useQuery<Service[]>({
+    queryKey: ['super-app-services'],
+    queryFn: async () => (await catalogService.getMainServices()).map(mainServiceToEntry),
+  });
+  const { groups, mains } = useAdminCatalog();
   const selectedId = useAdminCatalogStore((state) => state.mainServiceId);
   const selectMainService = useAdminCatalogStore((state) => state.selectMainService);
   const openPanel = useOrderPanelStore((state) => state.open);
   const closePanel = useOrderPanelStore((state) => state.close);
+  const openMainService = useCatalogPanelStore((state) => state.openMainService);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+
+  const entries = useMemo(() => {
+    const shown = new Set(publicEntries.map((entry) => entry.id));
+    return [...publicEntries, ...mains.filter((main) => !shown.has(main.id)).map(hiddenEntry)];
+  }, [publicEntries, mains]);
   const hasUngrouped = mains.some((main) => !main.group);
 
-  const visibleMains = useMemo(() => {
+  const visibleEntries = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    return mains
-      .filter((main) => activeCategory === 'All' || (activeCategory === NO_CATEGORY ? !main.group : main.group?.name === activeCategory))
-      .filter((main) => {
-        if (!query) return true;
-        const text = [main.name, main.group?.name ?? '', ...main.services.flatMap((sub) => [sub.name, sub.nameBn ?? ''])].join(' ');
-        return text.toLowerCase().includes(query);
-      });
-  }, [mains, searchQuery, activeCategory]);
+    return entries
+      .filter((entry) => activeCategory === 'All' || entry.category?.name === activeCategory)
+      .filter((entry) => !query || `${entry.name} ${entry.category?.name ?? ''}`.toLowerCase().includes(query));
+  }, [entries, searchQuery, activeCategory]);
 
-  const select = (id: string) => {
-    selectMainService(id);
+  const select = (entry: Service) => {
+    selectMainService(entry.id);
     closePanel();
+    // Same as the customer: its Overview, FAQ, How to Order, Review and Details open on the right, here with edit.
+    openMainService(entry.id);
     onServiceOpened();
   };
-  const openSide = (target: string | null, kind: 'adminCategory' | 'adminService' | 'adminCatalog') => {
-    openPanel(target, kind);
+  const newMainService = () => {
+    openPanel(null, 'adminCategory');
     onServiceOpened();
   };
 
@@ -116,50 +134,28 @@ export function AdminServicesSidebar({ user, onServiceOpened, onOpenAuth }: { us
         activeFilterChip={activeCategory}
         onSelectFilterChip={setActiveCategory}
         categoryNames={[...groups.map((group) => group.name), ...(hasUngrouped ? [NO_CATEGORY] : [])]}
+        chipsTrailing={<AddCategoryChip />}
         isSearchCollapsed={false}
         searchPlaceholder="Search services..."
-        profileSlot={
-          <div className="flex items-center justify-between">
-            <span className="text-[18px] font-semibold tracking-[-0.36px] text-[#202939]">Services</span>
-            <CreateMenu
-              onNewMainService={() => openSide(null, 'adminCategory')}
-              onNewService={() => openSide(selectedId ? `new:${selectedId}` : 'new', 'adminService')}
-              onOpenCategories={() => openSide(null, 'adminCatalog')}
-            />
-          </div>
-        }
+        profileSlot={<StaffSidebarHeader user={user} action={{ label: 'New main service', onClick: newMainService }} />}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[8px]">
-        {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-[#697586]">Loading services...</p>}
-        {!isLoading && visibleMains.length === 0 && <p className="p-[24px] text-center text-[14px] font-medium text-[#697586]">No services match.</p>}
-        {visibleMains.map((main) => {
-          const prices = main.services
-            .flatMap((sub) => (sub.variants.length ? sub.variants.map((variant) => Number(variant.price)) : [Number(sub.basePrice)]))
-            .filter((price) => price > 0);
-          const isSelected = main.id === selectedId;
-          const isHidden = !main.isActive || (main.group !== null && !main.group.isActive);
-          return (
-            <button
-              key={main.id}
-              type="button"
-              onClick={() => select(main.id)}
-              aria-current={isSelected ? 'true' : undefined}
-              className={`flex w-full cursor-pointer items-center gap-[12px] rounded-[16px] px-[12px] py-[10px] text-left transition-colors ${isSelected ? 'bg-[#f7f5f3]' : 'hover:bg-[#f7f5f3]/60'}`}
-            >
-              <MainAvatar icon={main.iconUrl} name={main.name} />
-              <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
-                <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{main.name}</span>
-                <div className="flex items-center justify-between gap-[8px] text-[13px] font-medium text-[#697586]">
-                  <span className="truncate">
-                    {!main.group ? <span className="text-amber-700">{NO_CATEGORY}</span> : isHidden ? 'Hidden' : `${main.services.length} services`}
-                  </span>
-                  {prices.length > 0 && <span className="shrink-0">from {formatTaka(Math.min(...prices))}</span>}
-                </div>
-              </div>
-            </button>
-          );
-        })}
+      <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[24px]">
+        {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-muted">Loading services...</p>}
+        {!isLoading && visibleEntries.length === 0 && <p className="p-[24px] text-center text-[14px] font-medium text-muted">No services match.</p>}
+        {visibleEntries.map((entry) => (
+          <div key={entry.id} className={entry.isActive ? '' : 'opacity-60'}>
+            <ServiceListItem service={entry} isSelected={entry.id === selectedId} onSelect={select} isDarkMode={false} />
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={newMainService}
+          className="btn-raised mx-auto mt-[16px] flex h-[40px] cursor-pointer items-center gap-[6px] rounded-[10px] bg-primary px-[16px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90"
+        >
+          <HugeiconsIcon icon={PlusSignIcon} size={18} strokeWidth={2.5} />
+          Add New Services
+        </button>
       </div>
     </>
   );

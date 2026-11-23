@@ -38,10 +38,10 @@ function PaymentModePicker({ order, value, onChange }: { order: Order; value: Co
               aria-checked={value === option.mode}
               disabled={isDisabled}
               onClick={() => onChange(option.mode)}
-              className={`w-full cursor-pointer rounded-[12px] border p-[14px] text-left disabled:cursor-not-allowed disabled:opacity-50 ${value === option.mode ? 'border-[#1daa61] bg-[#e7fce3]' : 'border-[#e5e5e5]'}`}
+              className={`w-full cursor-pointer rounded-[12px] border p-[14px] text-left disabled:cursor-not-allowed disabled:opacity-50 ${value === option.mode ? 'border-primary bg-secondary' : 'border-line'}`}
             >
-              <span className="block text-[14px] font-semibold text-[#202939]">{option.title}</span>
-              <span className="mt-[2px] block text-[12px] font-medium text-[#697586]">{option.hint}</span>
+              <span className="block text-[14px] font-semibold text-ink">{option.title}</span>
+              <span className="mt-[2px] block text-[12px] font-medium text-muted">{option.hint}</span>
             </button>
           );
         })}
@@ -99,20 +99,20 @@ function RevisionDonePanel({ order, onClose }: { order: Order; onClose: () => vo
 
   return (
     <SidePanelShell title="রিভিশন শেষ করুন" onClose={onClose}>
-      <p className="text-[13px] font-medium leading-relaxed text-[#697586]">
+      <p className="text-[13px] font-medium leading-relaxed text-muted">
         কাস্টমারের সমস্যা: &ldquo;{issue}&rdquo;
       </p>
 
-      <p className="mt-[20px] text-[15px] font-semibold text-[#202939]">কাজ শেষ হওয়ার পর কেন আবার রিভিশনে এলো?</p>
+      <p className="mt-[20px] text-[15px] font-semibold text-ink">কাজ শেষ হওয়ার পর কেন আবার রিভিশনে এলো?</p>
       <textarea
         value={reason}
         onChange={(event) => setReason(event.target.value.slice(0, 1000))}
         rows={4}
         placeholder="যেমন: প্রথমবার গ্যাস লিক ধরা পড়েনি, তাই ঠান্ডা হচ্ছিল না।"
-        className="mt-[10px] w-full resize-none rounded-[10px] border border-[#e5e5e5] p-[12px] text-[14px] font-medium text-[#202939] outline-none placeholder:text-[#9aa4b2] focus:border-[#1daa61]"
+        className="mt-[10px] w-full resize-none rounded-[10px] border border-line p-[12px] text-[14px] font-medium text-ink outline-none placeholder:text-muted focus:border-primary"
       />
 
-      <p className="mt-[16px] text-[15px] font-semibold text-[#202939]">প্রথম কাজের কোয়ালিটিতে কি সমস্যা ছিল?</p>
+      <p className="mt-[16px] text-[15px] font-semibold text-ink">প্রথম কাজের কোয়ালিটিতে কি সমস্যা ছিল?</p>
       <div className="mt-[10px] flex gap-[10px]">
         {[{ label: 'হ্যাঁ, ছিল', value: true }, { label: 'না, অন্য কারণে', value: false }].map((choice) => (
           <button
@@ -120,7 +120,7 @@ function RevisionDonePanel({ order, onClose }: { order: Order; onClose: () => vo
             type="button"
             aria-pressed={wasQualityIssue === choice.value}
             onClick={() => setWasQualityIssue(choice.value)}
-            className={`h-[40px] flex-1 cursor-pointer rounded-[10px] text-[14px] font-semibold ${wasQualityIssue === choice.value ? 'bg-[#1daa61] text-white' : 'bg-[#f7f5f3] text-[#202939]'}`}
+            className={`h-[40px] flex-1 cursor-pointer rounded-[10px] text-[14px] font-semibold ${wasQualityIssue === choice.value ? 'bg-primary text-white' : 'bg-surface text-ink'}`}
           >
             {choice.label}
           </button>
@@ -129,14 +129,14 @@ function RevisionDonePanel({ order, onClose }: { order: Order; onClose: () => vo
 
       {isMoneyDue ? (
         <>
-          <p className="mt-[20px] text-[13px] font-medium leading-relaxed text-[#697586]">
-            রিভিশনের সময় এক্সট্রা চার্জ যোগ হয়েছে। বাকি: <span className="font-semibold text-[#202939]">{formatTaka(dueAmount)}</span>
+          <p className="mt-[20px] text-[13px] font-medium leading-relaxed text-muted">
+            রিভিশনের সময় এক্সট্রা চার্জ যোগ হয়েছে। বাকি: <span className="font-semibold text-ink">{formatTaka(dueAmount)}</span>
           </p>
-          <p className="mt-[12px] text-[15px] font-semibold text-[#202939]">কাস্টমার কীভাবে পেমেন্ট করবে?</p>
+          <p className="mt-[12px] text-[15px] font-semibold text-ink">কাস্টমার কীভাবে পেমেন্ট করবে?</p>
           <PaymentModePicker order={order} value={paymentMode} onChange={setPaymentMode} />
         </>
       ) : (
-        <p className="mt-[20px] text-[13px] font-medium leading-relaxed text-[#697586]">
+        <p className="mt-[20px] text-[13px] font-medium leading-relaxed text-muted">
           এটি ওয়ারেন্টির কাজ, তাই নতুন কোনো পেমেন্ট বা কমিশন লাগবে না। পার্টস বা বড় সমস্যা থাকলে আগে &ldquo;Extra Charge&rdquo; পাঠান।
         </p>
       )}
@@ -146,13 +146,13 @@ function RevisionDonePanel({ order, onClose }: { order: Order; onClose: () => vo
           type="button"
           disabled={!isReady || finish.isPending}
           onClick={submit}
-          className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
+          className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
         >
           {finish.isPending ? 'সম্পন্ন হচ্ছে...' : 'রিভিশন সম্পন্ন'}
         </button>
       </div>
       {!isReady && (
-        <p className="mt-[10px] text-center text-[12px] font-medium text-[#697586]">
+        <p className="mt-[10px] text-center text-[12px] font-medium text-muted">
           বাকি আছে: {[!isReasonReady && 'কারণ', wasQualityIssue === null && 'কোয়ালিটি'].filter(Boolean).join(', ')}
         </p>
       )}
@@ -198,14 +198,14 @@ function PaymentCompletePanel({ order, onClose }: { order: Order; onClose: () =>
 
   return (
     <SidePanelShell title="কাজ শেষ করুন" onClose={onClose}>
-      <p className="text-[13px] font-medium text-[#697586]">মোট বিল: {formatTaka(order.totalPrice)} • বাকি: {formatTaka(order.dueAmount)}</p>
+      <p className="text-[13px] font-medium text-muted">মোট বিল: {formatTaka(order.totalPrice)} • বাকি: {formatTaka(order.dueAmount)}</p>
 
-      <p className="mt-[20px] text-[15px] font-semibold text-[#202939]">কাস্টমার কীভাবে পেমেন্ট করবে?</p>
+      <p className="mt-[20px] text-[15px] font-semibold text-ink">কাস্টমার কীভাবে পেমেন্ট করবে?</p>
       <PaymentModePicker order={order} value={paymentMode} onChange={setPaymentMode} />
 
       {paymentMode === 'CASH' && (
-        <div className="mt-[16px] rounded-[12px] border border-[#e5e5e5] p-[14px]">
-          <p className="text-[14px] font-semibold text-[#202939]">কাস্টমার কি টিপস দিয়েছেন?</p>
+        <div className="mt-[16px] rounded-[12px] border border-line p-[14px]">
+          <p className="text-[14px] font-semibold text-ink">কাস্টমার কি টিপস দিয়েছেন?</p>
           <div className="mt-[10px] flex gap-[10px]">
             {[{ label: 'হ্যাঁ', value: true }, { label: 'না', value: false }].map((choice) => (
               <button
@@ -213,7 +213,7 @@ function PaymentCompletePanel({ order, onClose }: { order: Order; onClose: () =>
                 type="button"
                 aria-pressed={hasCashTip === choice.value}
                 onClick={() => setHasCashTip(choice.value)}
-                className={`h-[40px] flex-1 cursor-pointer rounded-[10px] text-[14px] font-semibold ${hasCashTip === choice.value ? 'bg-[#1daa61] text-white' : 'bg-[#f7f5f3] text-[#202939]'}`}
+                className={`h-[40px] flex-1 cursor-pointer rounded-[10px] text-[14px] font-semibold ${hasCashTip === choice.value ? 'bg-primary text-white' : 'bg-surface text-ink'}`}
               >
                 {choice.label}
               </button>
@@ -225,14 +225,14 @@ function PaymentCompletePanel({ order, onClose }: { order: Order; onClose: () =>
               value={cashTip}
               onChange={(event) => setCashTip(event.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 4))}
               placeholder="কত টাকা টিপস দিয়েছেন? (৳)"
-              className="mt-[12px] w-full border-b border-[#202939]/60 bg-transparent pb-[8px] text-[14px] font-medium text-[#202939] outline-none placeholder:text-[#9aa4b2]"
+              className="mt-[12px] w-full border-b border-ink/60 bg-transparent pb-[8px] text-[14px] font-medium text-ink outline-none placeholder:text-muted"
             />
           )}
         </div>
       )}
 
       <div className="mt-[28px] flex justify-center">
-        <button type="button" onClick={submit} disabled={isSubmitting} className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" onClick={submit} disabled={isSubmitting} className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled">
           {isSubmitting ? 'অপেক্ষা করুন...' : 'কাজ শেষ নিশ্চিত করুন'}
         </button>
       </div>

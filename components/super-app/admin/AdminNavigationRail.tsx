@@ -3,10 +3,11 @@
 import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import Image from 'next/image';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
-import { Briefcase01Icon, CustomerSupportIcon, UserGroupIcon, UserSharingIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
+import { Briefcase01Icon, BubbleChatIcon, CustomerSupportIcon, UserGroupIcon, UserIcon, UserSharingIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
 import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { RailSelection, RailTab } from '@/types/super-app.types';
+import { railIconClass } from '../RailIconButton';
 
 interface AdminNavigationRailProps {
   selection: RailSelection;
@@ -32,8 +33,8 @@ export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOp
   const isServicesSelected = selection === 'SERVICES' && (!openKind?.startsWith('admin') || openKind === 'adminService');
 
   return (
-    <aside className="z-20 hidden h-full w-[64px] shrink-0 select-none flex-col items-center justify-between overflow-clip bg-[#f7f5f3] px-[8px] pb-[27px] md:flex">
-      <div className="flex w-[36px] flex-col gap-[8px]">
+    <aside className="z-20 hidden h-full w-[64px] shrink-0 select-none flex-col items-center justify-between overflow-clip bg-surface px-[8px] pb-[27px] md:flex">
+      <div className="flex w-[40px] flex-col items-center gap-[10px]">
         <div className={`mb-[5px] flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-center`}>
           <Image src="/chat-list/brand-logo.svg" alt="Super App" width={36} height={36} priority />
         </div>
@@ -45,10 +46,11 @@ export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOp
             onSelectTab('CHATS');
           }}
           title="All orders"
+          aria-label="All orders"
           aria-current={isMessagesSelected ? 'page' : undefined}
-          className="size-[36px] cursor-pointer"
+          className={railIconClass(isMessagesSelected)}
         >
-          <Image src={`/rail/chats-${isMessagesSelected ? 'active' : 'inactive'}.svg`} alt="Messages" width={36} height={36} />
+          <HugeiconsIcon icon={BubbleChatIcon} size={22} strokeWidth={isMessagesSelected ? 2 : 1.7} />
         </button>
 
         {/* Services: a tab of its own. The list takes the left side and the editor the right. */}
@@ -62,9 +64,9 @@ export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOp
           title="Services"
           aria-label="Services"
           aria-current={isServicesSelected ? 'page' : undefined}
-          className={`flex size-[36px] cursor-pointer items-center justify-center rounded-full transition-colors ${isServicesSelected ? 'bg-[#d7fdd2] text-[#1daa61]' : 'bg-white text-[#202939] hover:bg-[#ebe8e4]'}`}
+          className={railIconClass(isServicesSelected)}
         >
-          <HugeiconsIcon icon={Wrench01Icon} size={18} />
+          <HugeiconsIcon icon={Wrench01Icon} size={22} strokeWidth={isServicesSelected ? 2 : 1.7} />
         </button>
         )}
 
@@ -82,9 +84,9 @@ export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOp
               title={tab.title}
               aria-label={tab.title}
               aria-current={isSelected ? 'page' : undefined}
-              className={`flex size-[36px] cursor-pointer items-center justify-center rounded-full transition-colors ${isSelected ? 'bg-[#d7fdd2] text-[#1daa61]' : 'bg-white text-[#202939] hover:bg-[#ebe8e4]'}`}
+              className={railIconClass(isSelected)}
             >
-              <HugeiconsIcon icon={tab.icon} size={18} />
+              <HugeiconsIcon icon={tab.icon} size={22} strokeWidth={isSelected ? 2 : 1.7} />
             </button>
           );
         })}
@@ -100,19 +102,19 @@ export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOp
             title="Staff"
             aria-label="Staff"
             aria-current={isStaffSelected ? 'page' : undefined}
-            className={`flex size-[36px] cursor-pointer items-center justify-center rounded-full transition-colors ${isStaffSelected ? 'bg-[#d7fdd2] text-[#1daa61]' : 'bg-white text-[#202939] hover:bg-[#ebe8e4]'}`}
+            className={railIconClass(isStaffSelected)}
           >
-            <HugeiconsIcon icon={Briefcase01Icon} size={18} />
+            <HugeiconsIcon icon={Briefcase01Icon} size={22} strokeWidth={isStaffSelected ? 2 : 1.7} />
           </button>
         )}
       </div>
 
-      <button type="button" onClick={onOpenAccount} title="Profile" className={`size-[36px] cursor-pointer overflow-hidden rounded-full ${selection === 'ACCOUNT' ? 'ring-2 ring-[#1daa61]' : ''}`}>
+      <button type="button" onClick={onOpenAccount} title="Profile" className={profilePhoto ? `size-[40px] cursor-pointer overflow-hidden rounded-full border-2 ${selection === 'ACCOUNT' ? 'border-white ring-2 ring-secondary' : 'border-transparent'}` : railIconClass(selection === 'ACCOUNT')}>
         {profilePhoto ? (
           // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary upload hosts
           <img src={profilePhoto} alt="Account" className="size-full object-cover" />
         ) : (
-          <Image src={`/rail/account-${selection === 'ACCOUNT' ? 'active' : 'inactive'}.svg`} alt="Account" width={36} height={36} />
+          <HugeiconsIcon icon={UserIcon} size={22} strokeWidth={selection === 'ACCOUNT' ? 2 : 1.7} />
         )}
       </button>
     </aside>

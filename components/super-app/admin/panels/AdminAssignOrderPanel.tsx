@@ -21,16 +21,16 @@ function ProviderRow({ provider, isSelected, onSelect }: { provider: AssignableP
       disabled={!provider.canAssign}
       onClick={onSelect}
       aria-pressed={isSelected}
-      className={`flex w-full cursor-pointer items-center gap-[12px] rounded-[12px] border p-[10px] text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${isSelected ? 'border-[#1daa61] bg-[#e7fce3]' : 'border-[#e5e5e5] bg-white hover:bg-[#f7f5f3]'}`}
+      className={`flex w-full cursor-pointer items-center gap-[12px] rounded-[12px] border p-[10px] text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${isSelected ? 'border-primary bg-secondary' : 'border-line bg-white hover:bg-surface'}`}
     >
       <SupportAvatar name={displayName(provider)} photo={provider.user.profilePhoto} sizeClass="size-[40px]" />
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-[14px] font-semibold text-[#202939]">{displayName(provider)}</span>
-        <span className="truncate text-[12px] font-medium text-[#697586]">
+        <span className="truncate text-[14px] font-semibold text-ink">{displayName(provider)}</span>
+        <span className="truncate text-[12px] font-medium text-muted">
           {provider.user.mobileNumber} · {provider.rating > 0 ? `★ ${provider.rating.toFixed(1)}` : 'New'}
         </span>
         {provider.canAssign ? (
-          <span className={`text-[12px] font-semibold ${provider.coversUpazila ? 'text-[#1daa61]' : provider.coversDistrict ? 'text-[#b7791f]' : 'text-[#697586]'}`}>
+          <span className={`text-[12px] font-semibold ${provider.coversUpazila ? 'text-primary' : provider.coversDistrict ? 'text-[#b7791f]' : 'text-muted'}`}>
             {coverage}
             {provider.hasOpenOffer && ' · has an open offer'}
           </span>
@@ -63,19 +63,19 @@ export function AdminAssignOrderPanel({ adminId, orderId, onClose }: { adminId: 
       <div className="pb-[24px]">
         <fieldset className="mb-[16px] flex flex-col gap-[8px]">
           {MODES.map((option) => (
-            <label key={option.mode} className={`flex cursor-pointer gap-[10px] rounded-[12px] border p-[10px] ${mode === option.mode ? 'border-[#1daa61] bg-[#e7fce3]' : 'border-[#e5e5e5]'}`}>
-              <input type="radio" name="assign-mode" checked={mode === option.mode} onChange={() => setMode(option.mode)} className="mt-[3px] accent-[#1daa61]" />
+            <label key={option.mode} className={`flex cursor-pointer gap-[10px] rounded-[12px] border p-[10px] ${mode === option.mode ? 'border-primary bg-secondary' : 'border-line'}`}>
+              <input type="radio" name="assign-mode" checked={mode === option.mode} onChange={() => setMode(option.mode)} className="mt-[3px] accent-primary" />
               <span>
-                <span className="block text-[14px] font-semibold text-[#202939]">{option.title}</span>
-                <span className="block text-[12px] font-medium leading-relaxed text-[#697586]">{option.text}</span>
+                <span className="block text-[14px] font-semibold text-ink">{option.title}</span>
+                <span className="block text-[12px] font-medium leading-relaxed text-muted">{option.text}</span>
               </span>
             </label>
           ))}
         </fieldset>
 
-        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search providers..." className="mb-[10px] h-[40px] w-full rounded-[8px] border border-[#cecece] px-[10px] text-[14px] text-[#202939] outline-none focus:border-[#1daa61]" />
+        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search providers..." className="mb-[10px] h-[40px] w-full rounded-[8px] border border-line px-[10px] text-[14px] text-ink outline-none focus:border-primary" />
 
-        {isLoading && <p className="text-[14px] font-medium text-[#697586]">Loading providers...</p>}
+        {isLoading && <p className="text-[14px] font-medium text-muted">Loading providers...</p>}
         {isError && <p className="text-[14px] font-medium text-[#d64545]">This order is no longer waiting for a provider.</p>}
         <ul className="flex flex-col gap-[8px]">
           {visible.map((provider) => (
@@ -84,7 +84,7 @@ export function AdminAssignOrderPanel({ adminId, orderId, onClose }: { adminId: 
             </li>
           ))}
         </ul>
-        {!isLoading && !isError && visible.length === 0 && <p className="py-[12px] text-[14px] font-medium text-[#697586]">No provider found.</p>}
+        {!isLoading && !isError && visible.length === 0 && <p className="py-[12px] text-[14px] font-medium text-muted">No provider found.</p>}
 
         {isOutsideArea && <p className="mt-[12px] rounded-[10px] bg-[#fff4e5] p-[10px] text-[13px] font-medium text-[#b7791f]">This provider does not cover the order&apos;s area. You can still send it.</p>}
 
@@ -93,7 +93,7 @@ export function AdminAssignOrderPanel({ adminId, orderId, onClose }: { adminId: 
             type="button"
             disabled={!selected || assign.isPending}
             onClick={() => selected && assign.mutate({ providerId: selected.id, mode })}
-            className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
+            className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
           >
             {assign.isPending ? 'Sending...' : mode === 'OFFER' ? 'Send offer' : 'Assign order'}
           </button>

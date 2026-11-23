@@ -46,6 +46,9 @@ export const catalogService = {
 
   getMainService: async (id: string) => (await apiClient.get<CatalogMainServiceDetail>(`/catalog/main-services/${id}`)).data,
 
+  getMainServiceReviews: async (id: string, page: number) =>
+    (await apiClient.get<CatalogReviewPage>(`/catalog/main-services/${id}/reviews`, { params: { page } })).data,
+
   getSubService: async (id: string) => (await apiClient.get<CatalogSubServiceDetail>(`/catalog/sub-services/${id}`)).data,
 
   getSubServiceReviews: async (id: string, page: number) =>
@@ -53,6 +56,10 @@ export const catalogService = {
 
   quoteCart: async (body: { categoryId: string; items: CartItemRequest[]; answers?: OrderAnswer[] }) =>
     (await apiClient.post<PriceQuote>('/order-placement/cart/quote', body)).data,
+
+  /** Staff: the same cart, ordered for a customer by phone number (created as a customer if the number is new). */
+  placeCartForCustomer: async (body: PlaceCartRequest & { customerPhone: string; customerName?: string }) =>
+    (await apiClient.post<{ order: Order; quote: PriceQuote }>('/order-placement/admin/cart', body)).data,
 
   placeCart: async (body: PlaceCartRequest) => (await apiClient.post<{ order: Order; quote: PriceQuote }>('/order-placement/cart', body)).data,
 

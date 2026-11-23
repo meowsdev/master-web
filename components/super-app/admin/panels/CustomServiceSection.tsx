@@ -61,18 +61,18 @@ export function CustomServiceSection({ form, onChange }: { form: CustomServiceFo
         />
       </OrderField>
 
-      <label htmlFor="custom-order-price" className="mt-[20px] block text-[13px] font-semibold text-[#202939]">
+      <label htmlFor="custom-order-price" className="mt-[20px] block text-[13px] font-semibold text-ink">
         দাম
       </label>
-      <div className={`mt-[6px] flex items-center gap-[8px] rounded-[12px] border-2 px-[12px] py-[8px] ${isPriceOutOfRange ? 'border-[#d64545]' : 'border-[#1daa61]'}`}>
-        <span className="text-[22px] font-semibold text-[#1daa61]">৳</span>
+      <div className={`mt-[6px] flex items-center gap-[8px] rounded-[12px] border-2 px-[12px] py-[8px] ${isPriceOutOfRange ? 'border-[#d64545]' : 'border-primary'}`}>
+        <span className="text-[22px] font-semibold text-primary">৳</span>
         <input
           id="custom-order-price"
           inputMode="numeric"
           value={form.price}
           onChange={(event) => set('price')(event.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 6))}
           placeholder="০"
-          className="min-w-0 flex-1 bg-transparent text-[22px] font-semibold text-[#202939] outline-none placeholder:text-[#cecece]"
+          className="min-w-0 flex-1 bg-transparent text-[22px] font-semibold text-ink outline-none placeholder:text-muted"
         />
       </div>
       {isPriceOutOfRange && (
@@ -80,7 +80,7 @@ export function CustomServiceSection({ form, onChange }: { form: CustomServiceFo
           দাম {formatTaka(MIN_CUSTOM_ORDER_PRICE)} থেকে {formatTaka(MAX_CUSTOM_ORDER_PRICE)} এর মধ্যে হতে হবে।
         </p>
       )}
-      <p className="mt-[8px] text-[12px] font-medium leading-relaxed text-[#697586]">
+      <p className="mt-[8px] text-[12px] font-medium leading-relaxed text-muted">
         এই অর্ডার এলাকার সব available প্রোভাইডারের কাছে যাবে, যে আগে নেবে সে পাবে।
       </p>
     </FormPart>

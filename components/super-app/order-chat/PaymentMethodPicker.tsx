@@ -6,7 +6,7 @@ const METHODS: Array<{ id: OnlinePaymentMethod; label: string; accent: string }>
   // Brand colors of the wallets, so customers recognise them at a glance.
   { id: 'BKASH', label: 'bKash', accent: 'border-[#e2136e] text-[#e2136e]' },
   { id: 'NAGAD', label: 'Nagad', accent: 'border-[#f6921e] text-[#f6921e]' },
-  { id: 'CARD', label: 'Card', accent: 'border-[#202939] text-[#202939]' },
+  { id: 'CARD', label: 'Card', accent: 'border-ink text-ink' },
 ];
 
 interface PaymentMethodPickerProps {

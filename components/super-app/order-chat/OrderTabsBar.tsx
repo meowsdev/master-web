@@ -15,7 +15,7 @@ interface OrderTabsBarProps {
 
 const tabClass = (isSelected: boolean) =>
   `h-[32px] shrink-0 cursor-pointer whitespace-nowrap rounded-full border px-[12px] text-[12px] font-medium transition-colors ${
-    isSelected ? 'border-[#bccdba] bg-[#a9e5cf] text-[#202939]' : 'border-[#cecece] bg-white text-[#697586] hover:bg-[#f7f5f3]'
+    isSelected ? 'border-secondary bg-secondary text-ink' : 'border-line bg-white text-muted hover:bg-surface'
   }`;
 
 /*
@@ -24,7 +24,7 @@ const tabClass = (isSelected: boolean) =>
  */
 export function OrderTabsBar({ orders, selectedTab, onSelect }: OrderTabsBarProps) {
   return (
-    <nav aria-label="Chat tabs" className="no-scrollbar flex shrink-0 items-center gap-[8px] overflow-x-auto border-b border-[#e5e5e5] bg-white px-[12px] py-[8px]">
+    <nav aria-label="Chat tabs" className="no-scrollbar flex shrink-0 items-center gap-[8px] overflow-x-auto border-b border-line bg-white px-[12px] py-[8px]">
       <button type="button" onClick={() => onSelect(SERVICES_TAB)} aria-current={selectedTab === SERVICES_TAB ? 'page' : undefined} className={tabClass(selectedTab === SERVICES_TAB)}>
         Services
       </button>

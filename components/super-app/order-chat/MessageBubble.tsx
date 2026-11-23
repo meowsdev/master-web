@@ -29,18 +29,18 @@ export function MessageBubble({ message, isMine }: { message: Message; isMine: b
 
   return (
     <div
-      className={`max-w-[75%] rounded-[12px] px-[12px] py-[8px] text-[#202939] ${isMine ? 'ml-auto bg-[#ade2cf]' : 'bg-white'}`}
+      className={`max-w-[75%] rounded-[12px] px-[12px] py-[8px] text-ink ${isMine ? 'ml-auto bg-secondary' : 'bg-white'}`}
     >
       {!isMine && senderName && (
         <p className="mb-[2px] flex items-baseline gap-[6px] text-[13px] font-semibold leading-tight">
           <span className="truncate" style={{ color: nameColor(message.senderId) }}>
             {senderName}
           </span>
-          {roleLabel && <span className="shrink-0 text-[11px] font-medium text-[#697586]">{roleLabel}</span>}
+          {roleLabel && <span className="shrink-0 text-[11px] font-medium text-muted">{roleLabel}</span>}
         </p>
       )}
       <p className="whitespace-pre-wrap break-words text-[14px] font-medium">{message.text}</p>
-      <time className="mt-[2px] block text-right text-[11px] font-medium text-[#697586]">{formatMessageTime(message.createdAt)}</time>
+      <time className="mt-[2px] block text-right text-[11px] font-medium text-muted">{formatMessageTime(message.createdAt)}</time>
     </div>
   );
 }

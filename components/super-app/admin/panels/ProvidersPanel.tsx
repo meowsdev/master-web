@@ -11,21 +11,21 @@ export function ProvidersPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <SidePanelShell title="Providers" onClose={onClose}>
-      {isLoading && <p className="text-[14px] font-medium text-[#697586]">Loading providers...</p>}
+      {isLoading && <p className="text-[14px] font-medium text-muted">Loading providers...</p>}
       <ul>
         {providers.map((provider) => {
           const rating = Number(provider.rating);
           return (
-            <li key={provider.id} className="border-b border-[#e5e5e5] py-[12px]">
+            <li key={provider.id} className="border-b border-line py-[12px]">
               <div className="flex items-center justify-between gap-[8px]">
-                <p className="truncate text-[14px] font-semibold text-[#202939]">
+                <p className="truncate text-[14px] font-semibold text-ink">
                   {provider.companyName || provider.user.name || provider.user.username}
-                  {provider.user.username && <span className="font-medium text-[#697586]"> @{provider.user.username}</span>}
+                  {provider.user.username && <span className="font-medium text-muted"> @{provider.user.username}</span>}
                 </p>
-                <span className="shrink-0 text-[12px] font-semibold text-[#697586]">{provider.level}</span>
+                <span className="shrink-0 text-[12px] font-semibold text-muted">{provider.level}</span>
               </div>
-              <p className="mt-[2px] text-[12px] font-medium text-[#697586]">{provider.user.mobileNumber}</p>
-              <p className="mt-[6px] flex flex-wrap gap-x-[14px] gap-y-[2px] text-[13px] font-medium text-[#202939]">
+              <p className="mt-[2px] text-[12px] font-medium text-muted">{provider.user.mobileNumber}</p>
+              <p className="mt-[6px] flex flex-wrap gap-x-[14px] gap-y-[2px] text-[13px] font-medium text-ink">
                 <span>★ {rating > 0 ? rating.toFixed(1) : 'New'}</span>
                 <span>{provider._count.orders} orders</span>
                 <span>{provider.totalCompletedOrders} completed</span>

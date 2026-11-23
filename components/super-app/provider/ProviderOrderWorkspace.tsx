@@ -69,7 +69,7 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
         ]}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col gap-[12px] overflow-y-auto bg-[#f7f5f3] p-[16px]">
+      <div className="flex min-h-0 flex-1 flex-col gap-[12px] overflow-y-auto bg-surface p-[16px]">
         {timeline.map((entry) => {
           switch (entry.kind) {
             case 'order':

@@ -57,7 +57,7 @@ export function AdminCategoryPanel({ onClose }: { onClose: () => void }) {
         }}
         className="pb-[24px]"
       >
-        <p className="text-[13px] font-medium text-[#697586]">A main service groups the services customers order, like &ldquo;AC Repair &amp; Service&rdquo;.</p>
+        <p className="text-[13px] font-medium text-muted">A main service groups the services customers order, like &ldquo;AC Repair &amp; Service&rdquo;.</p>
 
         <OrderField icon={Wrench01Icon}>
           <input value={name} onChange={(event) => setName(event.target.value)} maxLength={100} placeholder="Main service name" className={fieldControlClass} />
@@ -78,7 +78,7 @@ export function AdminCategoryPanel({ onClose }: { onClose: () => void }) {
         <PicturePicker value={icon} onChange={setIcon} />
 
         <div className="mt-[28px] flex justify-center">
-          <button type="submit" disabled={!name.trim() || !groupId || create.isPending} className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="submit" disabled={!name.trim() || !groupId || create.isPending} className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled">
             {create.isPending ? 'Creating...' : 'Create main service'}
           </button>
         </div>

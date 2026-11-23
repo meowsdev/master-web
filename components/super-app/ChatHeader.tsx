@@ -27,7 +27,7 @@ export function ChatHeader({ activeService, onBackMobile, onBackToWelcome, onOpe
     <ConversationHeader
       isDarkMode={isDarkMode}
       picture={
-        <span className="flex size-[36px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#a9e5cf] text-[18px]">
+        <span className="flex size-[36px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-[18px]">
           {profileSource && isImageSource(profileSource) ? (
             // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary upload hosts
             <img src={profileSource} alt="" className="size-full object-cover" />

@@ -16,7 +16,7 @@ export function ProviderSections({ provider }: { provider: NonNullable<MemberDet
         <Fact label="Takes orders">{provider.isAvailable ? 'Yes' : 'No'}</Fact>
         {provider.isBlockedForNegative && <Fact label="Wallet">Blocked (negative balance)</Fact>}
         {provider.dueAmount > 0 && <Fact label="Owes the platform"><span className="text-[#d64545]">{formatTaka(provider.dueAmount)}</span></Fact>}
-        {provider.bio && <p className="mt-[8px] text-[14px] font-medium leading-relaxed text-[#202939]">{provider.bio}</p>}
+        {provider.bio && <p className="mt-[8px] text-[14px] font-medium leading-relaxed text-ink">{provider.bio}</p>}
       </Section>
 
       <Section title={`Orders · ${provider.totalCompletedOrders} completed`}>
@@ -33,26 +33,26 @@ export function ProviderSections({ provider }: { provider: NonNullable<MemberDet
         ) : (
           <p className="flex flex-wrap gap-[6px]">
             {provider.areas.map((area) => (
-              <span key={area.upazilaId} className="rounded-full bg-[#f7f5f3] px-[10px] py-[3px] text-[12px] font-semibold text-[#202939]">{area.name ?? area.upazilaId}</span>
+              <span key={area.upazilaId} className="rounded-full bg-surface px-[10px] py-[3px] text-[12px] font-semibold text-ink">{area.name ?? area.upazilaId}</span>
             ))}
           </p>
         )}
       </Section>
 
       <Section title={`Technicians · ${provider.technicians.length}`}>
-        {provider.technicians.length === 0 && <p className="text-[14px] font-medium text-[#697586]">No technicians yet.</p>}
+        {provider.technicians.length === 0 && <p className="text-[14px] font-medium text-muted">No technicians yet.</p>}
         <ul className="flex flex-col gap-[10px]">
           {provider.technicians.map((technician) => (
-            <li key={technician.id} className="rounded-[10px] bg-[#f7f5f3] p-[10px]">
+            <li key={technician.id} className="rounded-[10px] bg-surface p-[10px]">
               <div className="flex items-center justify-between gap-[8px]">
-                <p className="truncate text-[14px] font-semibold text-[#202939]">
+                <p className="truncate text-[14px] font-semibold text-ink">
                   {technician.name || 'Unnamed'}
-                  {technician.username && <span className="font-medium text-[#697586]"> @{technician.username}</span>}
+                  {technician.username && <span className="font-medium text-muted"> @{technician.username}</span>}
                 </p>
                 <StatusBadges status={technician.status} isRestricted={false} />
               </div>
-              <p className="mt-[2px] text-[13px] font-medium text-[#697586]">{technician.mobileNumber}</p>
-              <p className="text-[12px] font-medium text-[#697586]">Last login: {technician.lastLoginAt ? formatDate(technician.lastLoginAt) : 'never'}</p>
+              <p className="mt-[2px] text-[13px] font-medium text-muted">{technician.mobileNumber}</p>
+              <p className="text-[12px] font-medium text-muted">Last login: {technician.lastLoginAt ? formatDate(technician.lastLoginAt) : 'never'}</p>
             </li>
           ))}
         </ul>

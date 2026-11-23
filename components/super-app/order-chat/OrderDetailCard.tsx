@@ -45,15 +45,15 @@ export function OrderDetailCard({ order, onPayNow, onCancel, isCancelling }: Ord
   const [problemLine, ...surchargeLines] = detail?.priceBreakdown ?? [];
 
   return (
-    <article className="ml-auto w-full max-w-[420px] rounded-[16px] bg-[#ade2cf] p-[14px] text-[#202939] shadow-sm">
+    <article className="ml-auto w-full max-w-[420px] rounded-[16px] bg-secondary p-[14px] text-ink shadow-sm">
       <header className="flex items-center justify-between gap-[8px]">
         <span className="min-w-0 truncate text-[12px] font-medium">{buildOrderTabLabel(order)}</span>
         <div className="flex shrink-0 items-center gap-[6px]">
           {isPaid ? (
-            <span className="rounded-[8px] bg-white px-[8px] py-[4px] text-[12px] font-semibold text-[#1daa61]">Paid</span>
+            <span className="rounded-[8px] bg-white px-[8px] py-[4px] text-[12px] font-semibold text-primary">Paid</span>
           ) : (
             <span className="rounded-[8px] bg-white px-[8px] py-[4px] text-[12px] font-semibold">
-              {formatTaka(order.dueAmount)} <span className="rounded-full border border-[#202939]/40 px-[5px] text-[10px]">Due</span>
+              {formatTaka(order.dueAmount)} <span className="rounded-full border border-ink/40 px-[5px] text-[10px]">Due</span>
             </span>
           )}
           {/* Nothing left to pay (or the order is cancelled): the button stays but cannot be pressed. */}
@@ -62,7 +62,7 @@ export function OrderDetailCard({ order, onPayNow, onCancel, isCancelling }: Ord
             onClick={onPayNow}
             disabled={isPaid || isCancelled || !canPayAdvance}
             title={!canPayAdvance && !isPaid && !isCancelled ? 'You can pay once a provider accepts your order' : undefined}
-            className="cursor-pointer rounded-[8px] bg-[#202939] px-[12px] py-[6px] text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#202939]/30"
+            className="cursor-pointer rounded-[8px] bg-ink px-[12px] py-[6px] text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-ink/30"
           >
             {isPaid ? 'Paid' : 'Pay Now'}
           </button>
@@ -101,7 +101,7 @@ export function OrderDetailCard({ order, onPayNow, onCancel, isCancelling }: Ord
             type="button"
             onClick={onCancel}
             disabled={!isWaiting || isCancelling}
-            className="cursor-pointer rounded-[10px] bg-white px-[14px] py-[8px] text-[14px] font-semibold disabled:cursor-not-allowed disabled:text-[#9aa4b2] disabled:opacity-80"
+            className="cursor-pointer rounded-[10px] bg-white px-[14px] py-[8px] text-[14px] font-semibold disabled:cursor-not-allowed disabled:text-muted disabled:opacity-80"
           >
             {isWaiting ? 'Cancel Order' : statusLabel}
           </button>

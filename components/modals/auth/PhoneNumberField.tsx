@@ -15,11 +15,11 @@ const PhoneNumberInput = forwardRef<HTMLInputElement, PhoneNumberInputProps>(fun
   ref,
 ) {
   return (
-    <div className="flex flex-1 items-center justify-between gap-[8px] border-b border-[#cecece] pb-[8px] transition-colors focus-within:border-[#1daa61]">
+    <div className="flex flex-1 items-center justify-between gap-[8px] border-b border-line pb-[8px] transition-colors focus-within:border-primary">
       <input
         {...inputProps}
         ref={ref}
-        className="w-full bg-transparent text-[18px] tracking-[-0.36px] text-[#202939] outline-none placeholder:text-[#697586]"
+        className="w-full bg-transparent text-[18px] tracking-[-0.36px] text-ink outline-none placeholder:text-muted"
       />
       {trailing}
     </div>

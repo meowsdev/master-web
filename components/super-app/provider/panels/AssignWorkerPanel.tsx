@@ -30,10 +30,10 @@ export function AssignWorkerPanel({ order, userId, onClose }: { order: Order; us
 
   return (
     <SidePanelShell title="Assign Worker" onClose={onClose}>
-      <p className="text-[13px] font-medium text-[#697586]">Worker on this order</p>
-      <p className="mb-[16px] mt-[4px] text-[16px] font-semibold text-[#202939]">{order.assignee?.technician ?? 'No worker assigned yet'}</p>
+      <p className="text-[13px] font-medium text-muted">Worker on this order</p>
+      <p className="mb-[16px] mt-[4px] text-[16px] font-semibold text-ink">{order.assignee?.technician ?? 'No worker assigned yet'}</p>
 
-      {isLoading && <p className="text-[14px] font-medium text-[#697586]">Loading your technicians...</p>}
+      {isLoading && <p className="text-[14px] font-medium text-muted">Loading your technicians...</p>}
       {isError && <p className="text-[14px] font-medium text-[#d64545]">Could not load your technicians.</p>}
       {/* A new technician can be added right here; once added they appear in the list below to be assigned. */}
       {canAddWorker && (
@@ -44,19 +44,19 @@ export function AssignWorkerPanel({ order, userId, onClose }: { order: Order; us
             <button
               type="button"
               onClick={() => setIsAdding(true)}
-              className="flex w-full cursor-pointer items-center gap-[12px] rounded-[12px] border border-dashed border-[#1daa61] p-[10px] text-left hover:bg-[#e7fce3]"
+              className="flex w-full cursor-pointer items-center gap-[12px] rounded-[12px] border border-dashed border-primary p-[10px] text-left hover:bg-secondary"
             >
-              <span className="flex size-[40px] items-center justify-center rounded-full bg-[#e7fce3] text-[#1daa61]">
+              <span className="flex size-[40px] items-center justify-center rounded-full bg-secondary text-primary">
                 <HugeiconsIcon icon={Add01Icon} size={20} />
               </span>
-              <span className="text-[14px] font-semibold text-[#1daa61]">Add worker</span>
+              <span className="text-[14px] font-semibold text-primary">Add worker</span>
             </button>
           )}
         </div>
       )}
 
       {data && technicians.length === 0 && !isAdding && (
-        <p className="rounded-[12px] border border-[#e5e5e5] bg-[#f7f5f3] p-[14px] text-[13px] font-medium text-[#697586]">
+        <p className="rounded-[12px] border border-line bg-surface p-[14px] text-[13px] font-medium text-muted">
           {canAddWorker ? 'এখনো কোনো টেকনিশিয়ান নেই। উপরের "Add worker" দিয়ে যোগ করুন।' : 'This provider has no technicians yet.'}
         </p>
       )}
@@ -72,12 +72,12 @@ export function AssignWorkerPanel({ order, userId, onClose }: { order: Order; us
                 disabled={!technician.isActive}
                 aria-pressed={isSelected}
                 onClick={() => setChoice(technician.id)}
-                className={`flex w-full cursor-pointer items-center gap-[12px] rounded-[12px] border p-[10px] text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${isSelected ? 'border-[#1daa61] bg-[#e7fce3]' : 'border-[#e5e5e5] bg-white hover:bg-[#f7f5f3]'}`}
+                className={`flex w-full cursor-pointer items-center gap-[12px] rounded-[12px] border p-[10px] text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${isSelected ? 'border-primary bg-secondary' : 'border-line bg-white hover:bg-surface'}`}
               >
                 <SupportAvatar name={name} photo={technician.profilePhoto} sizeClass="size-[40px]" />
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-[14px] font-semibold text-[#202939]">{name}</span>
-                  <span className={`text-[12px] font-medium ${technician.isActive ? 'text-[#697586]' : 'text-[#d64545]'}`}>
+                  <span className="truncate text-[14px] font-semibold text-ink">{name}</span>
+                  <span className={`text-[12px] font-medium ${technician.isActive ? 'text-muted' : 'text-[#d64545]'}`}>
                     {technician.isActive ? `${technician.activeJobs} active job(s)` : 'Blocked, cannot take work'}
                   </span>
                 </span>
@@ -93,7 +93,7 @@ export function AssignWorkerPanel({ order, userId, onClose }: { order: Order; us
             type="button"
             disabled={!selectedId || selectedId === currentId || change.isPending}
             onClick={() => selectedId && change.mutate(selectedId)}
-            className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
+            className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
           >
             {change.isPending ? 'Saving...' : 'Assign worker'}
           </button>

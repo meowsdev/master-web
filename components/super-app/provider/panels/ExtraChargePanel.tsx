@@ -48,18 +48,18 @@ export function ExtraChargePanel({ order, userId, onClose }: { order: Order; use
 
   return (
     <SidePanelShell title="Extra Charge" onClose={onClose}>
-      <p className="text-[13px] font-medium text-[#697586]">কাস্টমার অনুমোদন দিলে মূল বিলের সাথে যোগ হবে।</p>
+      <p className="text-[13px] font-medium text-muted">কাস্টমার অনুমোদন দিলে মূল বিলের সাথে যোগ হবে।</p>
 
       <AmountRowsEditor rows={rows} onChange={setRows} labelPlaceholder="যেমন: ক্যাপাসিটর পরিবর্তন" addLabel="আরেকটি চার্জ যোগ করুন" />
 
-      <div className="mt-[20px] rounded-[12px] border border-[#e5e5e5] bg-[#f7f5f3] p-[14px]">
-        <div className="flex justify-between text-[13px] font-medium text-[#697586]"><span>পূর্বের বিল</span><span>{formatTaka(currentTotal)}</span></div>
-        <div className="mt-[6px] flex justify-between text-[13px] font-medium text-[#697586]"><span>নতুন সংযোজিত খরচ</span><span>{formatTaka(addedTotal)}</span></div>
-        <div className="mt-[8px] flex justify-between border-t border-[#e5e5e5] pt-[8px] text-[15px] font-semibold text-[#202939]"><span>সর্বমোট নতুন বিল</span><span>{formatTaka(currentTotal + addedTotal)}</span></div>
+      <div className="mt-[20px] rounded-[12px] border border-line bg-surface p-[14px]">
+        <div className="flex justify-between text-[13px] font-medium text-muted"><span>পূর্বের বিল</span><span>{formatTaka(currentTotal)}</span></div>
+        <div className="mt-[6px] flex justify-between text-[13px] font-medium text-muted"><span>নতুন সংযোজিত খরচ</span><span>{formatTaka(addedTotal)}</span></div>
+        <div className="mt-[8px] flex justify-between border-t border-line pt-[8px] text-[15px] font-semibold text-ink"><span>সর্বমোট নতুন বিল</span><span>{formatTaka(currentTotal + addedTotal)}</span></div>
       </div>
 
       <div className="mt-[28px] flex justify-center">
-        <button type="button" onClick={submit} disabled={isSubmitting} className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" onClick={submit} disabled={isSubmitting} className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled">
           {isSubmitting ? 'পাঠানো হচ্ছে...' : 'কাস্টমারের কাছে পাঠান'}
         </button>
       </div>

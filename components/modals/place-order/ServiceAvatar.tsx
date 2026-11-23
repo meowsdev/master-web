@@ -1,6 +1,7 @@
 'use client';
 
-import Image from 'next/image';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { HandHelpingIcon } from '@hugeicons/core-free-icons';
 import { OrderMainService, OrderSubService } from '@/types/order-placement.types';
 
 interface ServiceAvatarProps {
@@ -19,14 +20,14 @@ export function ServiceAvatar({ category, subService }: ServiceAvatarProps) {
 
   return (
     <div className="mb-[8px] mt-[4px] flex justify-center">
-      <span className="flex size-[78px] items-center justify-center overflow-hidden rounded-full border border-[#202939]/40 bg-[#a9e5cf] text-[34px]">
+      <span className="flex size-[78px] items-center justify-center overflow-hidden rounded-full border border-ink/40 bg-secondary text-[34px]">
         {source && isImageSource(source) ? (
           // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary upload hosts
           <img src={source} alt="" className="size-full object-cover" />
         ) : source ? (
           <span aria-hidden>{source}</span>
         ) : (
-          <Image src="/chat-list/provider.svg" alt="" width={36} height={36} />
+          <HugeiconsIcon icon={HandHelpingIcon} size={32} strokeWidth={1.6} className="text-primary" />
         )}
       </span>
     </div>

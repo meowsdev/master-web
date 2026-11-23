@@ -42,10 +42,10 @@ export function SendQuotePanel({ order, userId, onClose }: { order: Order; userI
 
   return (
     <SidePanelShell title="দাম পাঠান" onClose={onClose}>
-      <p className="text-[13px] font-medium text-[#697586]">Custom অর্ডার: সাইট দেখে কাজের দাম লিখুন। কাস্টমার Accept করলে এটাই অর্ডারের দাম হবে।</p>
+      <p className="text-[13px] font-medium text-muted">Custom অর্ডার: সাইট দেখে কাজের দাম লিখুন। কাস্টমার Accept করলে এটাই অর্ডারের দাম হবে।</p>
       {order.bookingDetail?.description && (
-        <div className="mt-[12px] rounded-[12px] bg-[#f7f5f3] p-[12px] text-[13px] text-[#364152]">
-          <p className="mb-[4px] font-semibold text-[#202939]">কাস্টমারের সমস্যা</p>
+        <div className="mt-[12px] rounded-[12px] bg-surface p-[12px] text-[13px] text-ink">
+          <p className="mb-[4px] font-semibold text-ink">কাস্টমারের সমস্যা</p>
           {order.bookingDetail.description}
         </div>
       )}
@@ -58,16 +58,16 @@ export function SendQuotePanel({ order, userId, onClose }: { order: Order; userI
         maxLength={500}
         rows={2}
         placeholder="কাস্টমারকে ছোট নোট (ঐচ্ছিক)"
-        className="mt-[16px] w-full resize-none rounded-[8px] border border-[#e5e5e5] p-[10px] text-[14px] outline-none focus:border-[#1daa61]"
+        className="mt-[16px] w-full resize-none rounded-[8px] border border-line p-[10px] text-[14px] outline-none focus:border-primary"
       />
 
-      <div className="mt-[16px] flex justify-between rounded-[12px] border border-[#e5e5e5] bg-[#f7f5f3] p-[14px] text-[15px] font-semibold text-[#202939]">
+      <div className="mt-[16px] flex justify-between rounded-[12px] border border-line bg-surface p-[14px] text-[15px] font-semibold text-ink">
         <span>মোট দাম</span>
         <span>{formatTaka(total)}</span>
       </div>
 
       <div className="mt-[28px] flex justify-center">
-        <button type="button" onClick={submit} disabled={isSubmitting} className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" onClick={submit} disabled={isSubmitting} className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled">
           {isSubmitting ? 'পাঠানো হচ্ছে...' : 'কাস্টমারের কাছে পাঠান'}
         </button>
       </div>

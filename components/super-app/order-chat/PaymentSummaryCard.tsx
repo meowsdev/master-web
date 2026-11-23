@@ -5,7 +5,7 @@ import { Order } from '@/types/order.types';
 
 function Line({ icon, children }: { icon: IconSvgElement; children: React.ReactNode }) {
   return (
-    <li className="flex items-center gap-[10px] text-[14px] font-semibold text-[#202939]">
+    <li className="flex items-center gap-[10px] text-[14px] font-semibold text-ink">
       <HugeiconsIcon icon={icon} size={18} className="shrink-0" />
       <span className="min-w-0">{children}</span>
     </li>
@@ -34,7 +34,7 @@ export function PaymentSummaryCard({ order, viewer }: { order: Order; viewer: 'C
   const providerOwesCompany = viewer !== 'CUSTOMER' && payment.paymentMode === 'CASH' && companyShare > 0;
 
   return (
-    <article className={`w-full max-w-[460px] rounded-[16px] p-[16px] text-[#202939] ${isMine ? 'ml-auto bg-[#ade2cf]' : 'bg-white shadow-sm'}`}>
+    <article className={`w-full max-w-[460px] rounded-[16px] p-[16px] text-ink ${isMine ? 'ml-auto bg-secondary' : 'bg-white shadow-sm'}`}>
       <h3 className="text-[14px] font-semibold">{isMine ? 'সার্ভিস সফলভাবে সম্পন্ন হয়েছে!' : 'কাস্টমারের পেমেন্ট সম্পন্ন হয়েছে'}</h3>
 
       <ul className="mt-[14px] flex flex-col gap-[12px]">
@@ -47,11 +47,11 @@ export function PaymentSummaryCard({ order, viewer }: { order: Order; viewer: 'C
       </ul>
 
       {providerOwesCompany && viewer === 'PROVIDER' && (
-        <p className="mt-[10px] text-[12px] font-medium text-[#697586]">ক্যাশ আপনি পেয়েছেন, তাই এই পরিমাণ আপনার প্রোফাইলের ডিউতে যোগ হয়েছে। Pay Now দিয়ে কোম্পানিকে পরিশোধ করুন।</p>
+        <p className="mt-[10px] text-[12px] font-medium text-muted">ক্যাশ আপনি পেয়েছেন, তাই এই পরিমাণ আপনার প্রোফাইলের ডিউতে যোগ হয়েছে। Pay Now দিয়ে কোম্পানিকে পরিশোধ করুন।</p>
       )}
 
       <footer className="mt-[16px] flex justify-end">
-        <span className={`rounded-[10px] px-[16px] py-[8px] text-[15px] font-semibold text-[#9aa4b2] ${isMine ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.12)]' : 'bg-[#f7f5f3]'}`}>
+        <span className={`rounded-[10px] px-[16px] py-[8px] text-[15px] font-semibold text-muted ${isMine ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.12)]' : 'bg-surface'}`}>
           {isMine ? 'Paid' : 'Received'}- {formatTaka(totalPaid)}
         </span>
       </footer>

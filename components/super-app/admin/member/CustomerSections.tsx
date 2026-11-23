@@ -22,10 +22,10 @@ export function CustomerSections({ customer }: { customer: NonNullable<MemberDet
       </Section>
 
       <Section title="Services they use">
-        {customer.services.length === 0 && <p className="text-[14px] font-medium text-[#697586]">Nothing ordered yet.</p>}
+        {customer.services.length === 0 && <p className="text-[14px] font-medium text-muted">Nothing ordered yet.</p>}
         <p className="flex flex-wrap gap-[6px]">
           {customer.services.map((service) => (
-            <span key={service.name} className="rounded-full bg-[#f7f5f3] px-[10px] py-[3px] text-[12px] font-semibold text-[#202939]">
+            <span key={service.name} className="rounded-full bg-surface px-[10px] py-[3px] text-[12px] font-semibold text-ink">
               {service.name} × {service.count}
             </span>
           ))}
@@ -37,12 +37,12 @@ export function CustomerSections({ customer }: { customer: NonNullable<MemberDet
           {customer.recentOrders.map((order) => {
             const status = ORDER_STATUS_LABEL[order.orderStatus as OrderStatus];
             return (
-              <li key={order.id} className="rounded-[10px] bg-[#f7f5f3] p-[10px]">
+              <li key={order.id} className="rounded-[10px] bg-surface p-[10px]">
                 <div className="flex items-center justify-between gap-[8px]">
-                  <p className="truncate text-[14px] font-semibold text-[#202939]">#{order.referenceCode} · {order.serviceName}</p>
+                  <p className="truncate text-[14px] font-semibold text-ink">#{order.referenceCode} · {order.serviceName}</p>
                   <span className={`shrink-0 text-[12px] font-semibold ${status?.className ?? ''}`}>{status?.text ?? order.orderStatus}</span>
                 </div>
-                <p className="mt-[2px] text-[12px] font-medium text-[#697586]">
+                <p className="mt-[2px] text-[12px] font-medium text-muted">
                   {formatDate(order.createdAt)} · {formatTaka(order.totalPrice)}
                   {order.providerName && ` · ${order.providerName}`}
                 </p>

@@ -59,4 +59,7 @@ export const adminService = {
   createService: async (dto: AdminServiceInput) => (await apiClient.post<{ id: string }>('/service/create', dto)).data,
 
   updateService: async (serviceId: string, dto: Partial<AdminServiceInput>) => (await apiClient.patch(`/service/${serviceId}`, dto)).data,
+
+  /** Soft delete: the sub-service leaves the catalog; past orders keep it. */
+  deleteService: async (serviceId: string) => (await apiClient.delete(`/service/${serviceId}`)).data,
 };

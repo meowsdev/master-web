@@ -20,9 +20,9 @@ export const matchesOrderFilter = (status: OrderStatus, chip: string) =>
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, { text: string; className: string }> = {
   [OrderStatus.PENDING]: { text: 'Pending', className: 'text-[#b7791f]' },
-  [OrderStatus.ACCEPTED]: { text: 'Accepted', className: 'text-[#1daa61]' },
-  [OrderStatus.IN_PROGRESS]: { text: 'In progress', className: 'text-[#1daa61]' },
-  [OrderStatus.COMPLETED]: { text: 'Complete', className: 'text-[#202939]' },
+  [OrderStatus.ACCEPTED]: { text: 'Accepted', className: 'text-primary' },
+  [OrderStatus.IN_PROGRESS]: { text: 'In progress', className: 'text-primary' },
+  [OrderStatus.COMPLETED]: { text: 'Complete', className: 'text-ink' },
   [OrderStatus.CANCELLED]: { text: 'Cancel', className: 'text-[#d64545]' },
   [OrderStatus.DISPUTED]: { text: 'Reject', className: 'text-[#d64545]' },
 };

@@ -10,7 +10,7 @@ export function ProviderPaymentNote({ order, viewer = 'PROVIDER' }: { order: Ord
   if (!isWaiting) return <PaymentSummaryCard order={order} viewer={viewer} />;
 
   return (
-    <p className="ml-auto max-w-[460px] rounded-[16px] bg-[#fff4d6] px-[14px] py-[10px] text-[14px] font-semibold text-[#202939]">
+    <p className="ml-auto max-w-[460px] rounded-[16px] bg-[#fff4d6] px-[14px] py-[10px] text-[14px] font-semibold text-ink">
       Waiting for the customer to pay online...
     </p>
   );

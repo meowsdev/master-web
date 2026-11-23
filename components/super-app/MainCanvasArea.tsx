@@ -115,7 +115,7 @@ export function MainCanvasArea({
         /* 2a. Provider landing: nothing open yet, just the header with Switch Account */
         <>
           <ChatEmptyHeader onSwitchAccount={openSettings} menuItems={[]} />
-          <div className="flex-1 bg-[#f7f5f3]" />
+          <div className="flex-1 bg-surface" />
         </>
       ) : activeRailTab === 'ORDERS' && !isProvider && user ? (
         /* 3a. Customer Orders view: one order's full chat history */

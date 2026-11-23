@@ -1,14 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import { STAFF_ROLE_LABEL, useStaffAccounts } from '@/hooks/useStaffAccounts';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { User } from '@/types/auth.types';
 import { CustomerSidebarTop } from '../../CustomerSidebarTop';
 import { SupportAvatar } from '../../support/SupportAvatar';
-import { AdminProfileHeader } from '../AdminProfileHeader';
+import { StaffSidebarHeader } from '../AdminProfileHeader';
 
 /** The sidebar adds its own "All" chip first. */
 const FILTERS = ['ম্যানেজার', 'সাপোর্ট', 'এইচআর', 'কাউন্সেলর', 'বন্ধ'] as const;
@@ -43,26 +41,13 @@ export function StaffSidebar({ user, onStaffOpened, onOpenAuth }: { user: User; 
         categoryNames={[...FILTERS]}
         isSearchCollapsed={false}
         searchPlaceholder="নাম বা নম্বর দিয়ে খুঁজুন..."
-        profileSlot={
-          <div className="flex items-center justify-between">
-            <AdminProfileHeader user={user} />
-            <button
-              type="button"
-              onClick={() => openPanel(null, 'adminAddStaff')}
-              title="নতুন স্টাফ যোগ করুন"
-              aria-label="Add staff"
-              className="flex size-[40px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1daa61] text-white transition-transform hover:scale-105"
-            >
-              <HugeiconsIcon icon={PlusSignIcon} size={22} strokeWidth={2.5} />
-            </button>
-          </div>
-        }
+        profileSlot={<StaffSidebarHeader user={user} action={{ label: 'নতুন স্টাফ যোগ করুন', onClick: () => openPanel(null, 'adminAddStaff') }} />}
       />
 
       <div className="min-h-0 flex-1 overflow-y-auto px-[8px] pb-[8px]">
-        {!isLoading && <p className="px-[10px] pb-[4px] pt-[8px] text-[13px] font-semibold text-[#697586]">মোট স্টাফ: {visible.length.toLocaleString('bn-BD')}</p>}
-        {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-[#697586]">লোড হচ্ছে...</p>}
-        {!isLoading && visible.length === 0 && <p className="p-[24px] text-center text-[14px] font-medium text-[#697586]">কোনো স্টাফ পাওয়া যায়নি।</p>}
+        {!isLoading && <p className="px-[10px] pb-[4px] pt-[8px] text-[13px] font-semibold text-muted">মোট স্টাফ: {visible.length.toLocaleString('bn-BD')}</p>}
+        {isLoading && <p className="p-[16px] text-center text-[14px] font-medium text-muted">লোড হচ্ছে...</p>}
+        {!isLoading && visible.length === 0 && <p className="p-[24px] text-center text-[14px] font-medium text-muted">কোনো স্টাফ পাওয়া যায়নি।</p>}
         {visible.map((person) => {
           const name = person.name || person.mobileNumber;
           const isOff = person.status !== 'ACTIVE';
@@ -74,15 +59,15 @@ export function StaffSidebar({ user, onStaffOpened, onOpenAuth }: { user: User; 
                 openPanel(person.id, 'adminStaff');
                 onStaffOpened();
               }}
-              className={`flex w-full cursor-pointer items-center gap-[12px] rounded-[12px] p-[10px] text-left transition-colors hover:bg-[#f7f5f3] ${openId === person.id ? 'bg-[#f7f5f3]' : ''}`}
+              className={`flex w-full cursor-pointer items-center gap-[12px] rounded-[12px] p-[10px] text-left transition-colors hover:bg-surface ${openId === person.id ? 'bg-surface' : ''}`}
             >
               <SupportAvatar name={name} photo={null} />
               <span className="flex min-w-0 flex-1 flex-col gap-[2px]">
                 <span className="flex items-center justify-between gap-[8px]">
-                  <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-[#202939]">{name}</span>
-                  <span className={`shrink-0 text-[12px] font-semibold ${isOff ? 'text-[#d64545]' : 'text-[#1daa61]'}`}>{isOff ? 'বন্ধ' : STAFF_ROLE_LABEL[person.role] ?? person.role}</span>
+                  <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-ink">{name}</span>
+                  <span className={`shrink-0 text-[12px] font-semibold ${isOff ? 'text-[#d64545]' : 'text-primary'}`}>{isOff ? 'বন্ধ' : STAFF_ROLE_LABEL[person.role] ?? person.role}</span>
                 </span>
-                <span className="truncate text-[13px] font-medium text-[#697586]">
+                <span className="truncate text-[13px] font-medium text-muted">
                   {person.mobileNumber}
                   {!person.isVerified && ' · এখনো লগইন করেননি'}
                 </span>

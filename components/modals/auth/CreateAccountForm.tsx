@@ -44,8 +44,8 @@ const USERNAME_HINTS: Partial<Record<UsernameStatus, string>> = {
 };
 
 function UsernameStatusIcon({ status }: { status: UsernameStatus }) {
-  if (status === 'checking') return <Loader2 className="size-[24px] shrink-0 animate-spin text-[#697586]" />;
-  if (status === 'available') return <CheckCircle2 className="size-[24px] shrink-0 text-[#1daa61]" strokeWidth={1.5} />;
+  if (status === 'checking') return <Loader2 className="size-[24px] shrink-0 animate-spin text-muted" />;
+  if (status === 'available') return <CheckCircle2 className="size-[24px] shrink-0 text-primary" strokeWidth={1.5} />;
   if (status === 'taken' || status === 'invalid') {
     return <XCircle className="size-[24px] shrink-0 text-[#d64545]" strokeWidth={1.5} />;
   }
@@ -53,7 +53,7 @@ function UsernameStatusIcon({ status }: { status: UsernameStatus }) {
 }
 
 const primaryButtonClass =
-  'cursor-pointer rounded-[12px] bg-[#1daa61] px-[16px] py-[8px] text-[20px] font-semibold tracking-[-0.4px] text-white transition-opacity hover:bg-[#189452] disabled:cursor-not-allowed disabled:bg-[#1daa61]/50';
+  'cursor-pointer rounded-[12px] bg-primary px-[16px] py-[8px] text-[20px] font-semibold tracking-[-0.4px] text-white transition-opacity hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary/50';
 
 /*
  * The single "Create Account" form from Figma, reused for editing a profile so
@@ -157,7 +157,7 @@ export function CreateAccountForm({
         value={phone}
         onChange={() => undefined}
         readOnly
-        trailing={<Check className="size-[24px] shrink-0 text-[#1daa61]" strokeWidth={1.5} />}
+        trailing={<Check className="size-[24px] shrink-0 text-primary" strokeWidth={1.5} />}
       />
 
       <LocationSelect

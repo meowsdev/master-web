@@ -17,11 +17,11 @@ const ROLES_WITH_STATS: string[] = [UserRole.CUSTOMER, UserRole.PROVIDER, UserRo
 /* The 120px circle of the edit form, read-only: the photo, or the same grey camera circle. */
 export function ProfilePhoto({ photoUrl }: { photoUrl: string | null }) {
   return (
-    <div className="flex size-[120px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#d9d9d9]">
+    <div className="flex size-[120px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface">
       {photoUrl ? (
         <Image src={photoUrl} alt="Profile photo" width={120} height={120} unoptimized className="size-full object-cover" />
       ) : (
-        <Camera className="size-[40px] text-[#202939]" strokeWidth={1.5} />
+        <Camera className="size-[40px] text-ink" strokeWidth={1.5} />
       )}
     </div>
   );
@@ -29,9 +29,9 @@ export function ProfilePhoto({ photoUrl }: { photoUrl: string | null }) {
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex flex-col items-center gap-[4px] rounded-[12px] bg-[#f7f5f3] px-[8px] py-[14px] text-center">
-      <span className="text-[20px] font-semibold tracking-[-0.4px] text-[#202939]">{value}</span>
-      <span className="text-[12px] font-medium text-[#697586]">{label}</span>
+    <div className="flex flex-col items-center gap-[4px] rounded-[12px] bg-surface px-[8px] py-[14px] text-center">
+      <span className="text-[20px] font-semibold tracking-[-0.4px] text-ink">{value}</span>
+      <span className="text-[12px] font-medium text-muted">{label}</span>
     </div>
   );
 }
@@ -53,7 +53,7 @@ export function ProfileView({ user, onEdit }: { user: User; onEdit: () => void }
       <div className="flex w-full flex-col items-center gap-[48px]">
         <AuthField icon={UserIcon} type="text" value={user.name ?? ''} placeholder="Full name" readOnly />
         <AuthField icon={AtSign} type="text" value={user.username ?? ''} placeholder="Username" readOnly />
-        <PhoneNumberField value={user.mobileNumber} onChange={() => undefined} readOnly trailing={<Check className="size-[24px] shrink-0 text-[#1daa61]" strokeWidth={1.5} />} />
+        <PhoneNumberField value={user.mobileNumber} onChange={() => undefined} readOnly trailing={<Check className="size-[24px] shrink-0 text-primary" strokeWidth={1.5} />} />
         <AuthField icon={BadgeCheck} type="text" value={districtName} placeholder="জেলা" readOnly />
         <AuthField icon={MapPin} type="text" value={upazilaName} placeholder="উপজেলা" readOnly />
         {/* Saved from the last order; the Place Order form starts with it. */}
@@ -76,8 +76,8 @@ function ProfileStats({ user }: { user: User }) {
 
   return (
     <section className="flex w-full flex-col gap-[16px]">
-      <h4 className="text-[16px] font-semibold tracking-[-0.32px] text-[#202939]">আমার কার্যক্রম</h4>
-      {isLoading && <p className="text-[14px] font-medium text-[#697586]">Loading...</p>}
+      <h4 className="text-[16px] font-semibold tracking-[-0.32px] text-ink">আমার কার্যক্রম</h4>
+      {isLoading && <p className="text-[14px] font-medium text-muted">Loading...</p>}
       {isError && <p className="text-[14px] font-medium text-[#d64545]">তথ্য লোড করা যায়নি।</p>}
       {data && (
         <>
@@ -87,7 +87,7 @@ function ProfileStats({ user }: { user: User }) {
             <Stat value={formatTaka(data.totalAmount)} label={amountLabel} />
           </div>
 
-          <h4 className="pt-[8px] text-[16px] font-semibold tracking-[-0.32px] text-[#202939]">
+          <h4 className="pt-[8px] text-[16px] font-semibold tracking-[-0.32px] text-ink">
             {isCustomer ? 'প্রোভাইডারদের মতামত' : 'কাস্টমারদের মতামত'}
           </h4>
           <ReviewList reviews={data.reviews} emptyText="এখনো কোনো রিভিউ নেই।" />

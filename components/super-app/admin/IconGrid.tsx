@@ -35,13 +35,13 @@ export function IconGrid({ onChoose, isBusy }: IconGridProps) {
   }, [names, query]);
 
   return (
-    <div className="mt-[10px] rounded-[12px] border border-[#e5e5e5] bg-[#f7f5f3] p-[10px]">
+    <div className="mt-[10px] rounded-[12px] border border-line bg-surface p-[10px]">
       <input
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder={library ? `Search ${names.length.toLocaleString()} icons (wrench, home, car...)` : 'Loading icons...'}
         disabled={!library}
-        className="h-[36px] w-full rounded-[8px] border border-[#cecece] bg-white px-[10px] text-[14px] text-[#202939] outline-none focus:border-[#1daa61]"
+        className="h-[36px] w-full rounded-[8px] border border-line bg-white px-[10px] text-[14px] text-ink outline-none focus:border-primary"
       />
       <div className={`mt-[8px] grid max-h-[240px] grid-cols-6 gap-[6px] overflow-y-auto ${isBusy ? 'pointer-events-none opacity-50' : ''}`}>
         {library &&
@@ -51,14 +51,14 @@ export function IconGrid({ onChoose, isBusy }: IconGridProps) {
               type="button"
               title={name.replace(/Icon$/, '')}
               onClick={() => onChoose(name.replace(/Icon$/, ''), library[name])}
-              className="flex aspect-square cursor-pointer items-center justify-center rounded-[8px] bg-white text-[#202939] hover:bg-[#d7fdd2]"
+              className="flex aspect-square cursor-pointer items-center justify-center rounded-[8px] bg-white text-ink hover:bg-secondary"
             >
               <HugeiconsIcon icon={library[name] as never} size={22} />
             </button>
           ))}
-        {library && shown.length === 0 && <p className="col-span-6 p-[12px] text-center text-[13px] font-medium text-[#697586]">No icon matches.</p>}
+        {library && shown.length === 0 && <p className="col-span-6 p-[12px] text-center text-[13px] font-medium text-muted">No icon matches.</p>}
       </div>
-      <p className="mt-[8px] text-[11px] font-medium text-[#697586]">Icons by Hugeicons. Showing the first {MAX_SHOWN}; search to narrow down.</p>
+      <p className="mt-[8px] text-[11px] font-medium text-muted">Icons by Hugeicons. Showing the first {MAX_SHOWN}; search to narrow down.</p>
     </div>
   );
 }

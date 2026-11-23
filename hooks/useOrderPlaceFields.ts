@@ -12,14 +12,16 @@ import { OrderPlaceFields } from '@/services/catalog.service';
  * Where and when, for the cart checkout and the Custom request: district, upazila, address, date and time slot.
  * Starts filled in with the place of the customer's last order (kept on the profile), like the Place Order form.
  */
-export function useOrderPlaceFields() {
-  const user = useAuthStore((state) => state.user);
+export function useOrderPlaceFields(initialSchedule?: { date: string; timeSlot: string }, { forSomeoneElse = false }: { forSomeoneElse?: boolean } = {}) {
+  // Staff ordering for a customer start empty: their own saved place is not the customer's.
+  const user = useAuthStore((state) => (forSomeoneElse ? null : state.user));
   const hasSavedArea = Boolean(user?.districtId && user?.upazilaId);
   const [districtId, setDistrictId] = useState<number | null>(hasSavedArea ? user!.districtId! : null);
   const [upazilaId, setUpazilaId] = useState<number | null>(hasSavedArea ? user!.upazilaId! : null);
   const [addressDetail, setAddressDetail] = useState(user?.addresses?.find((address) => address.isDefault)?.addressText ?? '');
-  const [scheduledDate, setScheduledDate] = useState('');
-  const [timeSlot, setTimeSlot] = useState('');
+  // Filled in when the customer already picked a time with Tap to Schedule.
+  const [scheduledDate, setScheduledDate] = useState(initialSchedule?.date ?? '');
+  const [timeSlot, setTimeSlot] = useState(initialSchedule?.timeSlot ?? '');
   const locations = useLocationOptions(districtId);
 
   // The time slots come with the public order catalog (same cache as the Place Order form).

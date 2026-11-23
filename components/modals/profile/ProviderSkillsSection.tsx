@@ -5,7 +5,7 @@ import { useProviderSkills, useSaveProviderSkills } from '@/hooks/useProviderSki
 import { Service } from '@/types/service.types';
 
 const selectClass =
-  'h-[44px] w-full cursor-pointer rounded-[10px] border border-[#cecece] bg-white px-[12px] text-[15px] font-medium text-[#202939] outline-none focus:border-[#1daa61]';
+  'h-[44px] w-full cursor-pointer rounded-[10px] border border-line bg-white px-[12px] text-[15px] font-medium text-ink outline-none focus:border-primary';
 
 interface MainService {
   id: string;
@@ -69,9 +69,9 @@ export function ProviderSkillsSection({ userId }: { userId: string }) {
     });
 
   return (
-    <section className="w-full border-t border-[#e5e5e5] pt-[24px]">
-      <h4 className="text-[16px] font-semibold text-[#202939]">Services I offer</h4>
-      <p className="mt-[4px] text-[13px] font-medium leading-relaxed text-[#697586]">
+    <section className="w-full border-t border-line pt-[24px]">
+      <h4 className="text-[16px] font-semibold text-ink">Services I offer</h4>
+      <p className="mt-[4px] text-[13px] font-medium leading-relaxed text-muted">
         Choose a main service, then tick the services under it that you provide. New orders reach you only for these.
         {hasLoadedSaved && selectedIds.size === 0 && <span className="font-semibold text-[#b7791f]"> You have none ticked, so you get no new orders.</span>}
       </p>
@@ -89,7 +89,7 @@ export function ProviderSkillsSection({ userId }: { userId: string }) {
       {mainServiceId !== null && (
         <div className="mt-[12px] flex flex-col gap-[10px]">
           {shown.length > 0 && (
-            <button type="button" onClick={toggleAllShown} className="w-fit cursor-pointer text-[14px] font-semibold text-[#1daa61] hover:underline">
+            <button type="button" onClick={toggleAllShown} className="w-fit cursor-pointer text-[14px] font-semibold text-primary hover:underline">
               {allShownSelected ? 'Clear this service' : 'Select the whole service'}
             </button>
           )}
@@ -102,7 +102,7 @@ export function ProviderSkillsSection({ userId }: { userId: string }) {
                   type="button"
                   aria-pressed={isOn}
                   onClick={() => toggle(service.id)}
-                  className={`h-[34px] cursor-pointer rounded-full border px-[12px] text-[13px] font-medium transition-colors ${isOn ? 'border-[#bccdba] bg-[#a9e5cf] text-[#202939]' : 'border-[#cecece] bg-white text-[#697586] hover:bg-[#f7f5f3]'}`}
+                  className={`h-[34px] cursor-pointer rounded-full border px-[12px] text-[13px] font-medium transition-colors ${isOn ? 'border-secondary bg-secondary text-ink' : 'border-line bg-white text-muted hover:bg-surface'}`}
                 >
                   {service.nameBn || service.name}
                 </button>
@@ -113,14 +113,14 @@ export function ProviderSkillsSection({ userId }: { userId: string }) {
       )}
 
       <div className="mt-[16px] flex items-center justify-between gap-[12px]">
-        <span className="text-[13px] font-semibold text-[#202939]">
+        <span className="text-[13px] font-semibold text-ink">
           {selectedIds.size === 0 ? 'Nothing chosen yet' : `${selectedIds.size} service(s) in ${countsByMain.size} main service(s)`}
         </span>
         <button
           type="button"
           disabled={save.isPending || isLoading}
           onClick={() => save.mutate([...selectedIds])}
-          className="h-[38px] cursor-pointer rounded-[8px] bg-[#1daa61] px-[16px] text-[14px] font-semibold text-white hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-[38px] cursor-pointer rounded-[8px] bg-primary px-[16px] text-[14px] font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
         >
           {save.isPending ? 'Saving...' : 'Save services'}
         </button>

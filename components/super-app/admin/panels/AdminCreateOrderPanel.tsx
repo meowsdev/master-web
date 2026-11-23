@@ -33,9 +33,9 @@ const apiErrorMessage = (error: unknown) => {
 };
 
 /* One line under the number: a known customer (details filled in), a new number, or a number that is not a customer. */
-function CustomerLookupNote({ lookup }: { lookup: CustomerLookup }) {
+export function CustomerLookupNote({ lookup }: { lookup: CustomerLookup }) {
   if (!lookup.found) {
-    return <p className="mt-[8px] text-[12px] font-medium text-[#697586]">নতুন নম্বর: অর্ডার দিলে নতুন কাস্টমার অ্যাকাউন্ট তৈরি হবে।</p>;
+    return <p className="mt-[8px] text-[12px] font-medium text-muted">নতুন নম্বর: অর্ডার দিলে নতুন কাস্টমার অ্যাকাউন্ট তৈরি হবে।</p>;
   }
   if (lookup.role !== 'CUSTOMER') {
     return <p className="mt-[8px] rounded-[8px] bg-[#fde8e8] px-[10px] py-[6px] text-[12px] font-semibold text-[#d64545]">এই নম্বরটি একজন {lookup.role.toLowerCase()}-এর, কাস্টমারের না। এই নম্বরে অর্ডার দেওয়া যাবে না।</p>;
@@ -44,7 +44,7 @@ function CustomerLookupNote({ lookup }: { lookup: CustomerLookup }) {
     return <p className="mt-[8px] rounded-[8px] bg-[#fde8e8] px-[10px] py-[6px] text-[12px] font-semibold text-[#d64545]">এই কাস্টমার ব্লক করা আছেন।</p>;
   }
   return (
-    <p className="mt-[8px] rounded-[8px] bg-[#e7fce3] px-[10px] py-[6px] text-[12px] font-semibold text-[#205737]">
+    <p className="mt-[8px] rounded-[8px] bg-secondary px-[10px] py-[6px] text-[12px] font-semibold text-ink">
       ✓ পুরোনো কাস্টমার{lookup.name ? `: ${lookup.name}` : ''}। নাম ও ঠিকানা বসিয়ে দেওয়া হয়েছে, দরকার হলে বদলাতে পারবেন।
     </p>
   );
@@ -172,7 +172,7 @@ export function AdminCreateOrderPanel({ adminId, onClose }: { adminId: string; o
         </div>
 
         {/* First the kind of order: a catalog service, or one typed by hand. The rest of the form follows it. */}
-        <section className="mt-[16px] rounded-[16px] border border-[#e5e5e5] bg-white px-[16px] pb-[16px] pt-[1px]">
+        <section className="mt-[16px] rounded-[16px] border border-line bg-white px-[16px] pb-[16px] pt-[1px]">
           <OrderSelect
             icon={LayersIcon}
             placeholder="অর্ডারের ধরন"
@@ -180,7 +180,7 @@ export function AdminCreateOrderPanel({ adminId, onClose }: { adminId: string; o
             options={ORDER_KIND_OPTIONS}
             onChange={(value) => setOrderKind(value === 'CUSTOM' ? 'CUSTOM' : 'EXISTING')}
           />
-          <p className="mt-[8px] text-[12px] font-medium leading-relaxed text-[#697586]">
+          <p className="mt-[8px] text-[12px] font-medium leading-relaxed text-muted">
             {isCustom
               ? 'লিস্টে নেই এমন সার্ভিস: মেইন সার্ভিস, সাব-সার্ভিস, বিস্তারিত আর দাম নিজে লিখুন।'
               : 'লিস্ট থেকে সার্ভিস বেছে নিন, দাম নিজে থেকে হিসাব হবে।'}
@@ -192,7 +192,7 @@ export function AdminCreateOrderPanel({ adminId, onClose }: { adminId: string; o
 
         {isCustom
           ? customPrice !== null && (
-              <div className="mt-[20px] flex justify-between rounded-[12px] border border-[#e5e5e5] bg-[#f7f5f3] p-[14px] text-[15px] font-semibold text-[#202939]">
+              <div className="mt-[20px] flex justify-between rounded-[12px] border border-line bg-surface p-[14px] text-[15px] font-semibold text-ink">
                 <span>Total</span>
                 <span>{formatTaka(customPrice)}</span>
               </div>
@@ -204,12 +204,12 @@ export function AdminCreateOrderPanel({ adminId, onClose }: { adminId: string; o
             type="button"
             onClick={isCustom ? submitCustom : state.submit}
             disabled={!canSubmit}
-            className="cursor-pointer rounded-[8px] bg-[#1daa61] px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-[#189452] disabled:cursor-not-allowed disabled:opacity-50"
+            className="cursor-pointer rounded-[8px] bg-primary px-[20px] py-[8px] text-[14px] font-semibold text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
           >
             {isSubmitting ? 'Creating order...' : 'Create order'}
           </button>
         </div>
-        {!canSubmit && missing.length > 0 && <p className="mt-[10px] text-center text-[12px] font-medium text-[#697586]">বাকি আছে: {missing.join(', ')}</p>}
+        {!canSubmit && missing.length > 0 && <p className="mt-[10px] text-center text-[12px] font-medium text-muted">বাকি আছে: {missing.join(', ')}</p>}
       </div>
     </SidePanelShell>
   );

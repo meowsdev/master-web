@@ -4,12 +4,13 @@ import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import Image from 'next/image';
 import { ReactNode } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { PlusSignIcon } from '@hugeicons/core-free-icons';
+import { BubbleChatIcon, PlusSignIcon, ShoppingBag02Icon, UserIcon } from '@hugeicons/core-free-icons';
 import { RailSelection, RailTab } from '@/types/super-app.types';
+import { RailIconButton, railIconClass } from './RailIconButton';
 
 interface CustomerNavigationRailProps {
   isAuthenticated: boolean;
-  /** The selected icon is drawn with the mint circle, the others with the white one. */
+  /** The selected icon sits in the secondary-green circle with a white border. */
   selection: RailSelection;
   onSelectTab: (tab: RailTab) => void;
   /** Signed-in only: the + above the profile picture starts a new order. */
@@ -26,10 +27,8 @@ interface CustomerNavigationRailProps {
 }
 
 /*
- * Customer rail from the Figma design: chats, orders and account only.
- * Each icon already includes its own 36px circular background in the exported
- * SVG: mint for the selected one, white for the rest. So every icon has a
- * `-active` and an `-inactive` file and the selected state just picks one.
+ * Customer rail from the Figma design: chats, orders and account only. The icons are Hugeicons (RailIconButton):
+ * the selected one sits in a secondary-green circle with a white border, the others have no circle.
  */
 export function CustomerNavigationRail({
   isAuthenticated,
@@ -43,44 +42,30 @@ export function CustomerNavigationRail({
   showOrdersTab = true,
   teamSlot,
 }: CustomerNavigationRailProps) {
-  const iconState = (isSelected: boolean) => (isSelected ? 'active' : 'inactive');
   // The Support chat is a row of the chat list, so Chats stays lit while it is open.
   const isChatsSelected = selection === 'CHATS' || selection === 'SUPPORT';
 
   return (
-    <aside className="z-20 hidden h-full w-[64px] shrink-0 select-none flex-col items-center justify-between overflow-clip bg-[#f7f5f3] px-[8px] pb-[27px] md:flex">
-      <div className="flex w-[36px] flex-col gap-[8px]">
+    <aside className="z-20 hidden h-full w-[64px] shrink-0 select-none flex-col items-center justify-between overflow-clip bg-surface px-[8px] pb-[27px] md:flex">
+      <div className="flex w-[40px] flex-col items-center gap-[10px]">
         {/* The app logo heads the rail in every role. */}
         {/* Centred in a bar as tall as the headers beside it, so the logo sits on the same line as their titles. */}
         <div className={`mb-[5px] flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-center`}>
           <Image src="/chat-list/brand-logo.svg" alt="Super App" width={36} height={36} priority />
         </div>
 
-        <button
-          type="button"
-          onClick={() => onSelectTab('CHATS')}
-          title="Chats & Services"
-          aria-current={isChatsSelected ? 'page' : undefined}
-          className="size-[36px] cursor-pointer"
-        >
-          <Image src={`/rail/chats-${iconState(isChatsSelected)}.svg`} alt="Chats" width={36} height={36} />
-        </button>
+        <RailIconButton icon={BubbleChatIcon} label="Chats & Services" isActive={isChatsSelected} onClick={() => onSelectTab('CHATS')} />
 
         {showOrdersTab && (
-        <button
-          type="button"
+        // Disabled for guests is a UI hint only; the orders API itself rejects unauthenticated requests.
+        <RailIconButton
+          icon={ShoppingBag02Icon}
+          label={isAuthenticated ? 'My Orders & History' : 'Log in to view your orders'}
+          isActive={selection === 'ORDERS'}
           onClick={() => onSelectTab('ORDERS')}
           disabled={!isAuthenticated}
-          title={isAuthenticated ? 'My Orders & History' : 'Log in to view your orders'}
-          // UI hint only; the orders API itself rejects unauthenticated requests.
-          aria-current={selection === 'ORDERS' ? 'page' : undefined}
-          className="relative size-[36px] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Image src={`/rail/orders-${iconState(selection === 'ORDERS')}.svg`} alt="My orders" width={36} height={36} />
-          {isAuthenticated && runningCount > 0 && (
-            <span className="absolute right-0 top-0 size-[10px] rounded-full bg-[#1daa61] ring-2 ring-[#f7f5f3]" />
-          )}
-        </button>
+          badge={isAuthenticated && runningCount > 0 ? <span className="absolute right-0 top-0 size-[10px] rounded-full bg-primary ring-2 ring-white" /> : undefined}
+        />
         )}
 
       </div>
@@ -94,7 +79,7 @@ export function CustomerNavigationRail({
             onClick={onStartNewOrder}
             title="Start a new order"
             aria-label="Start a new order"
-            className="flex size-[36px] cursor-pointer items-center justify-center rounded-full border-2 border-[#1daa61] text-[#1daa61] transition-colors hover:bg-[#d7fdd2]"
+            className="btn-raised flex size-[40px] cursor-pointer items-center justify-center rounded-full bg-primary text-white transition-transform hover:scale-105"
           >
             <HugeiconsIcon icon={PlusSignIcon} size={20} strokeWidth={2.5} />
           </button>
@@ -104,15 +89,13 @@ export function CustomerNavigationRail({
           onClick={onOpenAccount}
           title={accountTitle}
           aria-current={selection === 'ACCOUNT' ? 'page' : undefined}
-          className={`size-[36px] cursor-pointer overflow-hidden rounded-full ${
-            selection === 'ACCOUNT' && profilePhoto ? 'ring-2 ring-[#1daa61]' : ''
-          }`}
+          className={isAuthenticated && profilePhoto ? `size-[40px] cursor-pointer overflow-hidden rounded-full border-2 ${selection === 'ACCOUNT' ? 'border-white ring-2 ring-secondary' : 'border-transparent'}` : railIconClass(selection === 'ACCOUNT')}
         >
           {isAuthenticated && profilePhoto ? (
             // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary upload hosts
             <img src={profilePhoto} alt="Account" className="size-full object-cover" />
           ) : (
-            <Image src={`/rail/account-${iconState(selection === 'ACCOUNT')}.svg`} alt="Account" width={36} height={36} />
+            <HugeiconsIcon icon={UserIcon} size={22} strokeWidth={selection === 'ACCOUNT' ? 2 : 1.7} />
           )}
         </button>
       </div>

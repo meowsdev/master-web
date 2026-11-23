@@ -27,8 +27,8 @@ function RevisionHistoryItem({ revision, number }: { revision: ServiceRevision; 
   return (
     <div className="my-[6px] rounded-[10px] bg-[#fff4e5] p-[10px]">
       <Fact label={`Revision ${number} · sent`}>{formatDateTime(revision.createdAt)}</Fact>
-      <p className="mt-[2px] text-[13px] font-medium leading-relaxed text-[#202939]">
-        <span className="text-[#697586]">Customer: </span>
+      <p className="mt-[2px] text-[13px] font-medium leading-relaxed text-ink">
+        <span className="text-muted">Customer: </span>
         {revision.issueDescription}
       </p>
 
@@ -38,13 +38,13 @@ function RevisionHistoryItem({ revision, number }: { revision: ServiceRevision; 
             <Fact label={`Revision ${number} · done`}>{formatDateTime(revision.completedAt ?? revision.updatedAt)}</Fact>
           </div>
           {revision.completionReason && (
-            <p className="mt-[2px] text-[13px] font-medium leading-relaxed text-[#202939]">
-              <span className="text-[#697586]">Why it came back: </span>
+            <p className="mt-[2px] text-[13px] font-medium leading-relaxed text-ink">
+              <span className="text-muted">Why it came back: </span>
               {revision.completionReason}
             </p>
           )}
           {revision.wasQualityIssue !== null && revision.wasQualityIssue !== undefined && (
-            <p className={`mt-[4px] text-[12px] font-semibold ${revision.wasQualityIssue ? 'text-[#d64545]' : 'text-[#205737]'}`}>
+            <p className={`mt-[4px] text-[12px] font-semibold ${revision.wasQualityIssue ? 'text-[#d64545]' : 'text-ink'}`}>
               {revision.wasQualityIssue ? 'Quality issue in the first job' : 'Not a quality issue'}
             </p>
           )}
@@ -83,10 +83,10 @@ export function OrderDetailsPanel({ order, onClose }: { order: Order; viewer: Or
     <SidePanelShell title="Order details" onClose={onClose}>
       <div className="flex items-center justify-between gap-[12px] pb-[16px]">
         <div className="flex min-w-0 flex-col gap-[4px]">
-          <p className="truncate text-[18px] font-semibold tracking-[-0.36px] text-[#202939]">#{order.referenceCode}</p>
-          <p className="truncate text-[13px] font-medium text-[#697586]">{order.service?.category?.name ?? order.service?.name ?? 'Service'}</p>
+          <p className="truncate text-[18px] font-semibold tracking-[-0.36px] text-ink">#{order.referenceCode}</p>
+          <p className="truncate text-[13px] font-medium text-muted">{order.service?.category?.name ?? order.service?.name ?? 'Service'}</p>
         </div>
-        <span className={`shrink-0 rounded-[8px] bg-[#f7f5f3] px-[10px] py-[4px] text-[13px] font-semibold ${status.className}`}>{status.text}</span>
+        <span className={`shrink-0 rounded-[8px] bg-surface px-[10px] py-[4px] text-[13px] font-semibold ${status.className}`}>{status.text}</span>
       </div>
 
       <Section title="Customer">
@@ -117,7 +117,7 @@ export function OrderDetailsPanel({ order, onClose }: { order: Order; viewer: Or
               {technician.mobileNumber && <Fact label="Phone">{technician.mobileNumber}</Fact>}
             </>
           ) : (
-            <p className="text-[14px] font-medium text-[#697586]">The provider is doing the work; no technician assigned.</p>
+            <p className="text-[14px] font-medium text-muted">The provider is doing the work; no technician assigned.</p>
           )}
         </Section>
       )}
@@ -129,7 +129,7 @@ export function OrderDetailsPanel({ order, onClose }: { order: Order; viewer: Or
             {formatTaka(line.amount)}
           </Fact>
         ))}
-        {detail?.description && <p className="mt-[8px] text-[14px] font-medium leading-relaxed text-[#202939]">{detail.description}</p>}
+        {detail?.description && <p className="mt-[8px] text-[14px] font-medium leading-relaxed text-ink">{detail.description}</p>}
       </Section>
 
       {detail && (
@@ -162,23 +162,23 @@ export function OrderDetailsPanel({ order, onClose }: { order: Order; viewer: Or
       {(review || customerRating) && (
         <Section title="Reviews">
           {review && (
-            <div className="rounded-[10px] bg-[#f7f5f3] p-[10px]">
-              <p className="text-[12px] font-medium text-[#697586]">Customer → provider</p>
+            <div className="rounded-[10px] bg-surface p-[10px]">
+              <p className="text-[12px] font-medium text-muted">Customer → provider</p>
               <p className="text-[14px] font-semibold text-[#f5a524]">
                 {'★'.repeat(review.customerRating)}
-                <span className="text-[#cecece]">{'★'.repeat(Math.max(0, 5 - review.customerRating))}</span>
+                <span className="text-muted">{'★'.repeat(Math.max(0, 5 - review.customerRating))}</span>
               </p>
-              {review.reviewComment && <p className="mt-[2px] text-[14px] font-medium text-[#202939]">{review.reviewComment}</p>}
+              {review.reviewComment && <p className="mt-[2px] text-[14px] font-medium text-ink">{review.reviewComment}</p>}
             </div>
           )}
           {customerRating && (
-            <div className="mt-[8px] rounded-[10px] bg-[#f7f5f3] p-[10px]">
-              <p className="text-[12px] font-medium text-[#697586]">Provider → customer</p>
+            <div className="mt-[8px] rounded-[10px] bg-surface p-[10px]">
+              <p className="text-[12px] font-medium text-muted">Provider → customer</p>
               <p className="text-[14px] font-semibold text-[#f5a524]">
                 {'★'.repeat(customerRating.rating)}
-                <span className="text-[#cecece]">{'★'.repeat(Math.max(0, 5 - customerRating.rating))}</span>
+                <span className="text-muted">{'★'.repeat(Math.max(0, 5 - customerRating.rating))}</span>
               </p>
-              {customerRating.comment && <p className="mt-[2px] text-[14px] font-medium text-[#202939]">{customerRating.comment}</p>}
+              {customerRating.comment && <p className="mt-[2px] text-[14px] font-medium text-ink">{customerRating.comment}</p>}
             </div>
           )}
         </Section>

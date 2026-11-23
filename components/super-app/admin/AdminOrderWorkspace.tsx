@@ -64,7 +64,7 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
       />
 
       {isWaitingForProvider && (
-        <div className="flex shrink-0 items-center justify-between gap-[12px] border-b border-[#e5e5e5] bg-[#fff4e5] px-[16px] py-[8px]">
+        <div className="flex shrink-0 items-center justify-between gap-[12px] border-b border-line bg-[#fff4e5] px-[16px] py-[8px]">
           <p className="min-w-0 text-[13px] font-medium text-[#b7791f]">
             <span className="font-semibold">{order.needsAttention ? 'Needs a provider' : 'Waiting for a provider'}</span>
             {order.offerCount ? ` · offered to ${order.offerCount} so far` : ''}
@@ -73,7 +73,7 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
           <button
             type="button"
             onClick={() => openPanel(order.id, 'adminAssign')}
-            className="h-[34px] shrink-0 cursor-pointer rounded-[10px] bg-[#1daa61] px-[14px] text-[13px] font-semibold text-white hover:bg-[#189452]"
+            className="h-[34px] shrink-0 cursor-pointer rounded-[10px] bg-primary px-[14px] text-[13px] font-semibold text-white hover:bg-primary/90"
           >
             Send to a provider
           </button>
@@ -81,7 +81,7 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col gap-[12px] overflow-y-auto bg-[#f7f5f3] p-[16px]">
+      <div className="flex min-h-0 flex-1 flex-col gap-[12px] overflow-y-auto bg-surface p-[16px]">
         {timeline.map((entry) => {
           switch (entry.kind) {
             case 'order':

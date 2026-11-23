@@ -7,8 +7,8 @@ import { ORDER_STATUS_LABEL } from '../../order-history/order-status';
 
 export function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="border-t border-[#e5e5e5] py-[16px]">
-      <h4 className="mb-[10px] text-[13px] font-semibold uppercase tracking-[0.4px] text-[#697586]">{title}</h4>
+    <section className="border-t border-line py-[16px]">
+      <h4 className="mb-[10px] text-[13px] font-semibold uppercase tracking-[0.4px] text-muted">{title}</h4>
       {children}
     </section>
   );
@@ -17,15 +17,15 @@ export function Section({ title, children }: { title: string; children: ReactNod
 export function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-[16px] py-[4px] text-[14px]">
-      <span className="shrink-0 font-medium text-[#697586]">{label}</span>
-      <span className="min-w-0 break-words text-right font-semibold text-[#202939]">{children}</span>
+      <span className="shrink-0 font-medium text-muted">{label}</span>
+      <span className="min-w-0 break-words text-right font-semibold text-ink">{children}</span>
     </div>
   );
 }
 
 const STATUS_BADGE: Record<MemberStatus, { text: string; className: string }> = {
-  ACTIVE: { text: 'Active', className: 'bg-[#d7fdd2] text-[#205737]' },
-  INACTIVE: { text: 'Inactive', className: 'bg-[#f1f1f1] text-[#697586]' },
+  ACTIVE: { text: 'Active', className: 'bg-secondary text-ink' },
+  INACTIVE: { text: 'Inactive', className: 'bg-surface text-muted' },
   SUSPENDED: { text: 'Blocked', className: 'bg-[#fff4e5] text-[#b7791f]' },
   BANNED: { text: 'Banned', className: 'bg-[#fde8e8] text-[#d64545]' },
 };
@@ -43,9 +43,9 @@ export function StatusBadges({ status, isRestricted }: { status: MemberStatus; i
 /** "Complete 4 · Cancel 1": how many orders ended up where. */
 export function OrderCounts({ byStatus }: { byStatus: Record<string, number> }) {
   const entries = Object.entries(byStatus).filter(([, count]) => count > 0);
-  if (entries.length === 0) return <p className="text-[14px] font-medium text-[#697586]">No orders yet.</p>;
+  if (entries.length === 0) return <p className="text-[14px] font-medium text-muted">No orders yet.</p>;
   return (
-    <p className="flex flex-wrap gap-x-[14px] gap-y-[2px] text-[14px] font-semibold text-[#202939]">
+    <p className="flex flex-wrap gap-x-[14px] gap-y-[2px] text-[14px] font-semibold text-ink">
       {entries.map(([status, count]) => {
         const label = ORDER_STATUS_LABEL[status as OrderStatus];
         return (
