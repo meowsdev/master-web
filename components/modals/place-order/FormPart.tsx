@@ -1,8 +1,6 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Tick02Icon } from '@hugeicons/core-free-icons';
 
 interface FormPartProps {
   step: number;

@@ -11,19 +11,15 @@ import {
   Wallet,
   AlertOctagon,
   Award,
-  CheckCircle2,
-  Clock,
   TrendingUp,
   Package,
-  Wrench,
-  ArrowUpRight,
-  ShieldAlert,
   CreditCard,
   PlusCircle,
   X,
   RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiErrorMessage } from '@/lib/api-error';
 
 export default function ProviderDashboardPage() {
   const { user, setUser } = useAuthStore();
@@ -78,8 +74,8 @@ export default function ProviderDashboardPage() {
       queryClient.invalidateQueries({ queryKey: ['provider-orders'] });
       refetchMe();
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to update status');
+    onError: (err: unknown) => {
+      toast.error(apiErrorMessage(err, 'Failed to update status'));
     },
   });
 
@@ -93,8 +89,8 @@ export default function ProviderDashboardPage() {
       queryClient.invalidateQueries({ queryKey: ['me'] });
       queryClient.invalidateQueries({ queryKey: ['provider-orders'] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to recharge wallet');
+    onError: (err: unknown) => {
+      toast.error(apiErrorMessage(err, 'Failed to recharge wallet'));
     },
   });
 

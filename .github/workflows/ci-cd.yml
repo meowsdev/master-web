@@ -1,6 +1,6 @@
 name: CI/CD
 
-# Every push and pull request: install, typecheck, lint (report only) and build.
+# Every push and pull request: install, typecheck, lint and build.
 # A push to main that passes: deploy to the EC2 server (PM2).
 on:
   push:
@@ -17,11 +17,11 @@ jobs:
     name: Typecheck, lint, build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
@@ -32,10 +32,8 @@ jobs:
       - name: Typecheck
         run: pnpm exec tsc --noEmit -p .
 
-      # Older files still have lint errors; they are reported here but do not block a deploy yet.
-      - name: Lint (report only)
+      - name: Lint
         run: pnpm lint
-        continue-on-error: true
 
       - name: Build
         run: pnpm build

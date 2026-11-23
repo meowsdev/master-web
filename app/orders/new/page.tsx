@@ -3,19 +3,16 @@
 import React, { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Navbar } from '@/components/Navbar';
 import { servicesService } from '@/services/services.service';
-import { ordersService } from '@/services/orders.service';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
   ShieldCheck,
   Clock,
   MapPin,
-  CheckCircle2,
   Calendar,
   Headphones,
-  ArrowRight,
   Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';

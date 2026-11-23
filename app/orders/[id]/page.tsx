@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Navbar } from '@/components/Navbar';
 import { ordersService } from '@/services/orders.service';
@@ -9,16 +9,16 @@ import { revisionService } from '@/services/revision.service';
 import { reviewService } from '@/services/review.service';
 import { useAuthStore } from '@/store/useAuthStore';
 import { UserRole } from '@/types/auth.types';
-import { OrderStatus, PaymentStatus } from '@/types/order.types';
+import { OrderStatus } from '@/types/order.types';
 import { OrderRevisionModal } from '@/components/modals/OrderRevisionModal';
 import { OrderReviewModal } from '@/components/modals/OrderReviewModal';
-import { Package, ShieldCheck, CheckCircle2, XCircle, Clock, Star, Sparkles, AlertTriangle, RotateCcw, MessageSquare, ThumbsUp, ThumbsDown, Zap } from 'lucide-react';
+import { Package, CheckCircle2, XCircle, Clock, Star, Sparkles, AlertTriangle, RotateCcw, Zap } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiErrorMessage } from '@/lib/api-error';
 
 export default function OrderDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const router = useRouter();
   const queryClient = useQueryClient();
   const { user, activeRole } = useAuthStore();
 
@@ -45,8 +45,8 @@ export default function OrderDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['order', id] });
       queryClient.invalidateQueries({ queryKey: ['my-orders'] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to update order status');
+    onError: (err: unknown) => {
+      toast.error(apiErrorMessage(err, 'Failed to update order status'));
     },
   });
 
@@ -57,8 +57,8 @@ export default function OrderDetailPage() {
       toast.success('Proposed price accepted! Order is now IN_PROGRESS.');
       queryClient.invalidateQueries({ queryKey: ['order', id] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to accept price');
+    onError: (err: unknown) => {
+      toast.error(apiErrorMessage(err, 'Failed to accept price'));
     },
   });
 
@@ -69,8 +69,8 @@ export default function OrderDetailPage() {
       toast.success('Additional price rejected and reverted.');
       queryClient.invalidateQueries({ queryKey: ['order', id] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to reject price');
+    onError: (err: unknown) => {
+      toast.error(apiErrorMessage(err, 'Failed to reject price'));
     },
   });
 
@@ -87,8 +87,8 @@ export default function OrderDetailPage() {
       setRevisionDesc('');
       queryClient.invalidateQueries({ queryKey: ['order', id] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to request revision');
+    onError: (err: unknown) => {
+      toast.error(apiErrorMessage(err, 'Failed to request revision'));
     },
   });
 
@@ -107,8 +107,8 @@ export default function OrderDetailPage() {
       setIsReviewModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ['order', id] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to submit review');
+    onError: (err: unknown) => {
+      toast.error(apiErrorMessage(err, 'Failed to submit review'));
     },
   });
 

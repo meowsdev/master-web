@@ -16,6 +16,7 @@ import { catalogService } from '@/services/catalog.service';
 import { authService } from '@/services/auth.service';
 import { useAuthStore } from '@/store/useAuthStore';
 import { cartLineAmount, useCartStore } from '@/store/useCartStore';
+import { CartLine } from '@/types/catalog.types';
 import { useScheduleStore } from '@/store/useScheduleStore';
 import { useOrderHistoryStore } from '@/store/useOrderHistoryStore';
 import { useStaffPermissions } from '@/hooks/useStaffPermissions';
@@ -28,6 +29,9 @@ interface CartCheckoutPanelProps {
   onPlaced: (order: Order) => void;
 }
 
+/** One shared empty cart, so an empty cart keeps the same reference between renders. */
+const NO_LINES: CartLine[] = [];
+
 const MAX_QUANTITY = { FIXED: 1, PER_UNIT: 10, PER_SQFT: 10_000 } as const;
 
 /*
@@ -36,7 +40,7 @@ const MAX_QUANTITY = { FIXED: 1, PER_UNIT: 10, PER_SQFT: 10_000 } as const;
  * Staff who may create orders first say whom it is for (phone and name); it is then placed for that customer.
  */
 export function CartCheckoutPanel({ mainServiceId, onClose, onPlaced }: CartCheckoutPanelProps) {
-  const lines = useCartStore((state) => state.carts[mainServiceId]) ?? [];
+  const lines = useCartStore((state) => state.carts[mainServiceId]) ?? NO_LINES;
   const setQuantity = useCartStore((state) => state.setQuantity);
   const remove = useCartStore((state) => state.remove);
   const clear = useCartStore((state) => state.clear);

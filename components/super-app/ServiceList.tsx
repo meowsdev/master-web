@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo, useRef } from 'react';
-import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import { Service } from '@/types/service.types';
 import { ChatMessage } from '@/types/super-app.types';
@@ -48,8 +47,6 @@ export function ServiceList({
   onSelectService,
   isAuthenticated,
   user,
-  activeRole,
-  onOpenProfile,
   runningServiceIds = [],
   serviceMessages = {},
   conversationByServiceId,
@@ -76,7 +73,7 @@ export function ServiceList({
   const textSecondary = isDarkMode ? 'text-muted' : 'text-muted';
 
   // Fetch customer orders (shares 'my-orders-drawer' cache) to detect running revisions
-  const { data: customerOrders = [], refetch } = useQuery<Order[]>({
+  const { data: customerOrders = [] } = useQuery<Order[]>({
     queryKey: ['my-orders-drawer', user?.id],
     queryFn: () => ordersService.getOrders(),
     enabled: isAuthenticated && Boolean(user?.id),

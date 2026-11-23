@@ -3,7 +3,6 @@
 import { isValidPhoneNumber } from 'react-phone-number-input/mobile';
 import { PhoneNumberField } from './PhoneNumberField';
 import { OtpControls, OtpVerifyRow } from './OtpVerifyRow';
-import { authLinkClass } from './AuthDrawerShell';
 
 interface LoginOtpFormProps {
   phone: string;
@@ -17,7 +16,7 @@ interface LoginOtpFormProps {
  * logs straight in or continues to profile setup is decided by the server's
  * answer to Verify, so this form knows nothing about registration.
  */
-export function LoginOtpForm({ phone, onPhoneChange, otp, onTechnicianLogin }: LoginOtpFormProps) {
+export function LoginOtpForm({ phone, onPhoneChange, otp }: LoginOtpFormProps) {
   const isPhoneValid = phone !== '' && isValidPhoneNumber(phone);
 
   return (

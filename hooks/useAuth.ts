@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { authService } from '@/services/auth.service';
 import { useAuthStore } from '@/store/useAuthStore';
+import { apiErrorMessage } from '@/lib/api-error';
 import {
   CompleteProfileDto,
   RequestOtpDto,
@@ -23,8 +24,8 @@ export const useAuth = () => {
     onSuccess: () => {
       toast.success('OTP sent successfully to your mobile number!');
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to send OTP');
+    onError: (err: unknown) => {
+      toast.error(apiErrorMessage(err, 'Failed to send OTP'));
     },
   });
 
@@ -35,8 +36,8 @@ export const useAuth = () => {
       setAuth(data.user);
       toast.success('Login successful!');
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Invalid OTP code');
+    onError: (err: unknown) => {
+      toast.error(apiErrorMessage(err, 'Invalid OTP code'));
     },
   });
 
@@ -47,8 +48,8 @@ export const useAuth = () => {
       setAuth(data.user, data.accessToken, data.refreshToken);
       toast.success('Technician logged in successfully!');
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Technician login failed');
+    onError: (err: unknown) => {
+      toast.error(apiErrorMessage(err, 'Technician login failed'));
     },
   });
 
@@ -59,8 +60,8 @@ export const useAuth = () => {
       setUser(data);
       toast.success('Profile completed successfully!');
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to complete profile');
+    onError: (err: unknown) => {
+      toast.error(apiErrorMessage(err, 'Failed to complete profile'));
     },
   });
 
@@ -73,8 +74,8 @@ export const useAuth = () => {
       toast.success(`Switched to ${role} profile!`);
       queryClient.invalidateQueries();
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to switch profile');
+    onError: (err: unknown) => {
+      toast.error(apiErrorMessage(err, 'Failed to switch profile'));
     },
   });
 

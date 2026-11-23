@@ -34,7 +34,7 @@ export const chatService = {
   },
 
   getOrCreateConversation: async (dto: CreateConversationDto) => {
-    const payload: Record<string, any> = {};
+    const payload: Record<string, unknown> = {};
     if (dto.serviceId?.trim()) payload.serviceId = dto.serviceId.trim();
     if (dto.providerId?.trim()) payload.providerId = dto.providerId.trim();
     if (dto.customerProfileId?.trim()) payload.customerProfileId = dto.customerProfileId.trim();
@@ -57,7 +57,7 @@ export const chatService = {
 
   sendMessage: async (dto: SendMessageDto) => {
     const conversationId = dto.conversationId || dto.sessionId;
-    const payload: Record<string, any> = {
+    const payload: Record<string, unknown> = {
       conversationId: conversationId!,
       type: dto.type || MessageType.TEXT,
     };

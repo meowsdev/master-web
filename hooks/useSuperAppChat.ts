@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ChatMessage, OrderCardData } from '@/types/super-app.types';
 import { Service } from '@/types/service.types';
-import { Order, OrderStatus } from '@/types/order.types';
+import { OrderStatus } from '@/types/order.types';
 import { ordersService } from '@/services/orders.service';
 import { useChatStorage } from './useChatStorage';
 

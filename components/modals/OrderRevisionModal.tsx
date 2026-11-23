@@ -19,7 +19,6 @@ interface OrderRevisionModalProps {
 
 export function OrderRevisionModal({
   isOpen,
-  orderId,
   issueDescription,
   revisionDesc,
   onIssueDescriptionChange,

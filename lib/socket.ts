@@ -1,6 +1,5 @@
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Message } from '@/types/chat.types';
 
 import { API_BASE_URL } from '@/lib/api-config';
 import { refreshSession } from '@/lib/auth-session';

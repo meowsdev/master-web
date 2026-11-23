@@ -34,11 +34,11 @@ export interface User {
   role: UserRole;
   status: UserStatus;
   isVerified: boolean;
-  activeProfile?: any;
-  customerProfile?: any;
-  providerProfile?: any;
-  counselorProfile?: any;
-  technicianProfile?: any;
+  activeProfile?: RoleProfile | null;
+  customerProfile?: RoleProfile | null;
+  providerProfile?: RoleProfile | null;
+  counselorProfile?: RoleProfile | null;
+  technicianProfile?: RoleProfile | null;
   availableRoles?: UserRole[];
   addresses?: Array<{
     id: string;
@@ -89,4 +89,15 @@ export interface CompleteProfileDto {
   email?: string;
   profilePhoto?: string;
   role?: UserRole;
+}
+
+/** One of a user's role profiles, as far as the screens read it; the backend sends more fields. */
+export interface RoleProfile {
+  id: string;
+  rating?: number | string | null;
+  walletBalance?: number | string | null;
+  level?: string | null;
+  isBlockedForNegative?: boolean | null;
+  totalCompletedOrders?: number | null;
+  [field: string]: unknown;
 }

@@ -7,16 +7,14 @@ import { authService } from '@/services/auth.service';
 import { UserRole } from '@/types/auth.types';
 import {
   MapPin,
-  Search,
-  User,
   LogOut,
-  ShieldCheck,
   MessageSquare,
   Package,
   Wrench,
   Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiErrorMessage } from '@/lib/api-error';
 
 interface NavbarProps {
   onLocationChange?: (lat: number, lng: number, address: string) => void;
@@ -58,8 +56,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onLocationChange }) => {
       setUser(updated);
       setRole(role);
       toast.success(`Switched active profile to ${role}`);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Could not switch profile');
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Could not switch profile'));
     }
   };
 

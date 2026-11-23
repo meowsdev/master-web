@@ -14,7 +14,9 @@ interface UseChatSocketProps {
 export function useChatSocket({ activeSessionId }: UseChatSocketProps) {
   const queryClient = useQueryClient();
   const { user, accessToken, isAuthenticated } = useAuthStore();
-  const [isConnected, setIsConnected] = useState(false);
+  const [isSocketUp, setIsConnected] = useState(false);
+  // Signed out means not connected, whatever the socket last reported.
+  const isConnected = isAuthenticated && isSocketUp;
   const [typingUser, setTypingUser] = useState<string | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentJoinedSessionRef = useRef<string | null>(null);
@@ -24,7 +26,6 @@ export function useChatSocket({ activeSessionId }: UseChatSocketProps) {
     // Cookie sessions have no accessToken in JS; isAuthenticated is the signal.
     if (!isAuthenticated) {
       disconnectChatSocket();
-      setIsConnected(false);
       return;
     }
 
@@ -100,7 +101,7 @@ export function useChatSocket({ activeSessionId }: UseChatSocketProps) {
 
       // 4. Toast notification if message is from the other person and not currently focused/sent by self
       if (user?.id && newMsg.senderId !== user.id) {
-        const senderName = (newMsg as any).sender?.name || 'Counselor';
+        const senderName = (newMsg as { sender?: { name?: string } }).sender?.name || 'Counselor';
         if (newMsg.type === 'OFFER') {
           toast.info(`💼 New Special Offer from ${senderName}!`, { duration: 4000 });
         } else if (newMsg.type === 'SYSTEM') {

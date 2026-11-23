@@ -1,7 +1,7 @@
 'use client';
 
 import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
-import { HeaderMenuItem, HeaderOptionsMenu } from './HeaderOptionsMenu';
+import { HeaderMenuItem } from './HeaderOptionsMenu';
 
 interface ChatEmptyHeaderProps {
   onSwitchAccount: () => void;
@@ -9,7 +9,7 @@ interface ChatEmptyHeaderProps {
 }
 
 /* Header while no service is open (Figma): an empty bar with Switch Account and ⋮ on the right. */
-export function ChatEmptyHeader({ onSwitchAccount, menuItems }: ChatEmptyHeaderProps) {
+export function ChatEmptyHeader({ onSwitchAccount }: ChatEmptyHeaderProps) {
   return (
     <header className={`flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-end gap-[12px] border-b border-line bg-white px-[16px]`}>
       <button

@@ -13,6 +13,19 @@ const withoutGreetings = (stored: Record<string, ChatMessage[]>) =>
     Object.entries(stored).map(([serviceId, messages]) => [serviceId, messages.filter((message) => !/^init-\d+$/.test(message.id))]),
   );
 
+/** A saved map from localStorage, or empty (on the server, nothing saved, or unreadable). */
+function readSaved<T extends object>(key: string, clean?: (saved: T) => T): T {
+  if (typeof window === 'undefined') return {} as T;
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved) return {} as T;
+    const parsed = JSON.parse(saved) as T;
+    return clean ? clean(parsed) : parsed;
+  } catch {
+    return {} as T;
+  }
+}
+
 /**
  * Handles persistent message and activity storage with strict user session isolation.
  * Automatically switches storage keys when userId changes to prevent data leakage.
@@ -21,43 +34,17 @@ export function useChatStorage({ userId }: UseChatStorageProps) {
   const storageKey = userId ? `master_msgs_${userId}` : 'master_msgs_guest';
   const activityKey = userId ? `master_act_${userId}` : 'master_act_guest';
 
-  const [serviceMessages, setServiceMessages] = useState<Record<string, ChatMessage[]>>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(storageKey);
-        if (saved) return withoutGreetings(JSON.parse(saved));
-      } catch {
-        // Fallback to empty state on parse error
-      }
-    }
-    return {};
-  });
+  const [serviceMessages, setServiceMessages] = useState<Record<string, ChatMessage[]>>(() => readSaved(storageKey, withoutGreetings));
+  const [serviceLastActivity, setServiceLastActivity] = useState<Record<string, number>>(() => readSaved(activityKey));
 
-  const [serviceLastActivity, setServiceLastActivity] = useState<Record<string, number>>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(activityKey);
-        if (saved) return JSON.parse(saved);
-      } catch {
-        // Fallback to empty state on parse error
-      }
-    }
-    return {};
-  });
-
-  // User Session Isolation: When user changes or logs out, immediately switch to their scoped storage
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const savedMsgs = localStorage.getItem(storageKey);
-      setServiceMessages(savedMsgs ? withoutGreetings(JSON.parse(savedMsgs)) : {});
-      const savedAct = localStorage.getItem(activityKey);
-      setServiceLastActivity(savedAct ? JSON.parse(savedAct) : {});
-    } catch {
-      setServiceMessages({});
-      setServiceLastActivity({});
-    }
-  }, [storageKey, activityKey]);
+  // User Session Isolation: when the user changes or logs out, switch to their scoped storage right away. Done while
+  // rendering (React's pattern for state that follows a prop), so no effect sets state and nothing renders twice.
+  const [loadedKey, setLoadedKey] = useState(storageKey);
+  if (loadedKey !== storageKey) {
+    setLoadedKey(storageKey);
+    setServiceMessages(readSaved(storageKey, withoutGreetings));
+    setServiceLastActivity(readSaved(activityKey));
+  }
 
   // Sync activity map to user-scoped localStorage
   useEffect(() => {
