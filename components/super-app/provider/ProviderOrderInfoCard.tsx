@@ -5,7 +5,7 @@ import { Alert02Icon, Calendar03Icon, CreditCardIcon, Call02Icon, Home01Icon, No
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { ReactNode } from 'react';
 import { Order } from '@/types/order.types';
-import { formatScheduleDate } from '../order-chat/order-labels';
+import { formatMessageTime, formatScheduleDate } from '../order-chat/order-labels';
 import { OrderDetailLine } from '../order-chat/OrderDetailLine';
 import { ORDER_STATUS_LABEL } from '../order-history/order-status';
 import { providerOrderTitle } from './provider-order-filters';
@@ -70,7 +70,13 @@ export function ProviderOrderInfoCard({ order, actions, showParties = false }: P
         </OrderDetailLine>
       </ul>
 
-      {actions && <footer className="mt-[14px]">{actions}</footer>}
+      {/* Bottom left: when the order was sent, as on the provider-assigned card; the job buttons on the right. */}
+      <footer className="mt-[14px] flex items-end justify-between gap-[12px]">
+        <time dateTime={order.createdAt} title={new Date(order.createdAt).toLocaleString()} className="shrink-0 text-[12px] font-medium text-muted">
+          {formatMessageTime(order.createdAt)}
+        </time>
+        {actions && <div className="min-w-0">{actions}</div>}
+      </footer>
     </article>
   );
 }

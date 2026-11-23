@@ -1,7 +1,6 @@
 'use client';
 
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Tick02Icon } from '@hugeicons/core-free-icons';
+import { VerifiedMark } from '../VerifiedMark';
 import { ReactNode } from 'react';
 import { Order, OrderStatus } from '@/types/order.types';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
@@ -41,9 +40,7 @@ export function OrderHistoryListItem({ order, isSelected, onSelect, title, avata
           <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-ink">{title ?? buildOrderTabLabel(order)}</span>
           <span className={`flex shrink-0 items-center gap-[4px] text-[12px] font-semibold ${status.className}`}>
             {order.orderStatus === OrderStatus.COMPLETED && (
-              <span className="flex size-[16px] items-center justify-center rounded-full bg-black p-[2px]">
-                <HugeiconsIcon icon={Tick02Icon} size={10} strokeWidth={3} className="text-white" />
-              </span>
+              <VerifiedMark size={18} />
             )}
             {status.text}
           </span>

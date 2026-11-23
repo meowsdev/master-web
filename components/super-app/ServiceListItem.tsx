@@ -1,9 +1,10 @@
 'use client';
 
 import { HugeiconsIcon } from '@hugeicons/react';
-import { HandHelpingIcon, StarIcon, Tick02Icon } from '@hugeicons/core-free-icons';
+import { HandHelpingIcon, StarIcon } from '@hugeicons/core-free-icons';
 import React from 'react';
 import Image from 'next/image';
+import { VerifiedMark } from './VerifiedMark';
 import { CheckCheck, RotateCcw } from 'lucide-react';
 import { Service } from '@/types/service.types';
 import { ChatMessage } from '@/types/super-app.types';
@@ -120,10 +121,7 @@ export function ServiceListItem({
           ) : (
             completedCount > 0 && (
               <div className="flex shrink-0 items-center gap-[4px]">
-                {/* The exported check glyph is white; Figma seats it in a black badge */}
-                <span className="flex size-[20px] items-center justify-center rounded-full border-2 border-white bg-black p-[2px]">
-                  <HugeiconsIcon icon={Tick02Icon} size={11} strokeWidth={3} className="text-white" />
-                </span>
+                <VerifiedMark size={20} />
                 <span className="text-[12px] font-medium leading-[16px] tracking-[0.5px] text-muted">
                   {completedCount}+ Completed
                 </span>

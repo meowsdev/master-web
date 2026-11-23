@@ -1,7 +1,8 @@
 'use client';
 
 import { HugeiconsIcon } from '@hugeicons/react';
-import { PlusSignIcon, Tick02Icon } from '@hugeicons/core-free-icons';
+import { PlusSignIcon } from '@hugeicons/core-free-icons';
+import { VerifiedMark } from './VerifiedMark';
 import { useQuery } from '@tanstack/react-query';
 import { ordersService } from '@/services/orders.service';
 import { Order, OrderStatus } from '@/types/order.types';
@@ -42,9 +43,7 @@ export function CustomerProfileHeader({ user, onStartNewOrder }: CustomerProfile
             <MyRatingButton userId={user.id} role="CUSTOMER" storedRating={storedRating} />
           </div>
           <span className="flex items-center gap-[4px] text-[12px] font-medium text-muted">
-            <span className="flex size-[16px] items-center justify-center rounded-full bg-primary">
-              <HugeiconsIcon icon={Tick02Icon} size={10} strokeWidth={3} className="text-white" />
-            </span>
+            <VerifiedMark size={18} />
             {completedCount}+ Completed
           </span>
         </div>

@@ -44,6 +44,8 @@ Allowed exceptions (meaning, not decoration). Use these only for the purpose giv
 - Every UI icon comes from Hugeicons (https://hugeicons.com/icons), through `@hugeicons/core-free-icons` and
   `<HugeiconsIcon>` from `@hugeicons/react`. Do not add icon files to `public/` or use another icon set.
 - `public/` keeps only pictures that are not icons: the brand logo, store badges, the QR code, illustrations.
+- One exception: the completed / verified mark is the brand file `public/chat-list/verify-icon.svg`, always through
+  `VerifiedMark` (`components/super-app/VerifiedMark.tsx`).
 - Left-rail icons use `RailIconButton` / `railIconClass` (`components/super-app/RailIconButton.tsx`):
   selected = `bg-secondary` circle with a white border around it; not selected = no background.
 
