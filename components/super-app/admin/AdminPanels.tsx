@@ -6,6 +6,7 @@ import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AdminCategoryPanel } from './panels/AdminCategoryPanel';
 import { AdminCatalogPanel } from './panels/AdminCatalogPanel';
+import { AdminMainServicePanel } from './panels/AdminMainServicePanel';
 import { AdminAddMemberPanel } from './panels/AdminAddMemberPanel';
 import { AdminAssignOrderPanel } from './panels/AdminAssignOrderPanel';
 import { AdminCreateOrderPanel } from './panels/AdminCreateOrderPanel';
@@ -32,6 +33,7 @@ export function AdminPanels() {
   }
   if (kind === 'adminCategory') return <AdminCategoryPanel onClose={close} />;
   if (kind === 'adminCatalog') return <AdminCatalogPanel onClose={close} />;
+  if (kind === 'adminMainService' && target) return <AdminMainServicePanel key={target} mainServiceId={target} onClose={close} />;
   if (kind === 'adminProviders') return <ProvidersPanel onClose={close} />;
   if (kind === 'adminAddMember' && adminId && (target === 'PROVIDER' || target === 'TECHNICIAN' || target === 'CUSTOMER')) {
     return <AdminAddMemberPanel key={target} adminId={adminId} role={target} onClose={close} />;

@@ -24,9 +24,7 @@ export function LoginOtpForm({ phone, onPhoneChange, otp, onTechnicianLogin }: L
     <div className="flex w-full flex-col items-center gap-[48px]">
       <PhoneNumberField value={phone} onChange={onPhoneChange} />
       <OtpVerifyRow otp={otp} isPhoneValid={isPhoneValid} />
-      <button type="button" onClick={onTechnicianLogin} className={authLinkClass}>
-        Technician with password? Click here →
-      </button>
+
     </div>
   );
 }

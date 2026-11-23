@@ -1,41 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowDown01Icon, ArrowUp01Icon, Delete02Icon } from '@hugeicons/core-free-icons';
-import { toast } from 'sonner';
 import { SidePanelShell } from '@/components/modals/SidePanelShell';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
-import { orderErrorMessage } from '@/hooks/useOrderPlaceFields';
-import { AdminFaq, AdminGroup, AdminMainService, AdminSubService, catalogAdminService, ReorderLevel } from '@/services/catalog-admin.service';
+import { AdminGroup, AdminMainService, AdminSubService, catalogAdminService, ReorderLevel } from '@/services/catalog-admin.service';
 import { PriceUnit } from '@/types/service.types';
-
-const inputClass = 'w-full rounded-[8px] border border-[#e5e5e5] px-[10px] py-[7px] text-[14px] text-[#202939] outline-none focus:border-[#1daa61]';
-const smallButton = 'cursor-pointer rounded-[8px] px-[10px] py-[6px] text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50';
-const lines = (text: string) => text.split('\n').map((line) => line.trim()).filter(Boolean);
-
-/** Every catalog read the customer app caches; refreshed after each admin change so edits show at once. */
-function useRefreshCatalog() {
-  const queryClient = useQueryClient();
-  return () => {
-    ['admin-catalog-tree', 'admin-catalog-ungrouped', 'catalog-groups', 'super-app-services', 'catalog-main-service', 'catalog-sub-service', 'catalog-main-services-all', 'admin-services'].forEach((key) =>
-      queryClient.invalidateQueries({ queryKey: [key] }),
-    );
-  };
-}
-
-function useAction<T>(action: (input: T) => Promise<unknown>, success?: string) {
-  const refresh = useRefreshCatalog();
-  return useMutation({
-    mutationFn: action,
-    onSuccess: () => {
-      if (success) toast.success(success);
-      refresh();
-    },
-    onError: (error) => toast.error(orderErrorMessage(error, 'Could not save')),
-  });
-}
+import { inputClass, ServiceContentEditor, smallButton, useAction } from './ServiceContentEditor';
 
 /*
  * The admin's catalog editor: top-bar categories (add, rename, order, hide), which category each main service sits
@@ -51,7 +24,7 @@ export function AdminCatalogPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <SidePanelShell title="Catalog editor" onClose={onClose}>
-      <p className="text-[13px] text-[#697586]">Category (টপ বার) → Main service (চ্যাট লিস্ট) → Sub service (কার্ড) → Option (দাম)। এখানে যা বদলাবেন কাস্টমারের পাতায় সাথে সাথে দেখাবে।</p>
+      <p className="truncate text-[18px] font-semibold tracking-[-0.36px] text-[#202939]">Category </p>
 
       <form
         className="mt-[16px] flex gap-[8px]"
@@ -174,12 +147,12 @@ function MainServiceEditor({ main, groups, onMove, canMoveUp, canMoveDown }: { m
       {isOpen && (
         <div className="flex flex-col gap-[10px] border-t border-[#e5e5e5] p-[8px]">
           <MoveToGroup main={main} groups={groups} />
-          <ContentEditor
+          <ServiceContentEditor
             kind="main"
             id={main.id}
             initial={{ included: main.included, excluded: main.excluded, details: main.details ?? '', howToOrder: main.howToOrder }}
+            faqs={main.faqs}
           />
-          <FaqEditor faqs={main.faqs} owner={{ categoryId: main.id }} />
           <p className="pt-[4px] text-[13px] font-semibold text-[#202939]">Sub services</p>
           {main.services.map((sub) => (
             <SubServiceEditor key={sub.id} sub={sub} />
@@ -190,7 +163,7 @@ function MainServiceEditor({ main, groups, onMove, canMoveUp, canMoveDown }: { m
   );
 }
 
-function MoveToGroup({ main, groups }: { main: Pick<AdminMainService, 'id' | 'name' | 'groupId'>; groups: AdminGroup[] }) {
+export function MoveToGroup({ main, groups }: { main: Pick<AdminMainService, 'id' | 'name' | 'groupId'>; groups: AdminGroup[] }) {
   const move = useAction((groupId: string) => catalogAdminService.updateMainService(main.id, { groupId }), 'Moved');
   return (
     <label className="flex items-center gap-[8px] text-[13px] text-[#364152]">
@@ -221,8 +194,7 @@ function SubServiceEditor({ sub }: { sub: AdminSubService }) {
       {isOpen && (
         <div className="flex flex-col gap-[10px] border-t border-[#efefef] p-[8px]">
           <VariantsEditor sub={sub} />
-          <ContentEditor kind="sub" id={sub.id} initial={{ included: sub.included, excluded: sub.excluded, details: sub.details ?? '' }} />
-          <FaqEditor faqs={sub.faqs} owner={{ serviceId: sub.id }} />
+          <ServiceContentEditor kind="sub" id={sub.id} initial={{ included: sub.included, excluded: sub.excluded, details: sub.details ?? '' }} faqs={sub.faqs} />
         </div>
       )}
     </div>
@@ -235,7 +207,7 @@ const PRICE_UNITS: Array<{ value: PriceUnit; label: string }> = [
   { value: 'PER_SQFT', label: 'Per sqft' },
 ];
 
-function VariantsEditor({ sub }: { sub: AdminSubService }) {
+export function VariantsEditor({ sub }: { sub: AdminSubService }) {
   const [draft, setDraft] = useState({ name: '', price: '', originalPrice: '', priceUnit: 'FIXED' as PriceUnit });
   const create = useAction(
     () =>
@@ -306,79 +278,6 @@ function VariantRow({ variant, onDelete }: { variant: AdminSubService['variants'
         <HugeiconsIcon icon={Delete02Icon} size={15} />
       </button>
     </li>
-  );
-}
-
-/* Overview (included / excluded, one per line), How to order steps (main service only) and the Details text. */
-function ContentEditor({ kind, id, initial }: { kind: 'main' | 'sub'; id: string; initial: { included: string[]; excluded: string[]; details: string; howToOrder?: string[] } }) {
-  const [included, setIncluded] = useState(initial.included.join('\n'));
-  const [excluded, setExcluded] = useState(initial.excluded.join('\n'));
-  const [howToOrder, setHowToOrder] = useState((initial.howToOrder ?? []).join('\n'));
-  const [details, setDetails] = useState(initial.details);
-  const save = useAction(
-    () =>
-      kind === 'main'
-        ? catalogAdminService.updateMainService(id, { included: lines(included), excluded: lines(excluded), howToOrder: lines(howToOrder), details: details.trim() })
-        : catalogAdminService.updateSubService(id, { included: lines(included), excluded: lines(excluded), details: details.trim() }),
-    'Saved',
-  );
-
-  return (
-    <div className="flex flex-col gap-[6px]">
-      <p className="text-[13px] font-semibold text-[#202939]">Overview & Details {kind === 'sub' && <span className="font-normal text-[#697586]">(খালি রাখলে main service-এরটা দেখাবে)</span>}</p>
-      <textarea value={included} onChange={(event) => setIncluded(event.target.value)} rows={3} placeholder="What's included (প্রতি লাইনে একটা)" className={inputClass} />
-      <textarea value={excluded} onChange={(event) => setExcluded(event.target.value)} rows={3} placeholder="What's excluded (প্রতি লাইনে একটা)" className={inputClass} />
-      {kind === 'main' && <textarea value={howToOrder} onChange={(event) => setHowToOrder(event.target.value)} rows={3} placeholder="How to order ধাপ (প্রতি লাইনে একটা; খালি = ডিফল্ট ৩ ধাপ)" className={inputClass} />}
-      <textarea value={details} onChange={(event) => setDetails(event.target.value)} rows={4} placeholder="Details (লম্বা বর্ণনা)" className={inputClass} />
-      <button type="button" onClick={() => save.mutate(undefined)} disabled={save.isPending} className={`${smallButton} self-start bg-[#1daa61] text-white`}>
-        Save
-      </button>
-    </div>
-  );
-}
-
-function FaqEditor({ faqs, owner }: { faqs: AdminFaq[]; owner: { categoryId?: string; serviceId?: string } }) {
-  const [question, setQuestion] = useState('');
-  const [answer, setAnswer] = useState('');
-  const create = useAction(() => catalogAdminService.createFaq({ ...owner, question: question.trim(), answer: answer.trim() }), 'FAQ added');
-  const remove = useAction((id: string) => catalogAdminService.deleteFaq(id), 'FAQ removed');
-
-  return (
-    <div>
-      <p className="mb-[6px] text-[13px] font-semibold text-[#202939]">FAQ</p>
-      <ul className="flex flex-col gap-[4px]">
-        {faqs.map((faq) => (
-          <li key={faq.id} className="flex items-start gap-[6px] rounded-[8px] bg-white p-[6px] text-[13px]">
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-[#202939]">{faq.question}</p>
-              <p className="text-[#697586]">{faq.answer}</p>
-            </div>
-            <button type="button" aria-label="Delete FAQ" onClick={() => remove.mutate(faq.id)} className="cursor-pointer rounded-full p-[4px] text-[#d64545] hover:bg-[#fdecec]">
-              <HugeiconsIcon icon={Delete02Icon} size={15} />
-            </button>
-          </li>
-        ))}
-      </ul>
-      <form
-        className="mt-[6px] flex flex-col gap-[6px]"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (question.trim() && answer.trim())
-            create.mutate(undefined, {
-              onSuccess: () => {
-                setQuestion('');
-                setAnswer('');
-              },
-            });
-        }}
-      >
-        <input value={question} onChange={(event) => setQuestion(event.target.value)} maxLength={300} placeholder="প্রশ্ন" className={inputClass} />
-        <textarea value={answer} onChange={(event) => setAnswer(event.target.value)} rows={2} maxLength={5000} placeholder="উত্তর" className={inputClass} />
-        <button type="submit" disabled={!question.trim() || !answer.trim() || create.isPending} className={`${smallButton} self-start border border-[#1daa61] text-[#1daa61]`}>
-          Add FAQ
-        </button>
-      </form>
-    </div>
   );
 }
 

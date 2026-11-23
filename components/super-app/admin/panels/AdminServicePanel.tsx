@@ -9,6 +9,9 @@ import { OrderField, OrderSelect, fieldControlClass } from '@/components/modals/
 import { PicturePicker } from '../PicturePicker';
 import { AdminServiceInput, adminService } from '@/services/admin.service';
 import { servicesService } from '@/services/services.service';
+import { ServiceContentEditor } from './ServiceContentEditor';
+import { VariantsEditor } from './AdminCatalogPanel';
+import { useAdminCatalog } from '../useAdminCatalog';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { PriceUnit, Service } from '@/types/service.types';
 
@@ -89,6 +92,8 @@ export function AdminServicePanel({ service, defaultCategoryId, onClose }: Admin
       toast.success(service ? 'Service saved' : 'Service created');
       queryClient.invalidateQueries({ queryKey: ['admin-services'] });
       queryClient.invalidateQueries({ queryKey: ['order-catalog'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-catalog-tree'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-catalog-ungrouped'] });
       // After creating, the panel stays open on the new service so it can be refined.
       openPanel(savedId, 'adminService');
     },
@@ -148,6 +153,34 @@ export function AdminServicePanel({ service, defaultCategoryId, onClose }: Admin
             </button>
           </div>
       </form>
+      {service && <ServiceContentSection serviceId={service.id} />}
     </SidePanelShell>
+  );
+}
+
+/* What the customer sees of this sub-service beyond its card: the priced options, then the Overview, FAQ, How to order and Details tabs. */
+function ServiceContentSection({ serviceId }: { serviceId: string }) {
+  const { mains } = useAdminCatalog();
+  const main = mains.find((item) => item.services.some((sub) => sub.id === serviceId));
+  const sub = main?.services.find((item) => item.id === serviceId);
+  if (!main || !sub) return null;
+
+  return (
+    <div className="flex flex-col gap-[16px] pb-[24px]">
+      <section className="flex flex-col gap-[10px] rounded-[16px] bg-[#f7f5f3] p-[14px]">
+        <div>
+          <p className="text-[15px] font-semibold text-[#202939]">Options ও দাম</p>
+          <p className="text-[12px] text-[#697586]">কাস্টমার এগুলো থেকে বেছে কার্টে যোগ করে।</p>
+        </div>
+        <VariantsEditor sub={sub} />
+      </section>
+      <section className="flex flex-col gap-[12px] rounded-[16px] bg-[#f7f5f3] p-[14px]">
+        <div>
+          <p className="text-[15px] font-semibold text-[#202939]">কাস্টমার যা দেখবে</p>
+          <p className="text-[12px] text-[#697586]">শুধু এই সার্ভিসের জন্য। খালি রাখলে {main.name}-এরটা দেখাবে।</p>
+        </div>
+        <ServiceContentEditor key={sub.id} kind="sub" id={sub.id} initial={{ included: sub.included, excluded: sub.excluded, details: sub.details ?? '' }} faqs={sub.faqs} />
+      </section>
+    </div>
   );
 }

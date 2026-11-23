@@ -25,8 +25,11 @@ export interface AdminVariant {
 
 export interface AdminSubService {
   id: string;
+  categoryId: string;
   name: string;
   nameBn?: string | null;
+  imageUrl?: string | null;
+  basePrice: string | number;
   isActive: boolean;
   sortOrder: number;
   included: string[];
@@ -39,6 +42,7 @@ export interface AdminSubService {
 export interface AdminMainService {
   id: string;
   name: string;
+  description?: string | null;
   iconUrl?: string | null;
   groupId: string | null;
   isActive: boolean;

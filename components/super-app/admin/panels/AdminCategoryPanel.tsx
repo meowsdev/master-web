@@ -10,6 +10,7 @@ import { OrderField, fieldControlClass } from '@/components/modals/place-order/O
 import { adminService } from '@/services/admin.service';
 import { PicturePicker } from '../PicturePicker';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
+import { useAdminCatalogStore } from '@/store/useAdminCatalogStore';
 
 const apiErrorMessage = (error: unknown) => {
   const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
@@ -23,6 +24,7 @@ const apiErrorMessage = (error: unknown) => {
 export function AdminCategoryPanel({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const openPanel = useOrderPanelStore((state) => state.open);
+  const selectMainService = useAdminCatalogStore((state) => state.selectMainService);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [icon, setIcon] = useState('');
@@ -38,6 +40,9 @@ export function AdminCategoryPanel({ onClose }: { onClose: () => void }) {
       queryClient.invalidateQueries({ queryKey: ['order-catalog'] });
       queryClient.invalidateQueries({ queryKey: ['admin-catalog-tree'] });
       queryClient.invalidateQueries({ queryKey: ['super-app-services'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-catalog-ungrouped'] });
+      // The new main service opens in the middle, with the form for its first service on the right.
+      selectMainService(category.id);
       openPanel(`new:${category.id}`, 'adminService');
     },
     onError: (error) => toast.error(apiErrorMessage(error)),

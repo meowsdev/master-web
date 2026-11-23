@@ -6,6 +6,7 @@ import { RailTab } from '@/types/super-app.types';
 import { ChatEmptyHeader } from '../ChatEmptyHeader';
 import { AdminOrderWorkspace } from './AdminOrderWorkspace';
 import { AdminPanels } from './AdminPanels';
+import { AdminMainServiceCanvas } from './AdminMainServiceCanvas';
 import { useAdminOrders } from './AdminOrdersSidebar';
 import { AdminSupportCanvas } from '../support/AdminSupportCanvas';
 import { supportRoleForTab } from '../support/support-tabs';
@@ -16,14 +17,20 @@ export function AdminCanvas({ userId, activeRailTab, onBack, onSwitchAccount }: 
   const openOrderId = useOrderHistoryStore(selectOpenOrderId(userId));
   const order = orders.find((item) => item.id === openOrderId);
   const { canManageServices, canChatWithMembers } = useStaffPermissions();
-  // Services and Staff are management tabs: the canvas stays empty and their panels open on the right.
-  const isServicesTab = (canManageServices && activeRailTab === 'SERVICES') || activeRailTab === 'STAFF';
+  // Services shows the catalog the way the customer sees it; Staff keeps an empty canvas. Their panels open on the right.
+  const isCatalogTab = canManageServices && activeRailTab === 'SERVICES';
+  const isServicesTab = isCatalogTab || activeRailTab === 'STAFF';
   const supportRole = canChatWithMembers ? supportRoleForTab(activeRailTab) : null;
 
   return (
     <>
       {supportRole ? (
         <AdminSupportCanvas userId={userId} role={supportRole} onBack={onBack} onSwitchAccount={onSwitchAccount} />
+      ) : isCatalogTab ? (
+        <>
+          <ChatEmptyHeader onSwitchAccount={onSwitchAccount} menuItems={[]} />
+          <AdminMainServiceCanvas />
+        </>
       ) : !isServicesTab && order ? (
         <AdminOrderWorkspace key={order.id} order={order} userId={userId} onBack={onBack} />
       ) : (
