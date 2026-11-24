@@ -1,12 +1,9 @@
 name: CI/CD
 
-# Every push and pull request: install, typecheck, lint and build.
-# A push to main that passes: deploy to the EC2 server (PM2).
+# Only a push to main: install, typecheck, lint and build, then (if it passes) deploy to the EC2 server (PM2).
 on:
   push:
-    branches: ['**']
-  pull_request:
-  workflow_dispatch:
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
