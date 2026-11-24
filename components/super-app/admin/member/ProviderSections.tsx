@@ -1,5 +1,7 @@
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { MemberDetails } from '@/types/admin-member.types';
+import type { ProviderLevel } from '@/types/provider-earnings.types';
+import { LEVEL_LABEL } from '../../provider/earnings/earnings-format';
 import { Fact, OrderCounts, ReviewList, Section, StatusBadges, formatDate } from './MemberParts';
 
 /* A provider: business info, standing, areas, and the technicians who work under them. */
@@ -8,7 +10,7 @@ export function ProviderSections({ provider }: { provider: NonNullable<MemberDet
     <>
       <Section title="Provider">
         {provider.companyName && <Fact label="Company">{provider.companyName}</Fact>}
-        <Fact label="Level">{provider.level}</Fact>
+        <Fact label="Level">{LEVEL_LABEL[provider.level as ProviderLevel] ?? provider.level}</Fact>
         <Fact label="Rating">{provider.rating > 0 ? `★ ${provider.rating.toFixed(1)}` : 'New'}</Fact>
         <Fact label="Experience">{provider.experienceYears} year(s)</Fact>
         <Fact label="KYC">{provider.kyc?.status ?? 'Not submitted'}</Fact>

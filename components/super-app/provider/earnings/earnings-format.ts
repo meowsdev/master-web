@@ -1,12 +1,14 @@
 import { ProviderLevel } from '@/types/provider-earnings.types';
 
 export const LEVEL_LABEL: Record<ProviderLevel, string> = {
-  NEW: 'নতুন',
-  BRONZE: 'ব্রোঞ্জ',
-  SILVER: 'সিলভার',
-  GOLD: 'গোল্ড',
-  PLATINUM: 'প্লাটিনাম',
+  LEVEL_0: 'লেভেল ০',
+  LEVEL_1: 'লেভেল ১',
+  LEVEL_2: 'লেভেল ২',
+  TOP_RATED: 'টপ রেটেড',
 };
+
+/** Days the success score and response rate look back (REVIEW_WINDOW_DAYS in the backend's level-rules.ts). */
+export const LEVEL_REVIEW_WINDOW_DAYS = 60;
 
 /** Bengali digits, e.g. 4.5 → "৪.৫". */
 export const bnNumber = (value: number, maximumFractionDigits = 0) => value.toLocaleString('bn-BD', { maximumFractionDigits });

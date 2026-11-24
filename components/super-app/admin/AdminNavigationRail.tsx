@@ -3,7 +3,7 @@
 import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import Image from 'next/image';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
-import { Analytics01Icon, Invoice03Icon, Briefcase01Icon, BubbleChatIcon, MoneyBag02Icon, CustomerSupportIcon, UserGroupIcon, UserIcon, UserSharingIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
+import { Analytics01Icon, Medal01Icon, Invoice03Icon, Briefcase01Icon, BubbleChatIcon, MoneyBag02Icon, CustomerSupportIcon, UserGroupIcon, UserIcon, UserSharingIcon, Wrench01Icon } from '@hugeicons/core-free-icons';
 import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { RailSelection, RailTab } from '@/types/super-app.types';
@@ -24,11 +24,12 @@ const SUPPORT_CHAT_TABS: Array<{ tab: RailTab; title: string; icon: IconSvgEleme
 
 /* The staff rail: logo, Messages (all orders), then Services and the member chats when the role may use them, profile at the bottom. */
 export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOpenAccount }: AdminNavigationRailProps) {
-  const { canManageServices, canChatWithMembers, canManageStaff, canManagePayouts, canViewEarnings, canManageDues } = useStaffPermissions();
+  const { canManageServices, canChatWithMembers, canManageStaff, canManagePayouts, canViewEarnings, canManageDues, canViewLevels } = useStaffPermissions();
   const isStaffSelected = selection === 'STAFF';
   const isWithdrawalsSelected = selection === 'WITHDRAWALS';
   const isEarningsSelected = selection === 'EARNINGS';
   const isDuesSelected = selection === 'DUES';
+  const isLevelsSelected = selection === 'LEVELS';
   const openKind = useOrderPanelStore((state) => state.kind);
   const closePanel = useOrderPanelStore((state) => state.close);
   const isMessagesSelected = selection === 'CHATS' && !openKind?.startsWith('admin');
@@ -125,6 +126,23 @@ export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOp
             className={railIconClass(isDuesSelected)}
           >
             <HugeiconsIcon icon={Invoice03Icon} size={22} strokeWidth={isDuesSelected ? 2 : 1.7} />
+          </button>
+        )}
+
+        {/* Levels: every provider's level and the global targets. Admin edits, manager views. */}
+        {canViewLevels && (
+          <button
+            type="button"
+            onClick={() => {
+              closePanel();
+              onSelectTab('LEVELS');
+            }}
+            title="Levels"
+            aria-label="Levels"
+            aria-current={isLevelsSelected ? 'page' : undefined}
+            className={railIconClass(isLevelsSelected)}
+          >
+            <HugeiconsIcon icon={Medal01Icon} size={22} strokeWidth={isLevelsSelected ? 2 : 1.7} />
           </button>
         )}
 

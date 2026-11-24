@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { SidePanelShell } from '@/components/modals/SidePanelShell';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { adminService } from '@/services/admin.service';
+import type { ProviderLevel } from '@/types/provider-earnings.types';
+import { LEVEL_LABEL } from '../../provider/earnings/earnings-format';
 
 /* Providers: a read-only look at each provider's standing, so the admin sees who owes money or is blocked. */
 export function ProvidersPanel({ onClose }: { onClose: () => void }) {
@@ -22,7 +24,7 @@ export function ProvidersPanel({ onClose }: { onClose: () => void }) {
                   {provider.companyName || provider.user.name || provider.user.username}
                   {provider.user.username && <span className="font-medium text-muted"> @{provider.user.username}</span>}
                 </p>
-                <span className="shrink-0 text-[12px] font-semibold text-muted">{provider.level}</span>
+                <span className="shrink-0 text-[12px] font-semibold text-muted">{LEVEL_LABEL[provider.level as ProviderLevel] ?? provider.level}</span>
               </div>
               <p className="mt-[2px] text-[12px] font-medium text-muted">{provider.user.mobileNumber}</p>
               <p className="mt-[6px] flex flex-wrap gap-x-[14px] gap-y-[2px] text-[13px] font-medium text-ink">

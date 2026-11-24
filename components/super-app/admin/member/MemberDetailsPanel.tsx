@@ -8,6 +8,7 @@ import { CustomerSections } from './CustomerSections';
 import { Fact, ReviewList, Section, StatusBadges, formatDate } from './MemberParts';
 import { MemberActions } from './MemberActions';
 import { ProviderCommissionControl } from './ProviderCommissionControl';
+import { ProviderLevelSection } from './ProviderLevelSection';
 import { ProviderSections } from './ProviderSections';
 import { TechnicianProviderControl } from './TechnicianProviderControl';
 
@@ -20,7 +21,7 @@ const ROLE_LABEL = { PROVIDER: 'Provider', TECHNICIAN: 'Technician', CUSTOMER: '
 export function MemberDetailsPanel({ adminId, memberId, onClose }: { adminId: string; memberId: string; onClose: () => void }) {
   const { data: member, isLoading, isError } = useAdminMember(adminId, memberId);
   const moderate = useModerateMember(adminId, memberId);
-  const { canBanMembers, canManageTechnicians, canSetCommission } = useStaffPermissions();
+  const { canBanMembers, canManageTechnicians, canSetCommission, canManageLevels } = useStaffPermissions();
 
   return (
     <SidePanelShell title={member ? ROLE_LABEL[member.role] : 'Details'} onClose={onClose}>
@@ -51,6 +52,7 @@ export function MemberDetailsPanel({ adminId, memberId, onClose }: { adminId: st
           {member.provider && (
             <ProviderCommissionControl adminId={adminId} memberId={member.id} commissionRate={member.provider.commissionRate} canChange={canSetCommission} />
           )}
+          {member.provider && <ProviderLevelSection adminId={adminId} providerUserId={member.id} level={member.provider.level} canEdit={canManageLevels} />}
           {member.provider && <ProviderSections provider={member.provider} />}
           {member.technician && <TechnicianProviderControl adminId={adminId} technician={member.technician} canChange={canManageTechnicians} />}
           {member.technician && (

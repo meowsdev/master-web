@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import type { ProviderLevel } from '@/types/provider-earnings.types';
+import { LEVEL_LABEL } from '@/components/super-app/provider/earnings/earnings-format';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Navbar } from '@/components/Navbar';
 import { ordersService } from '@/services/orders.service';
@@ -47,7 +49,7 @@ export default function ProviderDashboardPage() {
 
   // Real provider metrics
   const walletBalance = Number(providerProfile?.walletBalance ?? 0);
-  const providerLevel = providerProfile?.level || 'BRONZE';
+  const providerLevel = (providerProfile?.level as ProviderLevel | undefined) ?? 'LEVEL_0';
   const ratingScore = Number(providerProfile?.rating ?? 5.0);
   const isWalletNegative = walletBalance < 0 || providerProfile?.isBlockedForNegative;
 
@@ -104,21 +106,9 @@ export default function ProviderDashboardPage() {
     rechargeMutation.mutate(finalAmount);
   };
 
-  const getLevelBadgeStyle = (level: string) => {
-    switch (level?.toUpperCase()) {
-      case 'PLATINUM':
-        return 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border-purple-200 dark:border-purple-800';
-      case 'GOLD':
-        return 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800';
-      case 'SILVER':
-        return 'bg-surface text-ink dark:bg-slate-800 dark:text-slate-300 border-line dark:border-slate-700';
-      case 'BRONZE':
-      case 'NEW':
-        return 'bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300 border-orange-200 dark:border-orange-800';
-      default:
-        return 'bg-secondary text-primary dark:bg-emerald-950/60 dark:text-emerald-300 border-secondary dark:border-emerald-800';
-    }
-  };
+  // Brand palette only: Top Rated gets the primary fill, every other level the soft one.
+  const getLevelBadgeStyle = (level: ProviderLevel) =>
+    level === 'TOP_RATED' ? 'bg-primary text-white border-primary' : 'bg-secondary text-ink border-secondary';
 
   return (
     <div className="min-h-screen bg-surface dark:bg-black text-ink dark:text-zinc-50 pb-16">
@@ -204,7 +194,7 @@ export default function ProviderDashboardPage() {
             <div className="my-4">
               <div className="flex items-center gap-2">
                 <span className="text-2xl sm:text-3xl font-extrabold text-ink dark:text-white">
-                  {providerLevel}
+                  {LEVEL_LABEL[providerLevel] ?? providerLevel}
                 </span>
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getLevelBadgeStyle(

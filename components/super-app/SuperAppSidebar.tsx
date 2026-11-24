@@ -10,6 +10,7 @@ import { AdminServicesSidebar } from './admin/AdminServicesSidebar';
 import { StaffSidebar } from './admin/staff/StaffSidebar';
 import { WithdrawalsSidebar } from './admin/withdrawals/WithdrawalsSidebar';
 import { AdminEarningsSidebar } from './admin/earnings/AdminEarningsSidebar';
+import { LevelsSidebar } from './admin/levels/LevelsSidebar';
 import { DuesSidebar } from './admin/dues/DuesSidebar';
 import { ServiceList } from './ServiceList';
 import { CustomerSidebarTop } from './CustomerSidebarTop';
@@ -101,7 +102,7 @@ export function SuperAppSidebar({
   const [isSearchCollapsed, setIsSearchCollapsed] = useState(false);
   const isStaff = isStaffRole(activeRole);
   const isTechnician = activeRole === 'TECHNICIAN';
-  const { canManageServices, canChatWithMembers, canManageStaff, canManagePayouts, canViewEarnings, canManageDues } = useStaffPermissions();
+  const { canManageServices, canChatWithMembers, canManageStaff, canManagePayouts, canViewEarnings, canManageDues, canViewLevels } = useStaffPermissions();
   const memberChatRole = canChatWithMembers ? supportRoleForTab(activeRailTab) : null;
   const bgSidebar = isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-line';
   const openAuth = () => onOpenAuth('LOGIN');
@@ -122,6 +123,9 @@ export function SuperAppSidebar({
       ) : isStaff && user && canManageDues && activeRailTab === 'DUES' ? (
         /* Admin / manager: providers who owe, and reminders */
         <DuesSidebar user={user} onPartnerOpened={() => setMobileView('CHAT')} onOpenAuth={openAuth} />
+      ) : isStaff && user && canViewLevels && activeRailTab === 'LEVELS' ? (
+        /* Admin / manager: every provider's level and the global targets */
+        <LevelsSidebar user={user} onOpened={() => setMobileView('CHAT')} onOpenAuth={openAuth} />
       ) : isStaff && user && canViewEarnings && activeRailTab === 'EARNINGS' ? (
         /* Admin: the platform's earnings */
         <AdminEarningsSidebar user={user} onPartnerOpened={() => setMobileView('CHAT')} />

@@ -36,20 +36,58 @@ export interface ProviderEarnings {
   }>;
 }
 
-export type ProviderLevel = 'NEW' | 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM';
+export type ProviderLevel = 'LEVEL_0' | 'LEVEL_1' | 'LEVEL_2' | 'TOP_RATED';
+
+/** The six level metrics (master-backend provider-leveling/level-rules.ts). */
+export type LevelMetricKey = 'successScore' | 'rating' | 'responseRate' | 'orders' | 'uniqueClients' | 'earnings';
 
 /** GET /provider-leveling/me. */
 export interface ProviderLevelProgress {
   level: ProviderLevel;
+  /** null at Top Rated: the targets shown are then the ones to keep it. */
   nextLevel: ProviderLevel | null;
   /** The level today's numbers would earn at the next monthly evaluation. */
   projectedLevel: ProviderLevel;
+  /** Set by an admin: the monthly evaluation leaves this level as it is. */
+  isLevelLocked: boolean;
+  levelLockReason: string | null;
   nextEvaluationAt: string;
+  /** Days the success score and response rate look back. */
   windowDays: number;
-  metrics: { completedOrdersInWindow: number; rating: number; reviewCount: number; totalCompletedOrders: number };
-  requirementsForNext: Array<{ key: 'orders' | 'rating'; current: number; target: number; isMet: boolean }>;
   /** Lowest first. */
-  levels: Array<{ level: ProviderLevel; minOrders: number; minRating: number; isReached: boolean }>;
+  levels: Array<{ level: ProviderLevel; isReached: boolean }>;
+  metrics: Array<{
+    key: LevelMetricKey;
+    /** null = no data yet (no finished order / no offer). */
+    value: number | null;
+    /** The next level's target (their own level's at Top Rated). */
+    target: number;
+    isMet: boolean;
+    targets: Record<'LEVEL_1' | 'LEVEL_2' | 'TOP_RATED', number>;
+  }>;
+}
+
+/** Each level's six targets (Level 0 needs nothing), as an admin set them. */
+export type LevelTargetTable = Record<'LEVEL_1' | 'LEVEL_2' | 'TOP_RATED', Record<LevelMetricKey, number>>;
+
+/** A row of the Levels tab (GET /provider-leveling/providers). */
+export interface LevelProviderRow {
+  providerId: string;
+  userId: string;
+  name: string;
+  mobileNumber: string;
+  profilePhoto: string | null;
+  level: ProviderLevel;
+  isLevelLocked: boolean;
+  levelLockReason: string | null;
+  rating: number;
+  totalCompletedOrders: number;
+}
+
+/** GET /provider-leveling/stats. */
+export interface LevelStats {
+  totalProviders: number;
+  distribution: Record<ProviderLevel, number>;
 }
 
 export type PayoutMethod = 'BKASH' | 'NAGAD' | 'BANK';
