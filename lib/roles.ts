@@ -27,6 +27,8 @@ export interface StaffPermissions {
   canReviewExpenses: boolean;
   /** Staff tab: add Manager / Support / HR / Counselor, change position, turn off (backend: ADMIN). */
   canManageStaff: boolean;
+  /** A provider's own commission percent, on their details panel (backend: ADMIN). */
+  canSetCommission: boolean;
 }
 
 const NONE: StaffPermissions = {
@@ -41,6 +43,7 @@ const NONE: StaffPermissions = {
   canSendToRevision: false,
   canReviewExpenses: false,
   canManageStaff: false,
+  canSetCommission: false,
 };
 
 const MANAGER: StaffPermissions = {
@@ -55,10 +58,11 @@ const MANAGER: StaffPermissions = {
   canSendToRevision: false,
   canReviewExpenses: false,
   canManageStaff: false,
+  canSetCommission: false,
 };
 
 const PERMISSIONS_BY_ROLE: Record<string, StaffPermissions> = {
-  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true, canReviewExpenses: true, canManageStaff: true },
+  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true, canReviewExpenses: true, canManageStaff: true, canSetCommission: true },
   MANAGER,
   // Support chat is open to support staff; member management is not (admin-members is ADMIN/MANAGER).
   SUPPORT: { ...NONE, canChatWithMembers: true },

@@ -28,6 +28,8 @@ export interface ProviderSection {
   experienceYears: number;
   isAvailable: boolean;
   isBlockedForNegative: boolean;
+  /** The platform's share of this provider's jobs, in percent (10 = 10%). */
+  commissionRate: number;
   dueAmount: number;
   totalCompletedOrders: number;
   kyc: { status: string } | null;
