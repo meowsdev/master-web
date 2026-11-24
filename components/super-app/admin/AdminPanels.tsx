@@ -13,6 +13,7 @@ import { MemberDetailsPanel } from './member/MemberDetailsPanel';
 import { AdminServicePanel } from './panels/AdminServicePanel';
 import { ProvidersPanel } from './panels/ProvidersPanel';
 import { AddStaffPanel, StaffDetailsPanel } from './staff/StaffPanels';
+import { WithdrawalPanel } from './withdrawals/WithdrawalPanel';
 
 /* The management panel the admin's rail opened, if any. */
 export function AdminPanels() {
@@ -43,5 +44,6 @@ export function AdminPanels() {
   if (kind === 'adminMember' && target && adminId) return <MemberDetailsPanel key={target} adminId={adminId} memberId={target} onClose={close} />;
   if (kind === 'adminAddStaff' && adminId) return <AddStaffPanel adminId={adminId} onClose={close} />;
   if (kind === 'adminStaff' && target && adminId) return <StaffDetailsPanel key={target} adminId={adminId} staffId={target} onClose={close} />;
+  if (kind === 'adminWithdrawal' && target && adminId) return <WithdrawalPanel key={target} adminId={adminId} withdrawalId={target} onClose={close} />;
   return null;
 }

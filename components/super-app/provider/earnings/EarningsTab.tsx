@@ -4,6 +4,7 @@ import { ReactNode } from 'react';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { useProviderEarnings } from '@/hooks/useProviderEarnings';
 import { bnDate, bnMonth, bnNumber } from './earnings-format';
+import { WithdrawCard } from './WithdrawCard';
 
 const sectionTitleClass = 'mb-[8px] mt-[22px] text-[13px] font-semibold uppercase tracking-[0.4px] text-muted';
 
@@ -35,6 +36,8 @@ export function EarningsTab({ userId }: { userId: string }) {
 
   return (
     <div className="pb-[24px]">
+      <WithdrawCard userId={userId} wallet={data.wallet} />
+
       <div className="rounded-[14px] bg-secondary p-[16px]">
         <p className="text-[13px] font-semibold text-ink">মোট নেট আয়</p>
         <p className="mt-[2px] text-[28px] font-semibold tracking-[-0.6px] text-ink">{formatTaka(summary.netIncome)}</p>
@@ -53,7 +56,7 @@ export function EarningsTab({ userId }: { userId: string }) {
         <Tile label="গড় অর্ডার মূল্য" value={formatTaka(summary.averageOrderValue)} />
         <Tile label="টিপস" value={formatTaka(summary.tips)} />
         <Tile label="ক্যাশে পাওয়া আয়" value={formatTaka(summary.cashIncome)} hint="গ্রাহক সাইটে দিয়েছেন" />
-        <Tile label="অনলাইনে পাওয়া আয়" value={formatTaka(summary.onlineIncome)} hint="প্ল্যাটফর্মে জমা হয়েছে" />
+        <Tile label="অনলাইনে পাওয়া আয়" value={formatTaka(summary.onlineIncome)} hint="ব্যালেন্সে যোগ হয়" />
         <Tile label="প্ল্যাটফর্ম কমিশন" value={formatTaka(summary.commissionPaid)} />
         <Tile
           label="বকেয়া (Due)"

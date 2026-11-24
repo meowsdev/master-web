@@ -18,6 +18,7 @@ export interface ProviderEarnings {
     /** What the provider owes the platform (commission on cash jobs). */
     dueAmount: number;
   };
+  wallet: ProviderWalletCard;
   /** The last 6 months, oldest first. month is "YYYY-MM". */
   monthly: Array<{ month: string; orders: number; billed: number; commission: number; tips: number; net: number }>;
   /** The newest completed jobs first. */
@@ -49,4 +50,53 @@ export interface ProviderLevelProgress {
   requirementsForNext: Array<{ key: 'orders' | 'rating'; current: number; target: number; isMet: boolean }>;
   /** Lowest first. */
   levels: Array<{ level: ProviderLevel; minOrders: number; minRating: number; isReached: boolean }>;
+}
+
+export type PayoutMethod = 'BKASH' | 'NAGAD' | 'BANK';
+export type WithdrawalStatus = 'PENDING' | 'PAID' | 'REJECTED' | 'CANCELLED';
+
+/** The withdraw card (part of GET /provider-wallet/me/earnings). */
+export interface ProviderWalletCard {
+  /** The wallet itself; negative = a due. */
+  balance: number;
+  availableForWithdrawal: number;
+  /** Online credits still in their clearance period. */
+  pendingClearance: number;
+  /** Asked for and held, waiting for an admin. */
+  pendingWithdrawal: number;
+  withdrawn: number;
+  minWithdrawal: number;
+  /** Days an online credit waits before it can be withdrawn. */
+  clearanceDays: number;
+}
+
+export interface WithdrawalRequest {
+  id: string;
+  amount: number | string;
+  method: PayoutMethod;
+  accountNumber: string;
+  accountName: string;
+  bankName: string | null;
+  branchName: string | null;
+  status: WithdrawalStatus;
+  transactionRef: string | null;
+  reviewNote: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  /** Admin list only. */
+  provider?: {
+    id: string;
+    companyName: string | null;
+    walletBalance: number | string;
+    user: { id: string; name: string | null; username: string | null; mobileNumber: string };
+  };
+}
+
+export interface NewWithdrawal {
+  amount: number;
+  method: PayoutMethod;
+  accountNumber: string;
+  accountName: string;
+  bankName?: string;
+  branchName?: string;
 }

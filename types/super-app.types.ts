@@ -44,7 +44,7 @@ export interface ChatMessage {
  * SUPPORT: a provider's or customer's chat with the platform staff.
  * SUPPORT_PROVIDERS / SUPPORT_TECHNICIANS / SUPPORT_CUSTOMERS: staff's three direct-chat lists.
  */
-export type RailTab = 'CHATS' | 'ORDERS' | 'SERVICES' | 'SUPPORT' | 'SUPPORT_PROVIDERS' | 'SUPPORT_TECHNICIANS' | 'SUPPORT_CUSTOMERS' | 'STAFF';
+export type RailTab = 'CHATS' | 'ORDERS' | 'SERVICES' | 'SUPPORT' | 'SUPPORT_PROVIDERS' | 'SUPPORT_TECHNICIANS' | 'SUPPORT_CUSTOMERS' | 'STAFF' | 'WITHDRAWALS';
 
 /** What the rail marks as selected: a tab, or the right-hand panel that is currently open. */
 export type RailSelection = RailTab | 'ACCOUNT';

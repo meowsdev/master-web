@@ -22,9 +22,9 @@ export function AdminCanvas({ userId, activeRailTab, onBack, onSwitchAccount }: 
   const openOrderId = useOrderHistoryStore(selectOpenOrderId(userId));
   const order = orders.find((item) => item.id === openOrderId);
   const { canManageServices, canChatWithMembers } = useStaffPermissions();
-  // Services shows the catalog the way the customer sees it; Staff keeps an empty canvas. Their panels open on the right.
+  // Services shows the catalog the way the customer sees it; Staff and Withdrawals keep an empty canvas. Their panels open on the right.
   const isCatalogTab = canManageServices && activeRailTab === 'SERVICES';
-  const isServicesTab = isCatalogTab || activeRailTab === 'STAFF';
+  const isServicesTab = isCatalogTab || activeRailTab === 'STAFF' || activeRailTab === 'WITHDRAWALS';
   const supportRole = canChatWithMembers ? supportRoleForTab(activeRailTab) : null;
 
   return (
