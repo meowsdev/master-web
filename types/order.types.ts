@@ -159,6 +159,8 @@ export interface Order {
   technician?: OrderProvider;
   originalPrice: string | number;
   adminCommission: string | number;
+  /** The provider's commission percent when they got the order (30 = 30%). */
+  commissionRate?: string | number;
   additionalPrice: string | number;
   totalPrice: string | number;
   finalPrice?: string | number;

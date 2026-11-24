@@ -10,8 +10,8 @@ import { ExpenseClaim } from '@/types/expense-claim.types';
 import { Order } from '@/types/order.types';
 import { AmountRow, AmountRowsEditor, sumAmountRows, toAmountItems, toAmountRows } from './AmountRowsEditor';
 
-/** Same rule as the backend (commissionAfterExpenses): the order's own rate on (total - costs). */
-const previewCommission = (total: number, commission: number, costs: number) => (total > 0 ? Math.max(0, Math.round((total - costs) * (commission / total))) : 0);
+/** Same rule as the backend (commissionAfterExpenses): the order's percent of the profit, (total - costs). */
+const previewCommission = (total: number, percent: number, costs: number) => Math.round((Math.max(0, total - costs) * percent) / 100);
 
 function ReviewForm({ order, userId, claim, onClose }: { order: Order; userId: string; claim: ExpenseClaim; onClose: () => void }) {
   const [rows, setRows] = useState<AmountRow[]>(() => toAmountRows(claim.items));
@@ -21,8 +21,11 @@ function ReviewForm({ order, userId, claim, onClose }: { order: Order; userId: s
 
   const total = Number(order.totalPrice);
   const commission = Number(order.adminCommission);
+  // Orders from before per-provider rates have none on the page yet: they were all 10%.
+  const percent = Number(order.commissionRate ?? 10);
   const costs = sumAmountRows(rows);
-  const newCommission = previewCommission(total, commission, costs);
+  const newCommission = previewCommission(total, percent, costs);
+  const percentLabel = `${percent.toLocaleString('bn-BD', { maximumFractionDigits: 2 })}%`;
 
   const approveClaim = () => {
     const items = toAmountItems(rows);
@@ -49,10 +52,14 @@ function ReviewForm({ order, userId, claim, onClose }: { order: Order; userId: s
       <div className="mt-[20px] rounded-[12px] border border-line bg-surface p-[14px] text-[13px] font-medium text-muted">
         <div className="flex justify-between"><span>অর্ডারের মোট বিল</span><span>{formatTaka(total)}</span></div>
         <div className="mt-[6px] flex justify-between"><span>অনুমোদিত খরচ</span><span>− {formatTaka(costs)}</span></div>
-        <div className="mt-[6px] flex justify-between"><span>কমিশনের ভিত্তি</span><span>{formatTaka(Math.max(0, total - costs))}</span></div>
+        <div className="mt-[6px] flex justify-between"><span>মূল প্রফিট (কমিশনের ভিত্তি)</span><span>{formatTaka(Math.max(0, total - costs))}</span></div>
+        <div className="mt-[6px] flex justify-between"><span>পার্টনারের কমিশন রেট</span><span>{percentLabel}</span></div>
         <div className="mt-[8px] flex justify-between border-t border-line pt-[8px] text-[15px] font-semibold text-ink">
           <span>কমিশন</span><span>{formatTaka(commission)} → {formatTaka(newCommission)}</span>
         </div>
+        <p className="mt-[6px] text-[12px]">
+          {formatTaka(Math.max(0, total - costs))} × {percentLabel} = {formatTaka(newCommission)}
+        </p>
       </div>
 
       <div className="mt-[16px] rounded-[10px] border border-line bg-white px-[12px] py-[8px]">
