@@ -7,6 +7,7 @@ import { User } from '@/types/auth.types';
 import { MyRatingButton } from '../reviews/MyRatingButton';
 import { ProviderPayDueDialog } from './ProviderPayDueDialog';
 import { TeamButton } from './team/TeamButton';
+import { EarningsButton } from './earnings/EarningsButton';
 
 /*
  * The provider's header in the sidebar: photo, name, rating, and what they owe the platform
@@ -49,6 +50,7 @@ export function ProviderProfileHeader({ user }: { user: User }) {
 
       <div className="flex shrink-0 items-center gap-[6px]">
         {/* Phones only: the left rail (where "আমার টিম" lives on wide screens) is hidden there. */}
+        <EarningsButton userId={user.id} variant="header" />
         <TeamButton userId={user.id} variant="header" />
         <button
           type="button"
