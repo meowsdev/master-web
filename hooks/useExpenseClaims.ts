@@ -24,6 +24,12 @@ export function useExpenseClaims(orderId: string, userId: string) {
     refetchInterval: 10000,
   });
 
+  const { data: status } = useQuery({
+    queryKey: [...key, 'status'],
+    queryFn: () => expenseClaimService.status(orderId),
+    refetchInterval: 10000,
+  });
+
   // The commission (and a cash provider's due) changes on approval, so the order lists and wallet refresh too.
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: key });
@@ -57,7 +63,9 @@ export function useExpenseClaims(orderId: string, userId: string) {
     onError: (error) => toast.error(apiErrorMessage(error, 'ফেরত পাঠানো যায়নি।')),
   });
 
-  // A new claim can be sent while none is waiting and none was approved.
-  const canSubmit = !claims.some((claim) => claim.status === 'PENDING' || claim.status === 'APPROVED');
-  return { claims, canSubmit, submit, approve, reject };
+  // The backend decides: none waiting, and nothing approved yet or a revision billed extra work since.
+  const canSubmit = status?.canSubmit ?? false;
+  /** Costs approved by earlier claims (the job's, before a revision's extra work). */
+  const approvedCosts = status?.approvedCosts ?? 0;
+  return { claims, canSubmit, approvedCosts, submit, approve, reject };
 }

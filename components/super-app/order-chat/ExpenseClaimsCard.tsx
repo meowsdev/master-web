@@ -77,6 +77,9 @@ export function ExpenseClaimsCard({ order, userId, viewer }: { order: Order; use
         </div>
       )}
 
+      {canSend && claims.some((claim) => claim.status === 'APPROVED') && (
+        <p className="mt-[10px] text-[13px] font-medium text-muted">রিভিশনে বাড়তি কাজ বিল হয়েছে। সেই কাজে পার্টস বা খরচ লাগলে জমা দিন, একই নিয়মে কমিশন থেকে বাদ যাবে।</p>
+      )}
       {canSend && (
         <button type="button" onClick={() => openPanel(order.id, 'expenseClaim')} className="mt-[12px] h-[36px] cursor-pointer rounded-[10px] bg-primary px-[16px] text-[14px] font-semibold text-white hover:bg-primary/90">
           {claims.length > 0 ? 'আবার খরচ পাঠান' : 'পার্টস / খরচ জমা দিন'}

@@ -16,7 +16,7 @@ const previewCommission = (total: number, percent: number, costs: number) => Mat
 function ReviewForm({ order, userId, claim, onClose }: { order: Order; userId: string; claim: ExpenseClaim; onClose: () => void }) {
   const [rows, setRows] = useState<AmountRow[]>(() => toAmountRows(claim.items));
   const [note, setNote] = useState('');
-  const { approve, reject } = useExpenseClaims(order.id, userId);
+  const { approve, reject, approvedCosts: earlierCosts } = useExpenseClaims(order.id, userId);
   const isBusy = approve.isPending || reject.isPending;
 
   const total = Number(order.totalPrice);
@@ -24,7 +24,10 @@ function ReviewForm({ order, userId, claim, onClose }: { order: Order; userId: s
   // Orders from before per-provider rates have none on the page yet: they were all 10%.
   const percent = Number(order.commissionRate ?? 10);
   const costs = sumAmountRows(rows);
-  const newCommission = previewCommission(total, percent, costs);
+  // A revision's claim: the job's costs were approved before; the commission takes all of them out.
+  const allCosts = earlierCosts + costs;
+  const profit = Math.max(0, total - allCosts);
+  const newCommission = previewCommission(total, percent, allCosts);
   const percentLabel = `${percent.toLocaleString('bn-BD', { maximumFractionDigits: 2 })}%`;
 
   const approveClaim = () => {
@@ -33,7 +36,7 @@ function ReviewForm({ order, userId, claim, onClose }: { order: Order; userId: s
       toast.error('প্রতিটি খরচের নাম দিন।');
       return;
     }
-    if (costs > total) {
+    if (allCosts > total) {
       toast.error('খরচ অর্ডারের মোট বিলের বেশি হতে পারে না।');
       return;
     }
@@ -51,14 +54,17 @@ function ReviewForm({ order, userId, claim, onClose }: { order: Order; userId: s
 
       <div className="mt-[20px] rounded-[12px] border border-line bg-surface p-[14px] text-[13px] font-medium text-muted">
         <div className="flex justify-between"><span>অর্ডারের মোট বিল</span><span>{formatTaka(total)}</span></div>
-        <div className="mt-[6px] flex justify-between"><span>অনুমোদিত খরচ</span><span>− {formatTaka(costs)}</span></div>
-        <div className="mt-[6px] flex justify-between"><span>মূল প্রফিট (কমিশনের ভিত্তি)</span><span>{formatTaka(Math.max(0, total - costs))}</span></div>
+        {earlierCosts > 0 && (
+          <div className="mt-[6px] flex justify-between"><span>আগে অনুমোদিত খরচ</span><span>− {formatTaka(earlierCosts)}</span></div>
+        )}
+        <div className="mt-[6px] flex justify-between"><span>{earlierCosts > 0 ? 'এবারের খরচ (রিভিশন)' : 'অনুমোদিত খরচ'}</span><span>− {formatTaka(costs)}</span></div>
+        <div className="mt-[6px] flex justify-between"><span>মূল প্রফিট (কমিশনের ভিত্তি)</span><span>{formatTaka(profit)}</span></div>
         <div className="mt-[6px] flex justify-between"><span>পার্টনারের কমিশন রেট</span><span>{percentLabel}</span></div>
         <div className="mt-[8px] flex justify-between border-t border-line pt-[8px] text-[15px] font-semibold text-ink">
           <span>কমিশন</span><span>{formatTaka(commission)} → {formatTaka(newCommission)}</span>
         </div>
         <p className="mt-[6px] text-[12px]">
-          {formatTaka(Math.max(0, total - costs))} × {percentLabel} = {formatTaka(newCommission)}
+          {formatTaka(profit)} × {percentLabel} = {formatTaka(newCommission)}
         </p>
       </div>
 
