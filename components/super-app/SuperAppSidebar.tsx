@@ -9,6 +9,7 @@ import { AdminOrdersSidebar } from './admin/AdminOrdersSidebar';
 import { AdminServicesSidebar } from './admin/AdminServicesSidebar';
 import { StaffSidebar } from './admin/staff/StaffSidebar';
 import { WithdrawalsSidebar } from './admin/withdrawals/WithdrawalsSidebar';
+import { AdminEarningsSidebar } from './admin/earnings/AdminEarningsSidebar';
 import { ServiceList } from './ServiceList';
 import { CustomerSidebarTop } from './CustomerSidebarTop';
 import { CustomerOrdersSidebar } from './order-history/CustomerOrdersSidebar';
@@ -99,7 +100,7 @@ export function SuperAppSidebar({
   const [isSearchCollapsed, setIsSearchCollapsed] = useState(false);
   const isStaff = isStaffRole(activeRole);
   const isTechnician = activeRole === 'TECHNICIAN';
-  const { canManageServices, canChatWithMembers, canManageStaff, canManagePayouts } = useStaffPermissions();
+  const { canManageServices, canChatWithMembers, canManageStaff, canManagePayouts, canViewEarnings } = useStaffPermissions();
   const memberChatRole = canChatWithMembers ? supportRoleForTab(activeRailTab) : null;
   const bgSidebar = isDarkMode ? 'bg-[#111b21] border-[#222e35]' : 'bg-white border-line';
   const openAuth = () => onOpenAuth('LOGIN');
@@ -117,6 +118,9 @@ export function SuperAppSidebar({
       ) : isStaff && user && canManageStaff && activeRailTab === 'STAFF' ? (
         /* Admin: office staff accounts */
         <StaffSidebar user={user} onStaffOpened={() => setMobileView('CHAT')} onOpenAuth={openAuth} />
+      ) : isStaff && user && canViewEarnings && activeRailTab === 'EARNINGS' ? (
+        /* Admin: the platform's earnings */
+        <AdminEarningsSidebar user={user} onPartnerOpened={() => setMobileView('CHAT')} />
       ) : isStaff && user && canManagePayouts && activeRailTab === 'WITHDRAWALS' ? (
         /* Admin: providers' withdrawal requests */
         <WithdrawalsSidebar user={user} onWithdrawalOpened={() => setMobileView('CHAT')} onOpenAuth={openAuth} />

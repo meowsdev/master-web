@@ -4,19 +4,10 @@ import { ReactNode } from 'react';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { useProviderEarnings } from '@/hooks/useProviderEarnings';
 import { bnDate, bnMonth, bnNumber } from './earnings-format';
+import { StatTile } from './StatTile';
 import { WithdrawCard } from './WithdrawCard';
 
 const sectionTitleClass = 'mb-[8px] mt-[22px] text-[13px] font-semibold uppercase tracking-[0.4px] text-muted';
-
-function Tile({ label, value, hint, tone = 'normal' }: { label: string; value: string; hint?: string; tone?: 'normal' | 'danger' }) {
-  return (
-    <div className="flex flex-col gap-[2px] rounded-[12px] border border-line bg-white p-[12px]">
-      <span className="text-[12px] font-medium text-muted">{label}</span>
-      <span className={`text-[17px] font-semibold tracking-[-0.3px] ${tone === 'danger' ? 'text-[#d64545]' : 'text-ink'}`}>{value}</span>
-      {hint && <span className="text-[11px] font-medium text-muted">{hint}</span>}
-    </div>
-  );
-}
 
 function Message({ children, isError = false }: { children: ReactNode; isError?: boolean }) {
   return <p className={`text-[14px] font-medium ${isError ? 'text-[#d64545]' : 'text-muted'}`}>{children}</p>;
@@ -47,18 +38,18 @@ export function EarningsTab({ userId }: { userId: string }) {
       </div>
 
       <div className="mt-[12px] grid grid-cols-2 gap-[8px]">
-        <Tile
+        <StatTile
           label="এই মাসে"
           value={formatTaka(summary.thisMonth)}
           hint={summary.lastMonth > 0 || summary.thisMonth > 0 ? `গত মাসের চেয়ে ${change >= 0 ? '+' : ''}${formatTaka(change)}` : undefined}
         />
-        <Tile label="আসন্ন আয়" value={formatTaka(summary.expectedEarnings)} hint={`${bnNumber(summary.activeOrders)}টি চলমান কাজ`} />
-        <Tile label="গড় অর্ডার মূল্য" value={formatTaka(summary.averageOrderValue)} />
-        <Tile label="টিপস" value={formatTaka(summary.tips)} />
-        <Tile label="ক্যাশে পাওয়া আয়" value={formatTaka(summary.cashIncome)} hint="গ্রাহক সাইটে দিয়েছেন" />
-        <Tile label="অনলাইনে পাওয়া আয়" value={formatTaka(summary.onlineIncome)} hint="ব্যালেন্সে যোগ হয়" />
-        <Tile label="প্ল্যাটফর্ম কমিশন" value={formatTaka(summary.commissionPaid)} />
-        <Tile
+        <StatTile label="আসন্ন আয়" value={formatTaka(summary.expectedEarnings)} hint={`${bnNumber(summary.activeOrders)}টি চলমান কাজ`} />
+        <StatTile label="গড় অর্ডার মূল্য" value={formatTaka(summary.averageOrderValue)} />
+        <StatTile label="টিপস" value={formatTaka(summary.tips)} />
+        <StatTile label="ক্যাশে পাওয়া আয়" value={formatTaka(summary.cashIncome)} hint="গ্রাহক সাইটে দিয়েছেন" />
+        <StatTile label="অনলাইনে পাওয়া আয়" value={formatTaka(summary.onlineIncome)} hint="ব্যালেন্সে যোগ হয়" />
+        <StatTile label="প্ল্যাটফর্ম কমিশন" value={formatTaka(summary.commissionPaid)} />
+        <StatTile
           label="বকেয়া (Due)"
           value={summary.dueAmount > 0 ? formatTaka(summary.dueAmount) : 'নেই'}
           hint={summary.dueAmount > 0 ? 'ক্যাশ কাজের কমিশন' : undefined}

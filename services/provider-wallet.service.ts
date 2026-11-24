@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/axios';
 import { OnlinePaymentMethod } from '@/services/order-completion.service';
-import { NewWithdrawal, ProviderEarnings, ProviderLevelProgress, WithdrawalRequest, WithdrawalStatus } from '@/types/provider-earnings.types';
+import { AdminEarningsReport, NewWithdrawal, ProviderEarnings, ProviderLevelProgress, WithdrawalRequest, WithdrawalStatus } from '@/types/provider-earnings.types';
 
 export interface ProviderWalletSummary {
   walletBalance: number;
@@ -37,4 +37,9 @@ export const adminWithdrawalsService = {
   markPaid: async (id: string, transactionRef: string, note?: string) =>
     (await apiClient.post<WithdrawalRequest>(`/admin/withdrawals/${id}/paid`, { transactionRef, ...(note?.trim() ? { note: note.trim() } : {}) })).data,
   reject: async (id: string, reason: string) => (await apiClient.post<WithdrawalRequest>(`/admin/withdrawals/${id}/reject`, { reason })).data,
+};
+
+/* Admin only: the platform's commission income and the partner wallets. */
+export const adminEarningsService = {
+  report: async () => (await apiClient.get<AdminEarningsReport>('/admin/earnings')).data,
 };

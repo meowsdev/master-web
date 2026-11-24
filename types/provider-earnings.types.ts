@@ -100,3 +100,49 @@ export interface NewWithdrawal {
   bankName?: string;
   branchName?: string;
 }
+
+/** GET /admin/earnings: the platform's commission income. */
+export interface AdminEarningsReport {
+  summary: {
+    commissionTotal: number;
+    thisMonth: number;
+    lastMonth: number;
+    completedOrders: number;
+    /** Everything customers were billed on completed orders. */
+    billedTotal: number;
+    averageCommissionPercent: number;
+    /** Commission of cash jobs (comes in as partners pay their dues). */
+    cashCommission: number;
+    /** Commission of online jobs (kept from the online payment). */
+    onlineCommission: number;
+    partnerTips: number;
+    expectedCommission: number;
+    activeOrders: number;
+    approvedCosts: number;
+    commissionReducedByCosts: number;
+  };
+  wallets: {
+    duesReceivable: number;
+    partnersWithDue: number;
+    partnerBalances: number;
+    partnersWithBalance: number;
+    pendingWithdrawals: number;
+    pendingWithdrawalCount: number;
+    paidOut: number;
+  };
+  /** Oldest first; month is "YYYY-MM". */
+  monthly: Array<{ month: string; orders: number; billed: number; commission: number }>;
+  /** Highest commission first. */
+  partners: Array<{
+    providerId: string;
+    userId: string;
+    name: string;
+    mobileNumber: string;
+    commissionRate: number;
+    walletBalance: number;
+    orders: number;
+    billed: number;
+    commission: number;
+    thisMonth: number;
+  }>;
+}

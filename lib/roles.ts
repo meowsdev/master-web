@@ -31,6 +31,8 @@ export interface StaffPermissions {
   canSetCommission: boolean;
   /** Withdrawals tab: providers' withdrawal requests, mark paid or reject (backend: ADMIN). */
   canManagePayouts: boolean;
+  /** Earnings tab: the platform's commission income, per month and per partner (backend: ADMIN). */
+  canViewEarnings: boolean;
 }
 
 const NONE: StaffPermissions = {
@@ -47,6 +49,7 @@ const NONE: StaffPermissions = {
   canManageStaff: false,
   canSetCommission: false,
   canManagePayouts: false,
+  canViewEarnings: false,
 };
 
 const MANAGER: StaffPermissions = {
@@ -63,10 +66,11 @@ const MANAGER: StaffPermissions = {
   canManageStaff: false,
   canSetCommission: false,
   canManagePayouts: false,
+  canViewEarnings: false,
 };
 
 const PERMISSIONS_BY_ROLE: Record<string, StaffPermissions> = {
-  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true, canReviewExpenses: true, canManageStaff: true, canSetCommission: true, canManagePayouts: true },
+  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true, canReviewExpenses: true, canManageStaff: true, canSetCommission: true, canManagePayouts: true, canViewEarnings: true },
   MANAGER,
   // Support chat is open to support staff; member management is not (admin-members is ADMIN/MANAGER).
   SUPPORT: { ...NONE, canChatWithMembers: true },
