@@ -146,3 +146,27 @@ export interface AdminEarningsReport {
     thisMonth: number;
   }>;
 }
+
+/** GET /admin/dues: providers who owe the platform (cash jobs' commission), largest first. */
+export interface DueList {
+  totalDue: number;
+  count: number;
+  /** The daily run reminds anyone not reminded for this many days. */
+  reminderIntervalDays: number;
+  isAutoReminderOn: boolean;
+  providers: Array<{
+    providerId: string;
+    userId: string;
+    name: string;
+    mobileNumber: string;
+    profilePhoto: string | null;
+    accountStatus: string;
+    dueAmount: number;
+    /** Gets no new orders until the due is paid. */
+    isBlocked: boolean;
+    commissionRate: number;
+    lastReminderAt: string | null;
+    lastReminderWasAutomatic: boolean | null;
+    reminderCount: number;
+  }>;
+}

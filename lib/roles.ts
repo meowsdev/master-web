@@ -33,6 +33,8 @@ export interface StaffPermissions {
   canManagePayouts: boolean;
   /** Earnings tab: the platform's commission income, per month and per partner (backend: ADMIN). */
   canViewEarnings: boolean;
+  /** Dues tab: providers who owe, and reminders to pay (backend: ADMIN, MANAGER). */
+  canManageDues: boolean;
 }
 
 const NONE: StaffPermissions = {
@@ -50,6 +52,7 @@ const NONE: StaffPermissions = {
   canSetCommission: false,
   canManagePayouts: false,
   canViewEarnings: false,
+  canManageDues: false,
 };
 
 const MANAGER: StaffPermissions = {
@@ -67,6 +70,7 @@ const MANAGER: StaffPermissions = {
   canSetCommission: false,
   canManagePayouts: false,
   canViewEarnings: false,
+  canManageDues: true,
 };
 
 const PERMISSIONS_BY_ROLE: Record<string, StaffPermissions> = {

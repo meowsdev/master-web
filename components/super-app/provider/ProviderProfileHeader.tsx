@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { getChatSocket } from '@/lib/socket';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { useProviderWallet } from '@/hooks/useProviderWallet';
 import { User } from '@/types/auth.types';
@@ -16,6 +19,26 @@ import { EarningsButton } from './earnings/EarningsButton';
 export function ProviderProfileHeader({ user }: { user: User }) {
   const { dueAmount, payDue } = useProviderWallet(user.id);
   const [isPayOpen, setIsPayOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Staff (or the daily run) reminded this provider to clear their due: show it at once, with Pay Now.
+  // The same words wait in their Support chat, so nothing is lost when the app was closed.
+  useEffect(() => {
+    const socket = getChatSocket();
+    if (!socket) return;
+    const handleReminder = (info: { message?: string }) => {
+      void queryClient.invalidateQueries({ queryKey: ['provider-wallet', user.id] });
+      void queryClient.invalidateQueries({ queryKey: ['support-mine'] });
+      toast.warning(info.message ?? 'আপনার বকেয়া পরিশোধ করুন', {
+        duration: 20000,
+        action: { label: 'Pay Now', onClick: () => setIsPayOpen(true) },
+      });
+    };
+    socket.on('dueReminder', handleReminder);
+    return () => {
+      socket.off('dueReminder', handleReminder);
+    };
+  }, [queryClient, user.id]);
   const hasDue = dueAmount > 0;
   const rating = Number(user.providerProfile?.rating) || 0;
 

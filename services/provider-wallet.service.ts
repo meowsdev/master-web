@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/axios';
 import { OnlinePaymentMethod } from '@/services/order-completion.service';
-import { AdminEarningsReport, NewWithdrawal, ProviderEarnings, ProviderLevelProgress, WithdrawalRequest, WithdrawalStatus } from '@/types/provider-earnings.types';
+import { AdminEarningsReport, DueList, NewWithdrawal, ProviderEarnings, ProviderLevelProgress, WithdrawalRequest, WithdrawalStatus } from '@/types/provider-earnings.types';
 
 export interface ProviderWalletSummary {
   walletBalance: number;
@@ -42,4 +42,11 @@ export const adminWithdrawalsService = {
 /* Admin only: the platform's commission income and the partner wallets. */
 export const adminEarningsService = {
   report: async () => (await apiClient.get<AdminEarningsReport>('/admin/earnings')).data,
+};
+
+/* Admin / manager: providers who owe, and reminders to pay (Support chat + live alert). */
+export const adminDuesService = {
+  list: async () => (await apiClient.get<DueList>('/admin/dues')).data,
+  /** No providerIds = everyone who owes. The backend adds the amount after own words. */
+  remind: async (input: { providerIds?: string[]; message?: string }) => (await apiClient.post<{ sent: number; skipped: number }>('/admin/dues/remind', input)).data,
 };
