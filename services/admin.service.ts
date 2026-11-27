@@ -55,6 +55,8 @@ export const adminService = {
   saveHugeicon: async (name: string, elements: unknown) => (await apiClient.post<{ url: string }>('/uploads/hugeicon', { name, elements })).data.url,
 
   createCategory: async (dto: { name: string; description?: string; iconUrl?: string; groupId?: string }) => (await apiClient.post<{ id: string; name: string }>('/category/create', dto)).data,
+  /** A main service's name, the line under it, and its picture (an uploaded image or a Hugeicons icon link). */
+  updateCategory: async (id: string, dto: { name?: string; description?: string; iconUrl?: string }) => (await apiClient.patch(`/category/${id}`, dto)).data,
 
   createService: async (dto: AdminServiceInput) => (await apiClient.post<{ id: string }>('/service/create', dto)).data,
 

@@ -18,6 +18,7 @@ import { filterChipClass } from '../ChipRow';
 import { useAction } from './panels/ServiceContentEditor';
 import { AdminMainEntry, useAdminCatalog } from './useAdminCatalog';
 import { StaffSidebarHeader } from './AdminProfileHeader';
+import { CategoryChipMenu, CategoryMenuTarget } from './CategoryChipMenu';
 
 const NO_CATEGORY = 'Category নেই';
 
@@ -79,7 +80,8 @@ function AddCategoryChip() {
 
 /*
  * The Services view of a staff member with service rights: the customer's list, row for row (category chips, one
- * row per main service), plus what only staff may do: Add a category, + / Add New Services for a main service, and
+ * row per main service), plus what only staff may do: Add a category (right-click one to edit or delete it), + / Add
+ * New Services for a main service, and
  * the main services customers cannot see yet at the end.
  */
 export function AdminServicesSidebar({ user, onServiceOpened, onOpenAuth }: { user: User; onServiceOpened: () => void; onOpenAuth: () => void }) {
@@ -95,6 +97,8 @@ export function AdminServicesSidebar({ user, onServiceOpened, onOpenAuth }: { us
   const openMainService = useCatalogPanelStore((state) => state.openMainService);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  // Right-click on a category chip: Edit / Delete (not on "All" or "no category", which are not real categories).
+  const [chipMenu, setChipMenu] = useState<CategoryMenuTarget | null>(null);
 
   const entries = useMemo(() => {
     const shown = new Set(publicEntries.map((entry) => entry.id));
@@ -135,6 +139,10 @@ export function AdminServicesSidebar({ user, onServiceOpened, onOpenAuth }: { us
         onSelectFilterChip={setActiveCategory}
         categoryNames={[...groups.map((group) => group.name), ...(hasUngrouped ? [NO_CATEGORY] : [])]}
         chipsTrailing={<AddCategoryChip />}
+        onFilterChipContextMenu={(chip, event) => {
+          const group = groups.find((item) => item.name === chip);
+          if (group) setChipMenu({ group, x: event.clientX, y: event.clientY });
+        }}
         isSearchCollapsed={false}
         searchPlaceholder="Search services..."
         profileSlot={<StaffSidebarHeader user={user} action={{ label: 'New main service', onClick: newMainService }} />}
@@ -157,6 +165,17 @@ export function AdminServicesSidebar({ user, onServiceOpened, onOpenAuth }: { us
           Add New Services
         </button>
       </div>
+
+      {chipMenu && (
+        <CategoryChipMenu
+          target={chipMenu}
+          onClose={() => setChipMenu(null)}
+          // A deleted category cannot stay the filter.
+          onDeleted={(group) => activeCategory === group.name && setActiveCategory('All')}
+          // A renamed category stays the filter under its new name.
+          onRenamed={(oldName, newName) => activeCategory === oldName && setActiveCategory(newName)}
+        />
+      )}
     </>
   );
 }

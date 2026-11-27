@@ -3,7 +3,7 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Search01Icon, ShoppingBag02Icon, UserIcon } from '@hugeicons/core-free-icons';
 import Image from 'next/image';
-import { ReactNode } from 'react';
+import { MouseEvent, ReactNode } from 'react';
 import { FilterChip } from '@/types/super-app.types';
 import { User } from '@/types/auth.types';
 import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
@@ -38,6 +38,8 @@ interface CustomerSidebarTopProps {
   profileSlot?: ReactNode;
   /** After the chips, e.g. the staff "Add" chip that creates a category. */
   chipsTrailing?: ReactNode;
+  /** Staff: right-click on a category chip (edit / delete). */
+  onFilterChipContextMenu?: (chip: FilterChip, event: MouseEvent) => void;
 }
 
 /* Brand header, search pill and filter chips of the Figma customer sidebar. */
@@ -60,6 +62,7 @@ export function CustomerSidebarTop({
   searchPlaceholder = 'Search services...',
   profileSlot,
   chipsTrailing,
+  onFilterChipContextMenu,
 }: CustomerSidebarTopProps) {
   const filterChips: FilterChip[] = ['All', ...categoryNames];
 
@@ -134,6 +137,7 @@ export function CustomerSidebarTop({
         onSelect={onSelectFilterChip}
         trailing={chipsTrailing}
         rowClassName="py-[12px]"
+        onChipContextMenu={onFilterChipContextMenu}
       />
         </div>
         </div>

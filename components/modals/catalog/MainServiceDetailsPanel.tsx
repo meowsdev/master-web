@@ -8,6 +8,7 @@ import { Cancel01Icon, CheckmarkCircle02Icon, PencilEdit01Icon, StarIcon } from 
 import { SidePanelShell } from '@/components/modals/SidePanelShell';
 import { MoveToGroup } from '@/components/super-app/admin/panels/AdminCatalogPanel';
 import { PublishToggle } from '@/components/super-app/admin/panels/PublishToggle';
+import { MainServiceIdentityEditor } from '@/components/super-app/admin/panels/MainServiceIdentityEditor';
 import { DetailsTab, FaqTab, HowToOrderTab, OverviewTab, useAction } from '@/components/super-app/admin/panels/ServiceContentEditor';
 import { useAdminCatalog } from '@/components/super-app/admin/useAdminCatalog';
 import { useStaffPermissions } from '@/hooks/useStaffPermissions';
@@ -136,7 +137,7 @@ export function MainServiceInfo({ data, embedded = false }: { data: CatalogMainS
           {(data.servedCount ?? 0) > 0 && <span>• {data.servedCount}+ served</span>}
           <span className="text-muted">({data.rating?.count ?? 0} reviews{data.services.length ? ` on ${data.services.length} services` : ''})</span>
         </div>
-        {data.description && !embedded && <p className="mt-[8px] text-[14px] leading-relaxed text-ink">{data.description}</p>}
+
         {canEdit && stored && !embedded && (
           <div className="mt-[12px] flex flex-col gap-[10px] rounded-[12px] bg-surface p-[10px]">
             <div className="flex items-center justify-between gap-[8px]">
@@ -144,6 +145,7 @@ export function MainServiceInfo({ data, embedded = false }: { data: CatalogMainS
               <PublishToggle isPublished={stored.isActive} onChange={(isActive) => publish.mutate(isActive)} />
             </div>
             <MoveToGroup main={stored} groups={groups} />
+            <MainServiceIdentityEditor key={`${stored.name}-${stored.iconUrl ?? ''}-${stored.description ?? ''}`} main={stored} />
           </div>
         )}
       </div>

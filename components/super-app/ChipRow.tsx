@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useHorizontalScroll } from '@/hooks/useHorizontalScroll';
 
@@ -23,13 +23,15 @@ interface ChipRowProps<T extends string> {
   trailing?: ReactNode;
   /** Padding of the scrolling row (it scrolls under the arrows). */
   rowClassName?: string;
+  /** Right-click (or long-press) on a chip, e.g. staff edit / delete. Without it the browser's own menu shows. */
+  onChipContextMenu?: (id: T, event: React.MouseEvent) => void;
 }
 
 /*
  * The app's row of chips, used for every filter and tab row (sidebar filters, the service tabs Overview · FAQ · How to
  * Order · Review · Details, the staff editor tabs). Too many for the width: the wheel, a drag and the arrows scroll it.
  */
-export function ChipRow<T extends string>({ chips, activeId, onSelect, label, trailing, rowClassName = 'px-[16px] py-[12px]' }: ChipRowProps<T>) {
+export function ChipRow<T extends string>({ chips, activeId, onSelect, label, trailing, rowClassName = 'px-[16px] py-[12px]', onChipContextMenu }: ChipRowProps<T>) {
   const { ref, canScrollLeft, canScrollRight, scrollByAmount, wasDragged } = useHorizontalScroll<HTMLDivElement>();
 
   return (
@@ -49,6 +51,14 @@ export function ChipRow<T extends string>({ chips, activeId, onSelect, label, tr
             onClick={() => {
               if (!wasDragged()) onSelect(chip.id);
             }}
+            onContextMenu={
+              onChipContextMenu
+                ? (event) => {
+                    event.preventDefault();
+                    onChipContextMenu(chip.id, event);
+                  }
+                : undefined
+            }
             className={filterChipClass(activeId === chip.id)}
           >
             {chip.label}
