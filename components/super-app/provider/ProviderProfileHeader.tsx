@@ -9,6 +9,9 @@ import { useProviderWallet } from '@/hooks/useProviderWallet';
 import { User } from '@/types/auth.types';
 import { MyRatingButton } from '../reviews/MyRatingButton';
 import { ProfileTrigger } from '../ProfileTrigger';
+import { openProviderNewOrder } from '../NavigationRail';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import { ProviderPayDueDialog } from './ProviderPayDueDialog';
 import { TeamButton } from './team/TeamButton';
 import { EarningsButton } from './earnings/EarningsButton';
@@ -85,6 +88,16 @@ export function ProviderProfileHeader({ user }: { user: User }) {
           className="shrink-0 cursor-pointer rounded-[10px] bg-ink px-[16px] py-[10px] text-[14px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-30"
         >
           Pay Now
+        </button>
+        {/* Phones only: the + on the left rail opens the same New order form on wide screens. */}
+        <button
+          type="button"
+          onClick={openProviderNewOrder}
+          title="New order"
+          aria-label="New order"
+          className="btn-raised flex size-[40px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-white transition-transform hover:scale-105 md:hidden"
+        >
+          <HugeiconsIcon icon={PlusSignIcon} size={20} strokeWidth={2.5} />
         </button>
       </div>
 

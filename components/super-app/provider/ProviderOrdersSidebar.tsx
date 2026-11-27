@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react';
 import { Order } from '@/types/order.types';
 import { User } from '@/types/auth.types';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
+import { AdminCreateOrderPanel } from '../admin/panels/AdminCreateOrderPanel';
 import { CustomerSidebarTop } from '../CustomerSidebarTop';
 import { OrderHistoryListItem } from '../order-history/OrderHistoryListItem';
 import { SupportChatRow } from '../support/SupportChatRow';
@@ -29,6 +31,8 @@ interface ProviderOrdersSidebarProps {
 export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, onSelectOrder, onOpenAuth, onOpenSupport, isSupportOpen }: ProviderOrdersSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilterChip, setActiveFilterChip] = useState('All');
+  const panelKind = useOrderPanelStore((state) => state.kind);
+  const closePanel = useOrderPanelStore((state) => state.close);
 
   const visibleOrders = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -81,6 +85,9 @@ export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, 
           />
         ))}
       </div>
+
+      {/* The provider's New order form (opened by the + on the rail or in the header): a side panel on the right. */}
+      {panelKind === 'providerOrder' && <AdminCreateOrderPanel adminId={user.id} booker="provider" onClose={closePanel} />}
     </>
   );
 }

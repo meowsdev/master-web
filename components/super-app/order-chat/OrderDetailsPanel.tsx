@@ -6,6 +6,7 @@ import { useServiceAreaLabel } from '@/hooks/useServiceAreaLabel';
 import { Order, OrderStatus, OrderUserProfile, ServiceRevision } from '@/types/order.types';
 import { Fact, Section } from '../admin/member/MemberParts';
 import { ORDER_STATUS_LABEL } from '../order-history/order-status';
+import { OrderCreatorTag } from '../order-history/OrderCreatorTag';
 import { formatScheduleDate } from './order-labels';
 
 export type OrderDetailsViewer = 'CUSTOMER' | 'PROVIDER' | 'TECHNICIAN' | 'ADMIN';
@@ -151,6 +152,7 @@ export function OrderDetailsPanel({ order, onClose }: { order: Order; viewer: Or
 
       <Section title="Timeline">
         <Fact label="Placed">{formatDateTime(order.createdAt)}</Fact>
+        <Fact label="Created by"><OrderCreatorTag order={order} withName /></Fact>
         {order.acceptedAt && <Fact label="Accepted">{formatDateTime(order.acceptedAt)}</Fact>}
         {order.completedAt && <Fact label="Completed">{formatDateTime(order.completedAt)}</Fact>}
         {revisions.map((revision, index) => (

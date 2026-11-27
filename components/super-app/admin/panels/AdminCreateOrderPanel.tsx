@@ -11,7 +11,7 @@ import { ProblemSection } from '@/components/modals/place-order/ProblemSection';
 import { ScheduleSection } from '@/components/modals/place-order/ScheduleSection';
 import { ServiceAvatar } from '@/components/modals/place-order/ServiceAvatar';
 import { usePlaceOrderForm } from '@/hooks/usePlaceOrderForm';
-import { CustomerLookup, orderPlacementService } from '@/services/order-placement.service';
+import { CustomerLookup, OrderBooker, orderPlacementService } from '@/services/order-placement.service';
 import { useOrderHistoryStore } from '@/store/useOrderHistoryStore';
 import { Order } from '@/types/order.types';
 import { LayersIcon, UserIcon } from '@hugeicons/core-free-icons';
@@ -54,8 +54,12 @@ export function CustomerLookupNote({ lookup }: { lookup: CustomerLookup }) {
  * "New order" for the admin: an order for a customer who did not order through the app. It is the same form
  * as the customer's Place Order panel (service, problem, quantity, location, date), plus the customer's phone
  * number. The backend prices it and matches providers by area exactly as for any order.
+ *
+ * `booker="provider"`: the same form for a provider's own customer. The order is theirs at once (not offered to
+ * anyone else). There is no number lookup: a provider must not read other people's names and addresses.
  */
-export function AdminCreateOrderPanel({ adminId, onClose }: { adminId: string; onClose: () => void }) {
+export function AdminCreateOrderPanel({ adminId, onClose, booker = 'admin' }: { adminId: string; onClose: () => void; booker?: OrderBooker }) {
+  const isProvider = booker === 'provider';
   const queryClient = useQueryClient();
   const selectOrder = useOrderHistoryStore((state) => state.select);
   const [customerPhone, setCustomerPhone] = useState('');
@@ -66,9 +70,14 @@ export function AdminCreateOrderPanel({ adminId, onClose }: { adminId: string; o
   const autoFilled = useRef({ name: '', address: '' });
 
   const handlePlaced = (order: Order) => {
-    void queryClient.invalidateQueries({ queryKey: ['admin-orders', adminId] });
-    // Open it in the list right away, so the admin sees where it went.
-    selectOrder(adminId, order.id);
+    if (isProvider) {
+      // It is already the provider's, so it shows in their own order list.
+      void queryClient.invalidateQueries({ queryKey: ['provider-assigned-orders'] });
+    } else {
+      void queryClient.invalidateQueries({ queryKey: ['admin-orders', adminId] });
+      // Open it in the list right away, so the admin sees where it went.
+      selectOrder(adminId, order.id);
+    }
     toast.success(`Order #${order.referenceCode} created`);
     onClose();
   };
@@ -80,7 +89,7 @@ export function AdminCreateOrderPanel({ adminId, onClose }: { adminId: string; o
       orderPlacementService.placeOrderForCustomer(request, {
         customerPhone,
         ...(customerName.trim() ? { customerName: customerName.trim() } : {}),
-      }),
+      }, booker),
   });
 
   const [orderKind, setOrderKind] = useState<OrderKind>('EXISTING');
@@ -115,7 +124,7 @@ export function AdminCreateOrderPanel({ adminId, onClose }: { adminId: string; o
         addressDetail: state.addressDetail.trim(),
         scheduledDate: state.scheduledDate,
         timeSlot: state.timeSlot,
-      });
+      }, booker);
       handlePlaced(order);
     } catch (error) {
       toast.error(apiErrorMessage(error));
@@ -133,7 +142,7 @@ export function AdminCreateOrderPanel({ adminId, onClose }: { adminId: string; o
     setCustomerPhone(next);
     latestPhone.current = next;
     setLookup(null);
-    if (!next || !isValidPhoneNumber(next)) return;
+    if (isProvider || !next || !isValidPhoneNumber(next)) return;
     orderPlacementService
       .lookupCustomer(next)
       .then((result) => {
@@ -166,6 +175,7 @@ export function AdminCreateOrderPanel({ adminId, onClose }: { adminId: string; o
         <div className="mb-[8px] pt-[40px]">
           <PhoneNumberField value={customerPhone} onChange={changePhone} />
           {lookup && <CustomerLookupNote lookup={lookup} />}
+          {isProvider && <p className="mt-[8px] text-[12px] font-medium text-muted">অর্ডারটি সরাসরি আপনার কাছে আসবে, অন্য কোনো প্রোভাইডারকে পাঠানো হবে না।</p>}
           <OrderField icon={UserIcon}>
             <input value={customerName} onChange={(event) => setCustomerName(event.target.value)} maxLength={100} placeholder="Customer name (optional)" className={fieldControlClass} />
           </OrderField>

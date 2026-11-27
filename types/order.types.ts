@@ -133,6 +133,8 @@ export interface OrderBookingDetail {
   priceBreakdown: OrderPriceLine[];
 }
 
+export type OrderCreator = 'CUSTOMER' | 'PROVIDER' | 'ADMIN';
+
 export interface Order {
   id: string;
   /** Random 6-character code (A-Z, 0-9) the customer quotes, e.g. A94K2B. */
@@ -172,6 +174,10 @@ export interface Order {
   orderStatus: OrderStatus;
   createdAt: string;
   updatedAt: string;
+  /** Who created the order (a tag on every screen). Orders from before this was recorded are CUSTOMER. */
+  createdByRole?: OrderCreator;
+  /** The creator's name for that tag; null on old orders or a deleted account. */
+  createdBy?: { name: string | null } | null;
   providerReview?: ProviderReview | null;
   /** The provider's (or technician's) rating of the customer after completion; null until given. */
   customerRating?: { rating: number; comment?: string | null; createdAt: string } | null;

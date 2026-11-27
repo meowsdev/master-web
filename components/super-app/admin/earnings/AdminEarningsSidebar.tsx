@@ -10,6 +10,7 @@ import { AdminEarningsReport } from '@/types/provider-earnings.types';
 import { ChipRow } from '../../ChipRow';
 import { SupportAvatar } from '../../support/SupportAvatar';
 import { StaffSidebarHeader } from '../AdminProfileHeader';
+import { ProviderOrderChargeCard } from './ProviderOrderChargeCard';
 import { StatTile } from '../../provider/earnings/StatTile';
 import { bnMonth, bnNumber } from '../../provider/earnings/earnings-format';
 
@@ -86,6 +87,9 @@ function Summary({ report }: { report: AdminEarningsReport }) {
       <p className="mt-[10px] text-[12px] font-medium leading-relaxed text-muted">
         কমিশন ধরা হয় সম্পন্ন অর্ডার থেকে, অনুমোদিত পার্টস / খরচ বাদ দিয়ে, প্রতিটা অর্ডারের পার্টনার রেটে। রিভিশনের বাড়তি বিলের কমিশনও এতে আছে।
       </p>
+
+      <p className={sectionTitleClass}>প্রোভাইডারের অর্ডার</p>
+      <ProviderOrderChargeCard />
     </>
   );
 }

@@ -8,6 +8,10 @@ import { CustomerNavigationRail } from './CustomerNavigationRail';
 import { AdminNavigationRail } from './admin/AdminNavigationRail';
 import { TeamButton } from './provider/team/TeamButton';
 import { EarningsButton } from './provider/earnings/EarningsButton';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
+
+/** A provider's New order form, for their own customer by phone number. */
+export const openProviderNewOrder = () => useOrderPanelStore.getState().open(null, 'providerOrder');
 
 interface NavigationRailProps {
   /** The selected tab, or ORDERS / ACCOUNT while that right-hand panel is open. */
@@ -29,14 +33,15 @@ export function NavigationRail({ activeRailTab, onSelectTab, onOpenProfile, onOp
     return <AdminNavigationRail selection={activeRailTab} onSelectTab={onSelectTab} profilePhoto={user?.profilePhoto} onOpenAccount={onOpenProfile} onGoHome={onGoHome} />;
   }
 
-  // Providers and technicians work from their order list: no orders tab and no new-order button.
+  // Providers and technicians work from their order list: no orders tab. Only providers get a new-order button.
   const isWorkerView = activeRole === 'PROVIDER' || activeRole === 'TECHNICIAN';
   return (
     <CustomerNavigationRail
       isAuthenticated={Boolean(user)}
       selection={activeRailTab}
       onSelectTab={onSelectTab}
-      onStartNewOrder={isWorkerView ? undefined : onStartNewOrder}
+      // Providers' + opens their own New order form; technicians have none.
+      onStartNewOrder={activeRole === 'PROVIDER' ? openProviderNewOrder : isWorkerView ? undefined : onStartNewOrder}
       showOrdersTab={!isWorkerView}
       profilePhoto={user?.profilePhoto}
       onOpenAccount={user ? onOpenProfile : onOpenAuth}

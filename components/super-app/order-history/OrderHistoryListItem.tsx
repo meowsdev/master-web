@@ -6,6 +6,7 @@ import { Order, OrderStatus } from '@/types/order.types';
 import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { buildOrderTabLabel } from '@/components/super-app/order-chat/order-labels';
 import { OrderAvatar } from './OrderAvatar';
+import { OrderCreatorTag } from './OrderCreatorTag';
 import { ORDER_STATUS_LABEL } from './order-status';
 
 interface OrderHistoryListItemProps {
@@ -47,7 +48,10 @@ export function OrderHistoryListItem({ order, isSelected, onSelect, title, avata
         </div>
 
         <div className="flex items-center justify-between gap-[8px] text-[13px] font-medium text-muted">
-          <span className="truncate">{order.service?.category?.name ?? order.service?.name}</span>
+          <span className="flex min-w-0 items-center gap-[6px]">
+            <OrderCreatorTag order={order} />
+            <span className="truncate">{order.service?.category?.name ?? order.service?.name}</span>
+          </span>
           <span className="shrink-0">{formatTaka(order.totalPrice)}</span>
         </div>
       </div>
