@@ -46,6 +46,9 @@ export const catalogService = {
 
   getMainService: async (id: string) => (await apiClient.get<CatalogMainServiceDetail>(`/catalog/main-services/${id}`)).data,
 
+  /** Staff: the same list with the reviews an admin hid (marked), to show them again. */
+  getMainServiceReviewsForStaff: async (id: string, page: number) =>
+    (await apiClient.get<CatalogReviewPage>(`/catalog/admin/main-services/${id}/reviews`, { params: { page } })).data,
   getMainServiceReviews: async (id: string, page: number) =>
     (await apiClient.get<CatalogReviewPage>(`/catalog/main-services/${id}/reviews`, { params: { page } })).data,
 

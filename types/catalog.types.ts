@@ -83,6 +83,8 @@ export interface CatalogFaq {
 
 export interface CatalogReview {
   id: string;
+  /** false: an admin hid it from the public (only staff lists carry hidden ones). */
+  isPublic?: boolean;
   rating: number;
   comment?: string | null;
   createdAt: string;
@@ -95,6 +97,8 @@ export interface CatalogReviewPage {
   summary: RatingBrief & { breakdown: [number, number, number, number, number] };
   page: number;
   pageSize: number;
+  /** How many reviews the list holds in all (staff lists count hidden ones too). */
+  totalItems?: number;
   items: CatalogReview[];
 }
 
