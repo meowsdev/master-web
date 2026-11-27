@@ -298,21 +298,30 @@ function SubServiceCard({ card, fallbackIcon, isSelected, onSelect, onSchedule, 
 }
 
 /* Customers only: for a problem the list does not have. The provider visits for free and sends a price. */
+/* Same shape as a sub-service card (picture, name, price line, bottom bar) so it sits in the list as one of them. */
 function CustomServiceCard({ onSelect }: { onSelect: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className="flex cursor-pointer items-center gap-[12px] rounded-[4px] border border-dashed border-secondary bg-white p-[12px] text-left transition-shadow hover:shadow-md"
-    >
-      <span className="flex size-[64px] shrink-0 items-center justify-center rounded-[2px] bg-secondary text-primary">
-        <HugeiconsIcon icon={PencilEdit02Icon} size={26} strokeWidth={1.8} />
-      </span>
-      <span className="flex min-w-0 flex-col gap-[4px]">
-        <span className="text-[14px] font-semibold text-ink">Custom</span>
-        <span className="text-[12px] leading-snug text-muted">লিস্টে নেই? সমস্যা লিখুন, প্রোভাইডার ভিজিট করে দাম জানাবে। ভিজিট ফ্রি।</span>
-      </span>
-    </button>
+    <div className="rounded-[4px] border border-line bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
+      <button type="button" onClick={onSelect} className="flex w-full cursor-pointer items-center gap-[12px] p-[12px] text-left">
+        <span className="flex size-[64px] shrink-0 items-center justify-center rounded-[2px] bg-gradient-to-b from-secondary to-surface text-primary">
+          <HugeiconsIcon icon={PencilEdit02Icon} size={28} strokeWidth={1.6} />
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col gap-[6px]">
+          <span className="truncate text-[14px] font-semibold leading-[20px] tracking-[0.1px] text-ink">Custom (লিস্টে নেই)</span>
+          <span className="text-[14px] leading-[20px] tracking-[0.1px] text-ink">
+            Visit <span className="font-bold text-primary">Free</span> · দাম পরে জানাবে
+          </span>
+        </span>
+      </button>
+
+      <div className="flex h-[44px] items-center border-t border-line px-[14px]">
+        <button type="button" onClick={onSelect} className="flex cursor-pointer items-center gap-[10px] text-ink">
+          <HugeiconsIcon icon={PencilEdit02Icon} size={18} strokeWidth={1.6} />
+          <span className="text-[11px] font-medium text-ink">সমস্যা লিখুন</span>
+          <HugeiconsIcon icon={ArrowDown01Icon} size={16} strokeWidth={1.8} />
+        </button>
+      </div>
+    </div>
   );
 }
 
