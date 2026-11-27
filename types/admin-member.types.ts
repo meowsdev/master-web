@@ -28,8 +28,16 @@ export interface ProviderSection {
   experienceYears: number;
   isAvailable: boolean;
   isBlockedForNegative: boolean;
-  /** The platform's share of this provider's jobs, in percent (10 = 10%). */
+  /** The platform's share of the orders this provider gets from the platform, in percent (10 = 10%): their own or the global one. */
   commissionRate: number;
+  /** An admin set this provider's own rate; false = the global rate applies. */
+  commissionIsCustom: boolean;
+  /** The global rate on platform orders right now. */
+  globalCommissionRate: number;
+  /** The charge on orders this provider creates themselves (Provider created); null follows the global rule. */
+  ownOrderChargeRate: number | null;
+  /** The global rule for provider-created orders right now (0 while it is off), shown when ownOrderChargeRate is null. */
+  globalOwnOrderChargeRate: number;
   dueAmount: number;
   totalCompletedOrders: number;
   kyc: { status: string } | null;

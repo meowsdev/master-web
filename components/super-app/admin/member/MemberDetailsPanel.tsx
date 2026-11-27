@@ -51,7 +51,16 @@ export function MemberDetailsPanel({ adminId, memberId, onClose }: { adminId: st
           </Section>
 
           {member.provider && (
-            <ProviderCommissionControl adminId={adminId} memberId={member.id} commissionRate={member.provider.commissionRate} canChange={canSetCommission} />
+            <ProviderCommissionControl
+              adminId={adminId}
+              memberId={member.id}
+              commissionRate={member.provider.commissionRate}
+              commissionIsCustom={member.provider.commissionIsCustom}
+              globalCommissionRate={member.provider.globalCommissionRate}
+              ownOrderChargeRate={member.provider.ownOrderChargeRate}
+              globalOwnOrderChargeRate={member.provider.globalOwnOrderChargeRate}
+              canChange={canSetCommission}
+            />
           )}
           {member.provider && <ProviderLevelSection adminId={adminId} providerUserId={member.id} level={member.provider.level} canEdit={canManageLevels} />}
           {member.provider && canViewKyc && <ProviderKycSection adminId={adminId} memberId={member.id} canReview={canReviewKyc} />}

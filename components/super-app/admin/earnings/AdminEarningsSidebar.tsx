@@ -11,6 +11,7 @@ import { ChipRow } from '../../ChipRow';
 import { SupportAvatar } from '../../support/SupportAvatar';
 import { StaffSidebarHeader } from '../AdminProfileHeader';
 import { ProviderOrderChargeCard } from './ProviderOrderChargeCard';
+import { PlatformCommissionCard } from './PlatformCommissionCard';
 import { StatTile } from '../../provider/earnings/StatTile';
 import { bnMonth, bnNumber } from '../../provider/earnings/earnings-format';
 
@@ -88,8 +89,12 @@ function Summary({ report }: { report: AdminEarningsReport }) {
         কমিশন ধরা হয় সম্পন্ন অর্ডার থেকে, অনুমোদিত পার্টস / খরচ বাদ দিয়ে, প্রতিটা অর্ডারের পার্টনার রেটে। রিভিশনের বাড়তি বিলের কমিশনও এতে আছে।
       </p>
 
-      <p className={sectionTitleClass}>প্রোভাইডারের অর্ডার</p>
-      <ProviderOrderChargeCard />
+      {/* Both global rates in one place; a provider's own rates are set on their details. */}
+      <p className={sectionTitleClass}>গ্লোবাল কমিশন</p>
+      <div className="flex flex-col gap-[10px]">
+        <PlatformCommissionCard />
+        <ProviderOrderChargeCard />
+      </div>
     </>
   );
 }

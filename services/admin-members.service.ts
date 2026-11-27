@@ -25,8 +25,12 @@ export const adminMembersService = {
   getDetails: async (memberId: string) => (await apiClient.get<MemberDetails>(`/admin/members/${memberId}`)).data,
 
   /** Admin only: a provider's own commission percent. Orders they already have keep their old percent. */
-  setCommission: async (memberId: string, commissionRate: number) =>
+  setCommission: async (memberId: string, commissionRate: number | null) =>
     (await apiClient.patch<MemberDetails>(`/admin/members/${memberId}/commission`, { commissionRate })).data,
+
+  /** Admin only: a provider's charge on orders they create themselves; null follows the global rule again. */
+  setOwnOrderCharge: async (memberId: string, rate: number | null) =>
+    (await apiClient.patch<MemberDetails>(`/admin/members/${memberId}/own-order-charge`, { rate })).data,
 
   moderate: async (memberId: string, action: ModerationAction, reason?: string) =>
     (await apiClient.post<MemberDetails>(`/admin/members/${memberId}/moderation`, { action, ...(reason?.trim() ? { reason: reason.trim() } : {}) })).data,

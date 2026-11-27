@@ -36,7 +36,7 @@ export function useModerateMember(adminId: string, memberId: string) {
 export function useSetProviderCommission(adminId: string, memberId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (commissionRate: number) => adminMembersService.setCommission(memberId, commissionRate),
+    mutationFn: (commissionRate: number | null) => adminMembersService.setCommission(memberId, commissionRate),
     onSuccess: (details) => {
       queryClient.setQueryData(['admin-member', adminId, memberId], details);
       toast.success('Commission saved');
@@ -63,6 +63,22 @@ export function useChangeTechnicianProvider(adminId: string) {
     onError: (error: unknown) => {
       const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
       toast.error((Array.isArray(message) ? message[0] : message) ?? 'Could not change the provider');
+    },
+  });
+}
+
+/** Sets a provider's charge on orders they create themselves, or null for the global rule (admin only). */
+export function useSetProviderOwnOrderCharge(adminId: string, memberId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (rate: number | null) => adminMembersService.setOwnOrderCharge(memberId, rate),
+    onSuccess: (details) => {
+      queryClient.setQueryData(['admin-member', adminId, memberId], details);
+      toast.success('Own-order charge saved');
+    },
+    onError: (error: unknown) => {
+      const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
+      toast.error((Array.isArray(message) ? message[0] : message) ?? 'Could not save the charge');
     },
   });
 }
