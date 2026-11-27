@@ -9,9 +9,9 @@ export function kycStatusView(info: Pick<MyKyc, 'kyc' | 'canReceiveOrders' | 'gr
   const status = info.kyc?.status;
   const grace = info.graceUntil && info.canReceiveOrders ? ` ${formatKycDate(info.graceUntil)} পর্যন্ত অর্ডার পাবেন।` : '';
   if (status === 'APPROVED') return { tone: 'ok' as const, title: 'ভেরিফাইড', text: 'আপনার পরিচয় যাচাই হয়েছে।' };
-  if (status === 'PENDING') return { tone: 'wait' as const, title: 'যাচাই চলছে', text: `এডমিন আপনার তথ্য দেখছে।${grace || ' অনুমোদনের পর অর্ডার পাবেন।'}` };
+  if (status === 'PENDING') return { tone: 'wait' as const, title: 'যাচাই চলছে', text: `এডমিন আপনার তথ্য দেখছে। জমা দেওয়ার ৩ দিনের মধ্যে ভেরিফিকেশন সম্পন্ন হবে। ভেরিফিকেশন ছাড়া কোনো অর্ডার পাবেন না।${grace}` };
   if (status === 'REJECTED') return { tone: 'bad' as const, title: 'আবার জমা দিন', text: `${info.kyc?.rejectReason ?? 'তথ্য ঠিক করে আবার জমা দিন।'}${grace}` };
-  return { tone: 'bad' as const, title: 'ভেরিফিকেশন বাকি', text: `অর্ডার পেতে আপনার পরিচয় যাচাই করুন।${grace}` };
+  return { tone: 'bad' as const, title: 'ভেরিফিকেশন বাকি', text: `ভেরিফিকেশন ছাড়া কোনো অর্ডার পাবেন না। তথ্য জমা দিন; ৩ দিনের মধ্যে যাচাই সম্পন্ন হবে।${grace}` };
 }
 
 const TONE = {

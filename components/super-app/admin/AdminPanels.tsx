@@ -17,6 +17,7 @@ import { WithdrawalPanel } from './withdrawals/WithdrawalPanel';
 import { LevelTargetsPanel, ProviderLevelPanel } from './levels/LevelPanels';
 import { DispatchRankingPanel } from './dispatch/DispatchRankingPanel';
 import { ProviderTermsEditorPanel } from './terms/ProviderTermsEditorPanel';
+import { AdminKycFillPanel } from './member/AdminKycFillPanel';
 
 /* The management panel the admin's rail opened, if any. */
 export function AdminPanels() {
@@ -24,6 +25,7 @@ export function AdminPanels() {
   const target = useOrderPanelStore((state) => state.orderId);
   const { data: services = [] } = useQuery({ queryKey: ['admin-services'], queryFn: () => servicesService.getServices() });
   const close = useOrderPanelStore((state) => state.close);
+  const open = useOrderPanelStore((state) => state.open);
   const adminId = useAuthStore((state) => state.user?.id);
 
   if (kind === 'adminService') {
@@ -51,6 +53,8 @@ export function AdminPanels() {
   if (kind === 'adminLevelTargets' && adminId) return <LevelTargetsPanel adminId={adminId} onClose={close} />;
   if (kind === 'adminDispatchRanking' && adminId) return <DispatchRankingPanel adminId={adminId} onClose={close} />;
   if (kind === 'adminProviderTerms' && adminId) return <ProviderTermsEditorPanel adminId={adminId} onClose={close} />;
+  // The admin fills in and verifies a provider's KYC (target holds the provider's user id).
+  if (kind === 'adminKycFill' && target && adminId) return <AdminKycFillPanel key={target} adminId={adminId} memberId={target} onClose={() => open(target, 'adminMember')} />;
   // One panel per provider: a different provider gets fresh state.
   if (kind === 'adminProviderLevel' && target && adminId) return <ProviderLevelPanel key={target} adminId={adminId} providerUserId={target} onClose={close} />;
   return null;

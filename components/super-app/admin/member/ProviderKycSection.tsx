@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { fieldControlClass } from '@/components/modals/place-order/OrderField';
 import { useServiceAreaLabel } from '@/hooks/useServiceAreaLabel';
 import { providerKycService } from '@/services/provider-kyc.service';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { KycImage } from '../../kyc/KycImage';
 import { KycStatusCard } from '../../kyc/KycStatusCard';
 import { Fact, Section, formatDate } from './MemberParts';
@@ -38,6 +39,7 @@ export function ProviderKycSection({ adminId, memberId, canReview }: { adminId: 
   const { data, isLoading, isError } = useQuery({ queryKey, queryFn: () => providerKycService.getForMember(memberId) });
   const [reason, setReason] = useState('');
   const [needsReason, setNeedsReason] = useState(false);
+  const openPanel = useOrderPanelStore((state) => state.open);
   const reasonRef = useRef<HTMLTextAreaElement>(null);
   const kyc = data?.kyc ?? null;
   const homeArea = useServiceAreaLabel(kyc?.districtId, kyc?.upazilaId);
@@ -59,6 +61,16 @@ export function ProviderKycSection({ adminId, memberId, canReview }: { adminId: 
       {isError && <p className="text-[14px] font-medium text-[#d64545]">Could not load the verification.</p>}
       {data && <KycStatusCard info={data} />}
       {data && !kyc && <p className="mt-[8px] text-[13px] font-medium text-muted">এখনো জমা দেয়নি।</p>}
+      {/* Admin: enter the whole KYC for them and verify at once (e.g. a provider who has not opened the app yet). */}
+      {data && canReview && kyc?.status !== 'APPROVED' && (
+        <button
+          type="button"
+          onClick={() => openPanel(memberId, 'adminKycFill')}
+          className="mt-[10px] h-[40px] w-full cursor-pointer rounded-[10px] border border-primary bg-white text-[14px] font-semibold text-primary hover:bg-secondary/40"
+        >
+          {kyc ? 'তথ্য ঠিক করে নিজে ভেরিফাই করুন' : 'KYC পূরণ করে ভেরিফাই করুন'}
+        </button>
+      )}
 
       {kyc && (
         <>

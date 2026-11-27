@@ -7,6 +7,7 @@ import { isValidPhoneNumber } from 'react-phone-number-input/mobile';
 import { useLocationOptions } from '@/hooks/useLocationOptions';
 import { adminMembersService } from '@/services/admin-members.service';
 import { useSupportChatStore } from '@/store/useSupportChatStore';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { SupportMemberRole } from '@/types/support-chat.types';
 
 const LABEL: Record<SupportMemberRole, string> = { PROVIDER: 'Provider', TECHNICIAN: 'Technician', CUSTOMER: 'Customer' };
@@ -60,8 +61,14 @@ export function useAddMember(adminId: string, role: SupportMemberRole, onDone: (
       void queryClient.invalidateQueries({ queryKey: ['support-directory', adminId] });
       void queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
       selectMember({ id: memberId, role, name: name.trim() || phone, roleLabel: LABEL[role], photo: null });
-      toast.success(`${LABEL[role]} added`);
-      onDone();
+      if (role === 'PROVIDER') {
+        // A new provider gets no orders until verified: go straight on to filling in and verifying their KYC.
+        toast.success('Provider added. এখন তার KYC পূরণ করে ভেরিফাই করুন।');
+        useOrderPanelStore.getState().open(memberId, 'adminKycFill');
+      } else {
+        toast.success(`${LABEL[role]} added`);
+        onDone();
+      }
     } catch (error) {
       const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
       toast.error((Array.isArray(message) ? message[0] : message) ?? `Could not add the ${role.toLowerCase()}`);

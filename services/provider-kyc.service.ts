@@ -72,6 +72,11 @@ export interface SubmitKycRequest {
   termsVersion: string;
 }
 
+export type AdminVerifyKycRequest = Omit<SubmitKycRequest, 'acceptTerms' | 'termsVersion'> & {
+  /** Replaces the provider's work areas; leave out to keep them. */
+  serviceAreas?: Array<{ districtId: number; upazilaId: number }>;
+};
+
 export const providerKycService = {
   getMine: async () => (await apiClient.get<MyKyc>('/provider-kyc/me')).data,
 
@@ -91,6 +96,17 @@ export const providerKycService = {
   fileBlob: async (key: string) => (await apiClient.get<Blob>(`/provider-kyc/files/${encodeURIComponent(key)}`, { responseType: 'blob' })).data,
 
   getForMember: async (userId: string) => (await apiClient.get<MemberKyc>(`/provider-kyc/member/${userId}`)).data,
+
+  /** Admin: one picture for this provider (it is the provider's file, like their own upload). */
+  uploadForMember: async (userId: string, file: File) => {
+    const body = new FormData();
+    body.append('file', file);
+    return (await apiClient.post<{ key: string }>(`/provider-kyc/member/${userId}/documents`, body, { headers: { 'Content-Type': 'multipart/form-data' } })).data;
+  },
+
+  /** Admin: the provider's whole KYC, entered for them and verified at once (they accept the terms on first visit). */
+  verifyForMember: async (userId: string, request: AdminVerifyKycRequest) =>
+    (await apiClient.put<MemberKyc>(`/provider-kyc/member/${userId}`, request)).data,
 
   review: async (kycId: string, status: 'APPROVED' | 'REJECTED', reason?: string) =>
     (await apiClient.patch<ProviderKyc>(`/provider-kyc/${kycId}/status`, { status, reason })).data,

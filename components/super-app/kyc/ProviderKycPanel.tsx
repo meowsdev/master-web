@@ -31,7 +31,7 @@ const STEPS = ['ব্যক্তিগত তথ্য', 'NID ও ছবি', 
 const isBdMobile = (phone: string) => /^(?:\+?880|0)?1[3-9]\d{8}$/.test(phone.replace(/[\s-]/g, ''));
 const isNid = (nid: string) => /^(\d{10}|\d{13}|\d{17})$/.test(nid.replace(/\s/g, ''));
 /** "+8801712345678" → "01712345678", the way people type it. */
-const localPhone = (phone: string | null) => (phone ? phone.replace(/^\+?880/, '0') : '');
+export const localPhone = (phone: string | null) => (phone ? phone.replace(/^\+?880/, '0') : '');
 const EMPTY_CONTACT: EmergencyContact = { name: '', relation: '', phone: '' };
 const BN_DIGITS = ['১', '২', '৩', '৪'];
 
@@ -40,7 +40,7 @@ const apiError = (error: unknown, fallback: string) => {
   return (Array.isArray(message) ? message[0] : message) || fallback;
 };
 
-interface KycDraft {
+export interface KycDraft {
   step: number;
   fullName: string;
   fatherName: string;
@@ -150,20 +150,7 @@ function KycWizard({ userId, info, onSent }: { userId: string; info: MyKyc; onSe
   const termsQuery = useQuery({ queryKey: ['provider-terms-current'], queryFn: providerTermsService.current, enabled: isReadingTerms, staleTime: 0 });
 
   // What each step still needs; a step's Next opens only once its list is empty.
-  const missingByStep: string[][] = [
-    [
-      draft.fullName.trim().length < 2 && 'নাম',
-      draft.fatherName.trim().length < 2 && 'বাবার নাম',
-      draft.motherName.trim().length < 2 && 'মায়ের নাম',
-      !draft.gender && 'লিঙ্গ',
-      (!draft.districtId || !draft.upazilaId) && 'জেলা ও উপজেলা',
-      !/^\d{4}$/.test(draft.postCode) && 'পোস্ট কোড',
-      draft.addressDetail.trim().length < 3 && 'বিস্তারিত ঠিকানা',
-    ],
-    [!isNid(draft.nidNumber) && 'NID নম্বর', !draft.nidFrontKey && 'NID সামনের ছবি', !draft.nidBackKey && 'NID পেছনের ছবি', !draft.selfieKey && 'নিজের ছবি'],
-    [!hasServiceAreas && 'অন্তত একটি কাজের এলাকা'],
-    [draft.contacts.some((contact) => contact.name.trim().length < 2 || !contact.relation || !isBdMobile(contact.phone)) && 'জরুরি যোগাযোগ'],
-  ].map((items) => items.filter((item): item is string => Boolean(item)));
+  const missingByStep = kycMissingByStep(draft, hasServiceAreas);
   const missing = missingByStep[draft.step];
   const isLast = draft.step === STEPS.length - 1;
   // A step can be reopened from the bar once every step before it is complete.
@@ -353,10 +340,53 @@ function StepBar({ current, isDone, canOpen, onOpen }: { current: number; isDone
   );
 }
 
-type StepProps = { draft: KycDraft; setDraft: (change: Partial<KycDraft>) => void };
+/**
+ * What each of the four parts still needs, in the words the form uses: personal details, NID and pictures, work
+ * areas, family numbers. Shared by the provider's wizard and the admin's fill-in form, so both check the same.
+ */
+export function kycMissingByStep(draft: KycDraft, hasServiceAreas: boolean): string[][] {
+  return [
+    [
+      draft.fullName.trim().length < 2 && 'নাম',
+      draft.fatherName.trim().length < 2 && 'বাবার নাম',
+      draft.motherName.trim().length < 2 && 'মায়ের নাম',
+      !draft.gender && 'লিঙ্গ',
+      (!draft.districtId || !draft.upazilaId) && 'জেলা ও উপজেলা',
+      !/^d{4}$/.test(draft.postCode) && 'পোস্ট কোড',
+      draft.addressDetail.trim().length < 3 && 'বিস্তারিত ঠিকানা',
+    ],
+    [!isNid(draft.nidNumber) && 'NID নম্বর', !draft.nidFrontKey && 'NID সামনের ছবি', !draft.nidBackKey && 'NID পেছনের ছবি', !draft.selfieKey && 'নিজের ছবি'],
+    [!hasServiceAreas && 'অন্তত একটি কাজের এলাকা'],
+    [draft.contacts.some((contact) => contact.name.trim().length < 2 || !contact.relation || !isBdMobile(contact.phone)) && 'জরুরি যোগাযোগ'],
+  ].map((items) => items.filter((item): item is string => Boolean(item)));
+}
+
+/** An empty form for someone with this login number (an admin filling in a new provider's KYC). */
+export const emptyKycDraft = (loginNumber: string | null): KycDraft => ({
+  step: 0,
+  fullName: '',
+  fatherName: '',
+  motherName: '',
+  contactPhone: localPhone(loginNumber),
+  gender: '',
+  districtId: null,
+  upazilaId: null,
+  postCode: '',
+  addressDetail: '',
+  nidNumber: '',
+  tradeLicenseNo: '',
+  nidFrontKey: '',
+  nidBackKey: '',
+  selfieKey: '',
+  contacts: [EMPTY_CONTACT, EMPTY_CONTACT],
+});
+
+export type StepProps = { draft: KycDraft; setDraft: (change: Partial<KycDraft>) => void };
+/** Where a KYC picture is uploaded: the provider's own, or an admin's on their behalf. */
+export type KycUpload = (file: File) => Promise<{ key: string }>;
 
 /* Step 1: who they are, and the address written on their NID. */
-function PersonalStep({ draft, setDraft }: StepProps) {
+export function PersonalStep({ draft, setDraft }: StepProps) {
   const { districts, upazilas } = useLocationOptions(draft.districtId);
   return (
     <>
@@ -419,7 +449,7 @@ function PersonalStep({ draft, setDraft }: StepProps) {
 }
 
 /* Step 2: the NID number, both sides of the card and a photo of the provider. */
-function DocumentsStep({ draft, setDraft }: StepProps) {
+export function DocumentsStep({ draft, setDraft, upload = providerKycService.uploadDocument }: StepProps & { upload?: KycUpload }) {
   return (
     <>
       <OrderField icon={IdentityCardIcon}>
@@ -430,9 +460,9 @@ function DocumentsStep({ draft, setDraft }: StepProps) {
         <input value={draft.tradeLicenseNo} onChange={(event) => setDraft({ tradeLicenseNo: event.target.value })} maxLength={40} placeholder="ট্রেড লাইসেন্স নম্বর (থাকলে)" className={fieldControlClass} />
       </OrderField>
       <div className="mt-[18px] grid grid-cols-3 gap-[8px]">
-        <DocumentUpload label="NID সামনে" fileKey={draft.nidFrontKey} onUploaded={(nidFrontKey) => setDraft({ nidFrontKey })} />
-        <DocumentUpload label="NID পেছনে" fileKey={draft.nidBackKey} onUploaded={(nidBackKey) => setDraft({ nidBackKey })} />
-        <DocumentUpload label="নিজের ছবি" fileKey={draft.selfieKey} onUploaded={(selfieKey) => setDraft({ selfieKey })} isPhoto />
+        <DocumentUpload label="NID সামনে" fileKey={draft.nidFrontKey} upload={upload} onUploaded={(nidFrontKey) => setDraft({ nidFrontKey })} />
+        <DocumentUpload label="NID পেছনে" fileKey={draft.nidBackKey} upload={upload} onUploaded={(nidBackKey) => setDraft({ nidBackKey })} />
+        <DocumentUpload label="নিজের ছবি" fileKey={draft.selfieKey} upload={upload} onUploaded={(selfieKey) => setDraft({ selfieKey })} isPhoto />
       </div>
       <p className="mt-[8px] text-[12px] font-medium text-muted">ছবি স্পষ্ট হতে হবে, লেখা পড়া যায় এমন। শুধু আপনি আর এডমিন এই ছবি দেখতে পারবে।</p>
     </>
@@ -440,7 +470,7 @@ function DocumentsStep({ draft, setDraft }: StepProps) {
 }
 
 /* Step 4: two or three family numbers, then a last look at everything before it is sent. */
-function ContactsStep({ draft, setDraft }: StepProps) {
+export function ContactsStep({ draft, setDraft }: StepProps) {
   const setContact = (index: number, change: Partial<EmergencyContact>) =>
     setDraft({ contacts: draft.contacts.map((contact, i) => (i === index ? { ...contact, ...change } : contact)) });
   const homeArea = useServiceAreaLabel(draft.districtId, draft.upazilaId);
@@ -489,9 +519,9 @@ function ContactsStep({ draft, setDraft }: StepProps) {
 }
 
 /* One private picture: tap to choose, it uploads at once and shows from the server. */
-function DocumentUpload({ label, fileKey, onUploaded, isPhoto = false }: { label: string; fileKey: string; onUploaded: (key: string) => void; isPhoto?: boolean }) {
+function DocumentUpload({ label, fileKey, onUploaded, isPhoto = false, upload: uploadFile }: { label: string; fileKey: string; onUploaded: (key: string) => void; isPhoto?: boolean; upload: KycUpload }) {
   const upload = useMutation({
-    mutationFn: providerKycService.uploadDocument,
+    mutationFn: uploadFile,
     onSuccess: (result) => onUploaded(result.key),
     onError: (error) => toast.error(apiError(error, 'ছবি আপলোড হয়নি।')),
   });
