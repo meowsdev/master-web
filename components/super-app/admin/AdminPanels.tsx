@@ -16,6 +16,7 @@ import { AddStaffPanel, StaffDetailsPanel } from './staff/StaffPanels';
 import { WithdrawalPanel } from './withdrawals/WithdrawalPanel';
 import { LevelTargetsPanel, ProviderLevelPanel } from './levels/LevelPanels';
 import { DispatchRankingPanel } from './dispatch/DispatchRankingPanel';
+import { ProviderTermsEditorPanel } from './terms/ProviderTermsEditorPanel';
 
 /* The management panel the admin's rail opened, if any. */
 export function AdminPanels() {
@@ -49,6 +50,7 @@ export function AdminPanels() {
   if (kind === 'adminWithdrawal' && target && adminId) return <WithdrawalPanel key={target} adminId={adminId} withdrawalId={target} onClose={close} />;
   if (kind === 'adminLevelTargets' && adminId) return <LevelTargetsPanel adminId={adminId} onClose={close} />;
   if (kind === 'adminDispatchRanking' && adminId) return <DispatchRankingPanel adminId={adminId} onClose={close} />;
+  if (kind === 'adminProviderTerms' && adminId) return <ProviderTermsEditorPanel adminId={adminId} onClose={close} />;
   // One panel per provider: a different provider gets fresh state.
   if (kind === 'adminProviderLevel' && target && adminId) return <ProviderLevelPanel key={target} adminId={adminId} providerUserId={target} onClose={close} />;
   return null;

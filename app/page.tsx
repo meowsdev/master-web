@@ -32,6 +32,7 @@ import { useAdminCatalogStore } from '@/store/useAdminCatalogStore';
 import { useSupportChatStore } from '@/store/useSupportChatStore';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { ProviderKycPanel } from '@/components/super-app/kyc/ProviderKycPanel';
+import { ProviderTermsGate } from '@/components/super-app/kyc/ProviderTermsGate';
 import { SwitchAccountDialog } from '@/components/super-app/switch-account/SwitchAccountDialog';
 import { useSwitchAccount } from '@/components/super-app/switch-account/useSwitchAccount';
 
@@ -374,6 +375,8 @@ export default function SuperAppPage() {
 
       {/* The verification (KYC): a provider's, or a customer's who chose to become one through Switch Account. */}
       {kycPanelOpen && user && <ProviderKycPanel userId={user.id} onClose={() => useOrderPanelStore.getState().close()} />}
+      {/* A verified provider accepts newly published provider terms once, before carrying on. */}
+      {user && activeRole === 'PROVIDER' && <ProviderTermsGate userId={user.id} />}
       {switchAccount.prompt && (
         <SwitchAccountDialog prompt={switchAccount.prompt} isBusy={switchAccount.isBusy} onConfirm={switchAccount.confirm} onCancel={switchAccount.cancel} />
       )}

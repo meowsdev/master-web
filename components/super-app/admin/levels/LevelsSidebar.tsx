@@ -28,7 +28,7 @@ const inputClass = 'h-[40px] w-full rounded-[8px] border border-chip bg-white px
  * gives them all a level at once (locked, the monthly evaluation leaves it). A row opens that provider's Level page.
  */
 export function LevelsSidebar({ user, onOpened, onOpenAuth }: { user: User; onOpened: () => void; onOpenAuth: () => void }) {
-  const { canManageLevels } = useStaffPermissions();
+  const { canManageLevels, canReviewKyc } = useStaffPermissions();
   const openPanel = useOrderPanelStore((state) => state.open);
   const openKind = useOrderPanelStore((state) => state.kind);
   const openTarget = useOrderPanelStore((state) => state.orderId);
@@ -138,6 +138,19 @@ export function LevelsSidebar({ user, onOpened, onOpenAuth }: { user: User; onOp
                 className={secondaryButton}
               >
                 অর্ডার বণ্টনের নিয়ম
+              </button>
+            )}
+            {/* Admin only: the terms providers accept (the backend allows only ADMIN to publish). */}
+            {canReviewKyc && (
+              <button
+                type="button"
+                onClick={() => {
+                  openPanel(null, 'adminProviderTerms');
+                  onOpened();
+                }}
+                className={secondaryButton}
+              >
+                প্রোভাইডারের শর্তাবলি
               </button>
             )}
           </div>

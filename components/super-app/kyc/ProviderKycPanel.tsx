@@ -15,7 +15,8 @@ import { useServiceAreaLabel } from '@/hooks/useServiceAreaLabel';
 import { EmergencyContact, KycGender, MyKyc, providerKycService } from '@/services/provider-kyc.service';
 import { KycImage } from './KycImage';
 import { KycStatusCard } from './KycStatusCard';
-import { PROVIDER_TERMS, PROVIDER_TERMS_TITLE, PROVIDER_TERMS_VERSION } from './provider-terms';
+import { ProviderTerms, providerTermsService } from '@/services/provider-terms.service';
+import { TermsText } from './TermsText';
 
 export const myKycQueryKey = (userId: string) => ['provider-kyc', userId];
 
@@ -145,6 +146,8 @@ function KycWizard({ userId, info, onSent }: { userId: string; info: MyKyc; onSe
   const hasServiceAreas = areas ? areas.length > 0 : info.hasServiceAreas;
   const [isReadingTerms, setIsReadingTerms] = useState(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
+  // The terms in force, fetched when they are about to be read (an admin may have changed them).
+  const termsQuery = useQuery({ queryKey: ['provider-terms-current'], queryFn: providerTermsService.current, enabled: isReadingTerms, staleTime: 0 });
 
   // What each step still needs; a step's Next opens only once its list is empty.
   const missingByStep: string[][] = [
@@ -184,7 +187,7 @@ function KycWizard({ userId, info, onSent }: { userId: string; info: MyKyc; onSe
         ...(draft.tradeLicenseNo.trim() ? { tradeLicenseNo: draft.tradeLicenseNo.trim() } : {}),
         emergencyContacts: draft.contacts.map((contact) => ({ name: contact.name.trim(), relation: contact.relation, phone: contact.phone.trim() })),
         acceptTerms: true,
-        termsVersion: PROVIDER_TERMS_VERSION,
+        termsVersion: String(termsQuery.data?.version ?? ''),
       }),
     onSuccess: (result) => {
       queryClient.setQueryData(myKycQueryKey(userId), result);
@@ -192,7 +195,16 @@ function KycWizard({ userId, info, onSent }: { userId: string; info: MyKyc; onSe
       toast.success('ভেরিফিকেশন জমা হয়েছে। এডমিন যাচাই করে জানাবে।');
       onSent();
     },
-    onError: (error) => toast.error(apiError(error, 'জমা দেওয়া যায়নি।')),
+    onError: (error) => {
+      // The admin published new terms while the form was open: show those, to be read and accepted.
+      if ((error as { response?: { status?: number } })?.response?.status === 409) {
+        setHasAcceptedTerms(false);
+        void termsQuery.refetch();
+        toast.info('শর্তাবলি বদলেছে। নতুনগুলো পড়ে আবার মেনে নিন।');
+        return;
+      }
+      toast.error(apiError(error, 'জমা দেওয়া যায়নি।'));
+    },
   });
 
   /*
@@ -202,6 +214,8 @@ function KycWizard({ userId, info, onSent }: { userId: string; info: MyKyc; onSe
   if (isReadingTerms) {
     return (
       <ProviderTermsView
+        terms={termsQuery.data ?? null}
+        isLoadingTerms={termsQuery.isLoading}
         hasAccepted={hasAcceptedTerms}
         onAcceptedChange={setHasAcceptedTerms}
         isSending={submit.isPending}
@@ -256,24 +270,29 @@ function KycWizard({ userId, info, onSent }: { userId: string; info: MyKyc; onSe
 }
 
 /* The provider terms: text only, then the acceptance box and Submit & Confirm at the end of it. */
-function ProviderTermsView({ hasAccepted, onAcceptedChange, isSending, onBack, onConfirm }: { hasAccepted: boolean; onAcceptedChange: (value: boolean) => void; isSending: boolean; onBack: () => void; onConfirm: () => void }) {
+function ProviderTermsView({
+  terms,
+  isLoadingTerms,
+  hasAccepted,
+  onAcceptedChange,
+  isSending,
+  onBack,
+  onConfirm,
+}: {
+  terms: ProviderTerms | null;
+  isLoadingTerms: boolean;
+  hasAccepted: boolean;
+  onAcceptedChange: (value: boolean) => void;
+  isSending: boolean;
+  onBack: () => void;
+  onConfirm: () => void;
+}) {
   return (
     <div className="mt-[16px]">
-      <h3 className="text-[16px] font-semibold text-ink">{PROVIDER_TERMS_TITLE}</h3>
-      <p className="mt-[4px] text-[12px] font-medium text-muted">জমা দেওয়ার আগে নিচের শর্তগুলো মন দিয়ে পড়ুন।</p>
-
-      <div className="mt-[14px] flex flex-col gap-[16px] rounded-[12px] border border-line bg-white p-[14px]">
-        {PROVIDER_TERMS.map((section) => (
-          <section key={section.heading}>
-            <h4 className="text-[14px] font-semibold text-ink">{section.heading}</h4>
-            <ul className="mt-[6px] flex list-disc flex-col gap-[6px] pl-[18px] text-[13px] font-medium leading-relaxed text-ink">
-              {section.points.map((point) => (
-                <li key={point}>{point}</li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
+      <p className="mb-[10px] text-[12px] font-medium text-muted">জমা দেওয়ার আগে নিচের শর্তগুলো মন দিয়ে পড়ুন।</p>
+      {isLoadingTerms && <p className="text-[14px] font-medium text-muted">শর্তাবলি আনা হচ্ছে...</p>}
+      {!isLoadingTerms && !terms && <p className="text-[14px] font-medium text-[#d64545]">শর্তাবলি আনা যায়নি। একটু পরে আবার চেষ্টা করুন।</p>}
+      {terms && <TermsText terms={terms} />}
 
       <label className="mt-[16px] flex cursor-pointer items-start gap-[10px] rounded-[12px] bg-surface p-[12px]">
         <input type="checkbox" checked={hasAccepted} onChange={(event) => onAcceptedChange(event.target.checked)} className="mt-[2px] size-[18px] shrink-0 cursor-pointer accent-primary" />
@@ -288,7 +307,7 @@ function ProviderTermsView({ hasAccepted, onAcceptedChange, isSending, onBack, o
         </button>
         <button
           type="button"
-          disabled={!hasAccepted || isSending}
+          disabled={!hasAccepted || isSending || !terms}
           onClick={onConfirm}
           className="h-[40px] flex-1 cursor-pointer rounded-[10px] bg-primary text-[14px] font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
         >
