@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -15,6 +15,7 @@ import { useServiceAreaLabel } from '@/hooks/useServiceAreaLabel';
 import { EmergencyContact, KycGender, MyKyc, providerKycService } from '@/services/provider-kyc.service';
 import { KycImage } from './KycImage';
 import { KycStatusCard } from './KycStatusCard';
+import { PROVIDER_TERMS, PROVIDER_TERMS_TITLE, PROVIDER_TERMS_VERSION } from './provider-terms';
 
 export const myKycQueryKey = (userId: string) => ['provider-kyc', userId];
 
@@ -129,19 +130,21 @@ function ApprovedSummary({ info }: { info: MyKyc }) {
 
 function KycWizard({ userId, info, onSent }: { userId: string; info: MyKyc; onSent: () => void }) {
   const queryClient = useQueryClient();
-  const store = useKycDraftStore();
-  // The draft of this login if there is one (the panel was closed half way), else a fresh one.
-  const [draft, setDraftState] = useState<KycDraft>(() =>
-    store.userId === userId && store.draft ? { ...store.draft, contactPhone: localPhone(info.accountPhone) } : startingDraft(info),
-  );
-  const setDraft = (change: Partial<KycDraft>) =>
-    setDraftState((current) => {
-      const next = { ...current, ...change };
-      useKycDraftStore.getState().save(userId, next);
-      return next;
-    });
+  // The draft of this login if there is one (the panel was closed half way), else a fresh one. Read once on open,
+  // not subscribed to: the wizard owns the draft while it is open.
+  const [draft, setDraftState] = useState<KycDraft>(() => {
+    const saved = useKycDraftStore.getState();
+    return saved.userId === userId && saved.draft ? { ...saved.draft, contactPhone: localPhone(info.accountPhone) } : startingDraft(info);
+  });
+  const setDraft = (change: Partial<KycDraft>) => setDraftState((current) => ({ ...current, ...change }));
+  // Kept for a reopen after every change, once the render is done (never while rendering).
+  useEffect(() => {
+    useKycDraftStore.getState().save(userId, draft);
+  }, [userId, draft]);
   const { data: areas } = useProviderAreas(userId);
   const hasServiceAreas = areas ? areas.length > 0 : info.hasServiceAreas;
+  const [isReadingTerms, setIsReadingTerms] = useState(false);
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
 
   // What each step still needs; a step's Next opens only once its list is empty.
   const missingByStep: string[][] = [
@@ -180,6 +183,8 @@ function KycWizard({ userId, info, onSent }: { userId: string; info: MyKyc; onSe
         selfieKey: draft.selfieKey,
         ...(draft.tradeLicenseNo.trim() ? { tradeLicenseNo: draft.tradeLicenseNo.trim() } : {}),
         emergencyContacts: draft.contacts.map((contact) => ({ name: contact.name.trim(), relation: contact.relation, phone: contact.phone.trim() })),
+        acceptTerms: true,
+        termsVersion: PROVIDER_TERMS_VERSION,
       }),
     onSuccess: (result) => {
       queryClient.setQueryData(myKycQueryKey(userId), result);
@@ -189,6 +194,22 @@ function KycWizard({ userId, info, onSent }: { userId: string; info: MyKyc; onSe
     },
     onError: (error) => toast.error(apiError(error, 'জমা দেওয়া যায়নি।')),
   });
+
+  /*
+   * After step 4: the provider terms, not a numbered step. Only the text, read through, then "I have read and
+   * accept" and Submit & Confirm, which is what actually sends the verification.
+   */
+  if (isReadingTerms) {
+    return (
+      <ProviderTermsView
+        hasAccepted={hasAcceptedTerms}
+        onAcceptedChange={setHasAcceptedTerms}
+        isSending={submit.isPending}
+        onBack={() => setIsReadingTerms(false)}
+        onConfirm={() => submit.mutate()}
+      />
+    );
+  }
 
   return (
     <>
@@ -217,15 +238,65 @@ function KycWizard({ userId, info, onSent }: { userId: string; info: MyKyc; onSe
         )}
         <button
           type="button"
-          disabled={missing.length > 0 || submit.isPending}
-          onClick={() => (isLast ? submit.mutate() : setDraft({ step: draft.step + 1 }))}
+          disabled={missing.length > 0}
+          onClick={() => {
+            if (!isLast) return setDraft({ step: draft.step + 1 });
+            // Not sent yet: the terms come first, read and accepted every time.
+            setHasAcceptedTerms(false);
+            setIsReadingTerms(true);
+          }}
           className="h-[40px] flex-1 cursor-pointer rounded-[10px] bg-primary text-[14px] font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
         >
-          {isLast ? (submit.isPending ? 'জমা হচ্ছে...' : info.kyc ? 'আবার জমা দিন' : 'যাচাইয়ের জন্য জমা দিন') : 'পরবর্তী'}
+          {isLast ? (info.kyc ? 'আবার জমা দিন' : 'জমা দিন') : 'পরবর্তী'}
         </button>
       </div>
       {missing.length > 0 && <p className="mt-[10px] text-center text-[12px] font-medium text-muted">বাকি আছে: {missing.join(', ')}</p>}
     </>
+  );
+}
+
+/* The provider terms: text only, then the acceptance box and Submit & Confirm at the end of it. */
+function ProviderTermsView({ hasAccepted, onAcceptedChange, isSending, onBack, onConfirm }: { hasAccepted: boolean; onAcceptedChange: (value: boolean) => void; isSending: boolean; onBack: () => void; onConfirm: () => void }) {
+  return (
+    <div className="mt-[16px]">
+      <h3 className="text-[16px] font-semibold text-ink">{PROVIDER_TERMS_TITLE}</h3>
+      <p className="mt-[4px] text-[12px] font-medium text-muted">জমা দেওয়ার আগে নিচের শর্তগুলো মন দিয়ে পড়ুন।</p>
+
+      <div className="mt-[14px] flex flex-col gap-[16px] rounded-[12px] border border-line bg-white p-[14px]">
+        {PROVIDER_TERMS.map((section) => (
+          <section key={section.heading}>
+            <h4 className="text-[14px] font-semibold text-ink">{section.heading}</h4>
+            <ul className="mt-[6px] flex list-disc flex-col gap-[6px] pl-[18px] text-[13px] font-medium leading-relaxed text-ink">
+              {section.points.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+
+      <label className="mt-[16px] flex cursor-pointer items-start gap-[10px] rounded-[12px] bg-surface p-[12px]">
+        <input type="checkbox" checked={hasAccepted} onChange={(event) => onAcceptedChange(event.target.checked)} className="mt-[2px] size-[18px] shrink-0 cursor-pointer accent-primary" />
+        <span className="text-[13px] font-semibold leading-relaxed text-ink">
+          আমি উপরের সব শর্ত পড়েছি, বুঝেছি এবং মেনে নিচ্ছি। আমার কাজ ও আচরণের সম্পূর্ণ দায়ভার আমার নিজের।
+        </span>
+      </label>
+
+      <div className="mt-[20px] flex items-center gap-[10px]">
+        <button type="button" disabled={isSending} onClick={onBack} className="h-[40px] flex-1 cursor-pointer rounded-[10px] border border-chip bg-white text-[14px] font-semibold text-ink hover:bg-surface disabled:opacity-50">
+          পেছনে
+        </button>
+        <button
+          type="button"
+          disabled={!hasAccepted || isSending}
+          onClick={onConfirm}
+          className="h-[40px] flex-1 cursor-pointer rounded-[10px] bg-primary text-[14px] font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary-disabled"
+        >
+          {isSending ? 'জমা হচ্ছে...' : 'Submit & Confirm'}
+        </button>
+      </div>
+      {!hasAccepted && <p className="mt-[10px] text-center text-[12px] font-medium text-muted">জমা দিতে আগে শর্তগুলো মেনে নেওয়ার ঘরে টিক দিন।</p>}
+    </div>
   );
 }
 

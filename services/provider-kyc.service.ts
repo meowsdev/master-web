@@ -30,6 +30,8 @@ export interface ProviderKyc {
   selfieUrl: string | null;
   emergencyContacts: EmergencyContact[];
   submittedAt: string | null;
+  termsAcceptedAt?: string | null;
+  termsVersion?: string | null;
   reviewedAt: string | null;
   rejectReason: string | null;
 }
@@ -65,6 +67,9 @@ export interface SubmitKycRequest {
   selfieKey: string;
   tradeLicenseNo?: string;
   emergencyContacts: EmergencyContact[];
+  /** The provider terms were read and accepted just before sending; the server keeps when and which version. */
+  acceptTerms: true;
+  termsVersion: string;
 }
 
 export const providerKycService = {

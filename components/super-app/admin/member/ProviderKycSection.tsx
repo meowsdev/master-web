@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fieldControlClass } from '@/components/modals/place-order/OrderField';
@@ -11,6 +11,17 @@ import { KycStatusCard } from '../../kyc/KycStatusCard';
 import { Fact, Section, formatDate } from './MemberParts';
 
 const GENDER_LABEL: Record<string, string> = { MALE: 'পুরুষ', FEMALE: 'মহিলা', OTHER: 'অন্যান্য' };
+
+/** Common reasons to send a verification back, one tap each. */
+const REJECT_REASONS = [
+  'NID-এর ছবি অস্পষ্ট।',
+  'NID-এর দুই পাশের ছবি লাগবে।',
+  'নিজের ছবি স্পষ্ট নয় বা NID-এর সাথে মেলে না।',
+  'নাম NID-এর সাথে মেলে না।',
+  'NID নম্বর ভুল।',
+  'ঠিকানা অসম্পূর্ণ।',
+  'জরুরি যোগাযোগের নম্বরে পাওয়া যায়নি।',
+];
 
 const apiError = (error: unknown, fallback: string) => {
   const message = (error as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
@@ -26,6 +37,8 @@ export function ProviderKycSection({ adminId, memberId, canReview }: { adminId: 
   const queryKey = ['admin-member-kyc', adminId, memberId];
   const { data, isLoading, isError } = useQuery({ queryKey, queryFn: () => providerKycService.getForMember(memberId) });
   const [reason, setReason] = useState('');
+  const [needsReason, setNeedsReason] = useState(false);
+  const reasonRef = useRef<HTMLTextAreaElement>(null);
   const kyc = data?.kyc ?? null;
   const homeArea = useServiceAreaLabel(kyc?.districtId, kyc?.upazilaId);
 
@@ -80,6 +93,7 @@ export function ProviderKycSection({ adminId, memberId, canReview }: { adminId: 
             {kyc.tradeLicenseNo && <Fact label="Trade license">{kyc.tradeLicenseNo}</Fact>}
             <Fact label="NID address">{[kyc.addressDetail, homeArea, kyc.postCode].filter(Boolean).join(', ') || '—'}</Fact>
             {kyc.submittedAt && <Fact label="Sent">{formatDate(kyc.submittedAt)}</Fact>}
+            <Fact label="Provider terms">{kyc.termsAcceptedAt ? `Accepted ${formatDate(kyc.termsAcceptedAt)} (v${kyc.termsVersion ?? '?'})` : 'Not accepted'}</Fact>
             {kyc.reviewedAt && <Fact label="Reviewed">{formatDate(kyc.reviewedAt)}</Fact>}
           </div>
 
@@ -97,15 +111,51 @@ export function ProviderKycSection({ adminId, memberId, canReview }: { adminId: 
 
           {canReview && kyc.status === 'PENDING' && (
             <div className="mt-[14px]">
-              <div className="rounded-[10px] border border-line bg-white px-[12px] py-[8px]">
-                <textarea value={reason} onChange={(event) => setReason(event.target.value)} rows={2} maxLength={300} placeholder="ফেরত পাঠালে কারণ লিখুন (প্রোভাইডার দেখবে)" className={`${fieldControlClass} resize-none`} />
+              <p className="mb-[6px] text-[13px] font-semibold text-ink">ফেরত পাঠালে কারণ (প্রোভাইডার দেখবে)</p>
+              {/* One tap fills a common reason; it can still be edited or added to. */}
+              <div className="mb-[8px] flex flex-wrap gap-[6px]">
+                {REJECT_REASONS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => {
+                      setReason((current) => (current.trim() ? `${current.trim()} ${preset}` : preset).slice(0, 300));
+                      setNeedsReason(false);
+                    }}
+                    className="cursor-pointer rounded-full border border-chip px-[10px] py-[4px] text-[12px] font-semibold text-muted hover:border-secondary hover:bg-secondary hover:text-ink"
+                  >
+                    {preset}
+                  </button>
+                ))}
               </div>
+              <div className={`rounded-[10px] border bg-white px-[12px] py-[8px] ${needsReason ? 'border-[#d64545]' : 'border-line'}`}>
+                <textarea
+                  ref={reasonRef}
+                  value={reason}
+                  onChange={(event) => {
+                    setReason(event.target.value);
+                    if (event.target.value.trim()) setNeedsReason(false);
+                  }}
+                  rows={2}
+                  maxLength={300}
+                  placeholder="কী ঠিক করতে হবে লিখুন"
+                  className={`${fieldControlClass} resize-none`}
+                />
+              </div>
+              {needsReason && <p className="mt-[4px] text-[12px] font-semibold text-[#d64545]">ফেরত পাঠাতে কারণ লিখুন বা উপরের একটি বেছে নিন।</p>}
               <div className="mt-[10px] flex gap-[8px]">
                 <button
                   type="button"
-                  disabled={review.isPending || reason.trim().length === 0}
-                  onClick={() => review.mutate('REJECTED')}
-                  title={reason.trim() ? undefined : 'আগে কারণ লিখুন'}
+                  disabled={review.isPending}
+                  onClick={() => {
+                    // Never a silent dead button: without a reason, say so and put the cursor in the box.
+                    if (!reason.trim()) {
+                      setNeedsReason(true);
+                      reasonRef.current?.focus();
+                      return;
+                    }
+                    review.mutate('REJECTED');
+                  }}
                   className="h-[40px] flex-1 cursor-pointer rounded-[10px] border border-chip bg-white text-[14px] font-semibold text-ink hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   ফেরত পাঠান
