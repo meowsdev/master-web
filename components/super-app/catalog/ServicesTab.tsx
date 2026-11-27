@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowDown01Icon, Calendar03Icon, Delete02Icon, PencilEdit01Icon, PencilEdit02Icon, PlusSignIcon } from '@hugeicons/core-free-icons';
+import { ArrowDown01Icon, ArrowRight01Icon, Calendar03Icon, CheckmarkCircle02Icon, Delete02Icon, PencilEdit01Icon, PencilEdit02Icon, PlusSignIcon } from '@hugeicons/core-free-icons';
 import { useTapToSchedule } from '@/components/modals/catalog/ScheduleDialogHost';
 import { PublishToggle } from '@/components/super-app/admin/panels/PublishToggle';
 import { useAction } from '@/components/super-app/admin/panels/ServiceContentEditor';
@@ -298,30 +298,55 @@ function SubServiceCard({ card, fallbackIcon, isSelected, onSelect, onSchedule, 
 }
 
 /* Customers only: for a problem the list does not have. The provider visits for free and sends a price. */
-/* Same shape as a sub-service card (picture, name, price line, bottom bar) so it sits in the list as one of them. */
+/** How a custom order goes. Every claim matches the backend: the visit is free, the provider sends a price after
+ * it, and the customer accepts that price or rejects it (which cancels the order, with nothing to pay). */
+const CUSTOM_STEPS = ['লিখুন', 'ফ্রি ভিজিট', 'দাম দেখে Accept'] as const;
+
+/*
+ * Customers only: for a problem the list does not have. Exactly a sub-service card's size (a 64px picture row and
+ * the 44px bar), so the two sit level in the list. The steps and the no-risk promise fit inside that frame, so a
+ * customer who did not find their problem orders here instead of leaving. The whole card is one button.
+ */
 function CustomServiceCard({ onSelect }: { onSelect: () => void }) {
   return (
-    <div className="rounded-[4px] border border-line bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
-      <button type="button" onClick={onSelect} className="flex w-full cursor-pointer items-center gap-[12px] p-[12px] text-left">
-        <span className="flex size-[64px] shrink-0 items-center justify-center rounded-[2px] bg-gradient-to-b from-secondary to-surface text-primary">
+    <button
+      type="button"
+      onClick={onSelect}
+      className="group w-full cursor-pointer rounded-[4px] border border-line bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-all duration-200 hover:border-primary hover:shadow-md focus-visible:border-primary focus-visible:outline-none"
+    >
+      <span className="flex items-center gap-[12px] p-[12px]">
+        <span className="flex size-[64px] shrink-0 items-center justify-center rounded-[2px] bg-gradient-to-b from-secondary to-surface text-primary transition-transform duration-200 group-hover:scale-105">
           <HugeiconsIcon icon={PencilEdit02Icon} size={28} strokeWidth={1.6} />
         </span>
-        <span className="flex min-w-0 flex-1 flex-col gap-[6px]">
-          <span className="truncate text-[14px] font-semibold leading-[20px] tracking-[0.1px] text-ink">Custom (লিস্টে নেই)</span>
-          <span className="text-[14px] leading-[20px] tracking-[0.1px] text-ink">
-            Visit <span className="font-bold text-primary">Free</span> · দাম পরে জানাবে
+        <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+          <span className="truncate text-[14px] font-semibold leading-[20px] tracking-[0.1px] text-ink">আপনার সমস্যা লিস্টে নেই?</span>
+          <span className="truncate text-[13px] leading-[18px] text-ink">
+            Custom অর্ডার · ভিজিট <span className="font-bold text-primary">ফ্রি</span>
+          </span>
+          {/* The three steps on one line: what happens before the customer starts. */}
+          <span className="flex min-w-0 items-center gap-[4px] text-[11px] font-medium leading-[16px] text-muted">
+            {CUSTOM_STEPS.map((label, index) => (
+              <span key={label} className="flex shrink-0 items-center gap-[4px]">
+                {index > 0 && <HugeiconsIcon icon={ArrowRight01Icon} size={10} strokeWidth={2.2} className="text-primary" />}
+                <span className="flex size-[14px] items-center justify-center rounded-full bg-secondary text-[9px] font-bold text-ink">{index + 1}</span>
+                {label}
+              </span>
+            ))}
           </span>
         </span>
-      </button>
+      </span>
 
-      <div className="flex h-[44px] items-center border-t border-line px-[14px]">
-        <button type="button" onClick={onSelect} className="flex cursor-pointer items-center gap-[10px] text-ink">
-          <HugeiconsIcon icon={PencilEdit02Icon} size={18} strokeWidth={1.6} />
-          <span className="text-[11px] font-medium text-ink">সমস্যা লিখুন</span>
-          <HugeiconsIcon icon={ArrowDown01Icon} size={16} strokeWidth={1.8} />
-        </button>
-      </div>
-    </div>
+      <span className="flex h-[44px] items-center justify-between gap-[8px] border-t border-line px-[14px]">
+        <span className="text-[13px] font-semibold text-primary">Custom অর্ডার দিন</span>
+        <span className="flex min-w-0 items-center gap-[6px]">
+          <span className="flex min-w-0 items-center gap-[4px] text-[11px] font-medium text-muted">
+            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} strokeWidth={1.8} className="shrink-0 text-primary" />
+            <span className="truncate">দাম পছন্দ না হলে বাতিল, চার্জ নেই</span>
+          </span>
+          <HugeiconsIcon icon={ArrowRight01Icon} size={18} strokeWidth={2} className="shrink-0 text-primary transition-transform duration-200 group-hover:translate-x-[3px]" />
+        </span>
+      </span>
+    </button>
   );
 }
 
