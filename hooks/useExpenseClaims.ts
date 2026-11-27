@@ -38,11 +38,38 @@ export function useExpenseClaims(orderId: string, userId: string) {
 
   const submit = useMutation({
     mutationFn: (items: ExpenseItem[]) => expenseClaimService.submit(orderId, items),
-    onSuccess: () => {
-      toast.success('খরচের হিসাব এডমিনের কাছে রিভিউয়ের জন্য পাঠানো হয়েছে।');
+    onSuccess: (claim) => {
+      toast.success(claim.status === 'PROVIDER_REVIEW' ? 'খরচের হিসাব প্রোভাইডারের কাছে পাঠানো হয়েছে।' : 'খরচের হিসাব এডমিনের কাছে রিভিউয়ের জন্য পাঠানো হয়েছে।');
       refresh();
     },
     onError: (error) => toast.error(apiErrorMessage(error, 'খরচ পাঠানো যায়নি।')),
+  });
+
+  const resubmit = useMutation({
+    mutationFn: ({ claimId, items }: { claimId: string; items: ExpenseItem[] }) => expenseClaimService.resubmit(claimId, items),
+    onSuccess: () => {
+      toast.success('ঠিক করা খরচ আবার প্রোভাইডারের কাছে পাঠানো হয়েছে।');
+      refresh();
+    },
+    onError: (error) => toast.error(apiErrorMessage(error, 'খরচ পাঠানো যায়নি।')),
+  });
+
+  const providerAccept = useMutation({
+    mutationFn: ({ claimId, items, note }: { claimId: string; items: ExpenseItem[]; note?: string }) => expenseClaimService.providerAccept(claimId, items, note),
+    onSuccess: () => {
+      toast.success('খরচ Accept করে এডমিনের কাছে পাঠানো হয়েছে।');
+      refresh();
+    },
+    onError: (error) => toast.error(apiErrorMessage(error, 'পাঠানো যায়নি।')),
+  });
+
+  const providerReturn = useMutation({
+    mutationFn: ({ claimId, note }: { claimId: string; note?: string }) => expenseClaimService.providerReturn(claimId, note),
+    onSuccess: () => {
+      toast.info('খরচের হিসাব টেকনিশিয়ানের কাছে ফেরত পাঠানো হয়েছে।');
+      refresh();
+    },
+    onError: (error) => toast.error(apiErrorMessage(error, 'ফেরত পাঠানো যায়নি।')),
   });
 
   const approve = useMutation({
@@ -55,9 +82,9 @@ export function useExpenseClaims(orderId: string, userId: string) {
   });
 
   const reject = useMutation({
-    mutationFn: ({ claimId, note }: { claimId: string; note?: string }) => expenseClaimService.reject(claimId, note),
+    mutationFn: ({ claimId, note, items }: { claimId: string; note?: string; items?: ExpenseItem[] }) => expenseClaimService.reject(claimId, note, items),
     onSuccess: () => {
-      toast.info('খরচের হিসাব ফেরত পাঠানো হয়েছে।');
+      toast.info('খরচের হিসাব প্রোভাইডারের কাছে ফেরত পাঠানো হয়েছে।');
       refresh();
     },
     onError: (error) => toast.error(apiErrorMessage(error, 'ফেরত পাঠানো যায়নি।')),
@@ -67,5 +94,5 @@ export function useExpenseClaims(orderId: string, userId: string) {
   const canSubmit = status?.canSubmit ?? false;
   /** Costs approved by earlier claims (the job's, before a revision's extra work). */
   const approvedCosts = status?.approvedCosts ?? 0;
-  return { claims, canSubmit, approvedCosts, submit, approve, reject };
+  return { claims, canSubmit, approvedCosts, submit, resubmit, approve, reject, providerAccept, providerReturn };
 }

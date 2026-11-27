@@ -14,5 +14,19 @@ export const expenseClaimService = {
   approve: async (claimId: string, items: ExpenseItem[], note?: string) =>
     (await apiClient.patch<ExpenseClaim>(`/orders/expense-claims/${claimId}/approve`, { items, note })).data,
 
-  reject: async (claimId: string, note?: string) => (await apiClient.patch<ExpenseClaim>(`/orders/expense-claims/${claimId}/reject`, { note })).data,
+  /** Admin: back to the provider, with a note and (optionally) the amounts the admin thinks are right. */
+  reject: async (claimId: string, note?: string, items?: ExpenseItem[]) =>
+    (await apiClient.patch<ExpenseClaim>(`/orders/expense-claims/${claimId}/reject`, { note, items })).data,
+
+  /** Provider: accept (amounts may change) and pass it to the admin. */
+  providerAccept: async (claimId: string, items: ExpenseItem[], note?: string) =>
+    (await apiClient.patch<ExpenseClaim>(`/orders/expense-claims/${claimId}/provider-accept`, { items, note })).data,
+
+  /** Provider: send the technician's costs back to them. */
+  providerReturn: async (claimId: string, note?: string) =>
+    (await apiClient.patch<ExpenseClaim>(`/orders/expense-claims/${claimId}/provider-return`, { note })).data,
+
+  /** Technician: change the costs the provider sent back and send them to the provider again. */
+  resubmit: async (claimId: string, items: ExpenseItem[]) =>
+    (await apiClient.patch<ExpenseClaim>(`/orders/expense-claims/${claimId}/resubmit`, { items })).data,
 };

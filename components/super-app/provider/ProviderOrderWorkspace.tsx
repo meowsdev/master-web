@@ -95,7 +95,7 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
         <QuoteCard order={order} userId={userId} viewer="PROVIDER" />
         <RevisionCard order={order} canRequest={false} />
         {/* After the job: parts / costs for the admin to review (commission is then taken on total - costs). */}
-        <ExpenseClaimsCard order={order} userId={userId} viewer="WORKER" />
+        <ExpenseClaimsCard order={order} userId={userId} viewer={viewer} />
         <div ref={bottomRef} />
       </div>
 
