@@ -8,6 +8,7 @@ import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { useProviderWallet } from '@/hooks/useProviderWallet';
 import { User } from '@/types/auth.types';
 import { MyRatingButton } from '../reviews/MyRatingButton';
+import { ProfileTrigger } from '../ProfileTrigger';
 import { ProviderPayDueDialog } from './ProviderPayDueDialog';
 import { TeamButton } from './team/TeamButton';
 import { EarningsButton } from './earnings/EarningsButton';
@@ -45,17 +46,19 @@ export function ProviderProfileHeader({ user }: { user: User }) {
   return (
     <div className="flex items-center justify-between gap-[8px]">
       <div className="flex min-w-0 items-center gap-[10px]">
-        {user.profilePhoto ? (
-          // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary upload hosts
-          <img src={user.profilePhoto} alt="" className="size-[44px] shrink-0 rounded-full object-cover" />
-        ) : (
-          <span className="flex size-[44px] shrink-0 items-center justify-center rounded-full bg-secondary text-[18px] font-semibold text-ink">
-            {(user.name || '?').charAt(0).toUpperCase()}
-          </span>
-        )}
+        <ProfileTrigger className="shrink-0">
+          {user.profilePhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary upload hosts
+            <img src={user.profilePhoto} alt="" className="size-[44px] shrink-0 rounded-full object-cover" />
+          ) : (
+            <span className="flex size-[44px] shrink-0 items-center justify-center rounded-full bg-secondary text-[18px] font-semibold text-ink">
+              {(user.name || '?').charAt(0).toUpperCase()}
+            </span>
+          )}
+        </ProfileTrigger>
         <div className="flex min-w-0 flex-col">
           <div className="flex items-center gap-[8px]">
-            <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-ink">{user.name || 'My account'}</span>
+            <ProfileTrigger className="min-w-0 truncate text-[15px] font-semibold tracking-[-0.3px] text-ink">{user.name || 'My account'}</ProfileTrigger>
             {/* Opens "আমার রিভিউ": what each customer said about this provider's work. */}
             <MyRatingButton userId={user.id} role="PROVIDER" storedRating={rating} />
           </div>

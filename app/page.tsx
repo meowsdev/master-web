@@ -25,6 +25,7 @@ import { MainCanvasArea } from '@/components/super-app/MainCanvasArea';
 import { ServicePreviewPanel } from '@/components/modals/ServicePreviewPanel';
 import { SuperAppModals } from '@/components/super-app/SuperAppModals';
 import { CatalogPanels } from '@/components/modals/catalog/CatalogPanels';
+import { OpenProfileProvider } from '@/components/super-app/ProfileTrigger';
 import { useCatalogPanelStore } from '@/store/useCatalogPanelStore';
 import { useOrderHistoryStore } from '@/store/useOrderHistoryStore';
 import { useAdminCatalogStore } from '@/store/useAdminCatalogStore';
@@ -201,6 +202,7 @@ export default function SuperAppPage() {
     else modals.handleOpenAuth('LOGIN');
   };
   const runningBadgeCount = isProvider ? providerOrders.length : runningServiceIds.length;
+  const openProfile = () => modals.setIsProfileEditorOpen(true);
 
   // The logo: back to the screen a fresh login lands on. Only closes what is open; it never logs out, deletes
   // anything or ends a running call, and every chat and order is still there to reopen.
@@ -237,7 +239,8 @@ export default function SuperAppPage() {
         onGoHome={handleGoHome}
       />
 
-      {/* 2. Middle column: the list for this role */}
+      {/* 2. Middle column: the list for this role. Its header photo and name open the profile, like the rail's icon. */}
+      <OpenProfileProvider value={isAuthenticated ? openProfile : null}>
       <SuperAppSidebar
         activeRailTab={activeRailTab}
         mobileView={mobileView}
@@ -283,6 +286,7 @@ export default function SuperAppPage() {
         serviceMessages={serviceMessages}
         conversationByServiceId={conversationByServiceId}
       />
+      </OpenProfileProvider>
 
       {/* 3. Right: the open chat / order for this role */}
       <MainCanvasArea

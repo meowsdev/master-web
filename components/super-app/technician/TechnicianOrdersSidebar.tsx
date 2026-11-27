@@ -9,6 +9,7 @@ import { OrderHistoryListItem } from '../order-history/OrderHistoryListItem';
 import { CustomerAvatar } from '../provider/CustomerAvatar';
 import { PROVIDER_FILTER_CHIPS, matchesProviderFilter, providerOrderTitle } from '../provider/provider-order-filters';
 import { MyRatingButton } from '../reviews/MyRatingButton';
+import { ProfileTrigger } from '../ProfileTrigger';
 import { SupportChatRow } from '../support/SupportChatRow';
 
 interface TechnicianOrdersSidebarProps {
@@ -60,15 +61,17 @@ export function TechnicianOrdersSidebar({ user, onOrderOpened, onOpenAuth, onOpe
         searchPlaceholder="Search my jobs..."
         profileSlot={
           <div className="flex items-center gap-[10px]">
-            {user.profilePhoto ? (
-              // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary upload hosts
-              <img src={user.profilePhoto} alt="" className="size-[44px] shrink-0 rounded-full object-cover" />
-            ) : (
-              <span className="flex size-[44px] shrink-0 items-center justify-center rounded-full bg-secondary text-[18px] font-semibold text-ink">{(user.name || '?').charAt(0).toUpperCase()}</span>
-            )}
+            <ProfileTrigger className="shrink-0">
+              {user.profilePhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary upload hosts
+                <img src={user.profilePhoto} alt="" className="size-[44px] shrink-0 rounded-full object-cover" />
+              ) : (
+                <span className="flex size-[44px] shrink-0 items-center justify-center rounded-full bg-secondary text-[18px] font-semibold text-ink">{(user.name || '?').charAt(0).toUpperCase()}</span>
+              )}
+            </ProfileTrigger>
             <div className="flex min-w-0 flex-col">
               <div className="flex items-center gap-[8px]">
-                <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-ink">{user.name || 'My account'}</span>
+                <ProfileTrigger className="min-w-0 truncate text-[15px] font-semibold tracking-[-0.3px] text-ink">{user.name || 'My account'}</ProfileTrigger>
                 {/* Opens "আমার রিভিউ": what customers said about the jobs this technician did. */}
                 <MyRatingButton userId={user.id} role="TECHNICIAN" />
               </div>

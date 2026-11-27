@@ -1,13 +1,14 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import { User } from '@/types/auth.types';
+import { ProfileTrigger } from '../ProfileTrigger';
 
 const ROLE_BADGE: Record<string, string> = { ADMIN: 'Admin', MANAGER: 'Manager', SUPPORT: 'Support', HR: 'HR', COUNSELOR: 'Counselor' };
 
 /* A staff member's header in the sidebar: photo, name and their role badge. No due and no Pay button: staff hold no wallet. */
 export function AdminProfileHeader({ user }: { user: User }) {
   return (
-    <div className="flex items-center gap-[10px]">
+    <ProfileTrigger className="flex min-w-0 items-center gap-[10px]">
       {user.profilePhoto ? (
         // eslint-disable-next-line @next/next/no-img-element -- photo URLs come from arbitrary upload hosts
         <img src={user.profilePhoto} alt="" className="size-[44px] shrink-0 rounded-full object-cover" />
@@ -20,7 +21,7 @@ export function AdminProfileHeader({ user }: { user: User }) {
         <span className="truncate text-[15px] font-semibold tracking-[-0.3px] text-ink">{user.name || ROLE_BADGE[user.role] || 'Staff'}</span>
         <span className="w-fit rounded-full bg-ink px-[8px] py-[1px] text-[11px] font-semibold text-white">{ROLE_BADGE[user.role] ?? user.role}</span>
       </div>
-    </div>
+    </ProfileTrigger>
   );
 }
 

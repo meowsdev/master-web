@@ -8,6 +8,7 @@ import { ordersService } from '@/services/orders.service';
 import { Order, OrderStatus } from '@/types/order.types';
 import { User } from '@/types/auth.types';
 import { MyRatingButton } from './reviews/MyRatingButton';
+import { ProfileTrigger } from './ProfileTrigger';
 
 interface CustomerProfileHeaderProps {
   user: User;
@@ -33,12 +34,14 @@ export function CustomerProfileHeader({ user, onStartNewOrder }: CustomerProfile
   return (
     <div className="flex items-center justify-between">
       <div className="flex min-w-0 items-center gap-[10px]">
-        <ProfileAvatar user={user} />
+        <ProfileTrigger className="shrink-0">
+          <ProfileAvatar user={user} />
+        </ProfileTrigger>
         <div className="flex min-w-0 flex-col">
           <div className="flex items-center gap-[8px]">
-            <span className="truncate text-[16px] font-semibold tracking-[-0.32px] text-ink">
+            <ProfileTrigger className="min-w-0 truncate text-[16px] font-semibold tracking-[-0.32px] text-ink">
               {user.name || 'My account'}
-            </span>
+            </ProfileTrigger>
             {/* Opens "আমার রিভিউ": what each provider said about this customer. */}
             <MyRatingButton userId={user.id} role="CUSTOMER" storedRating={storedRating} />
           </div>
