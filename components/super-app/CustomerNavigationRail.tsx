@@ -24,6 +24,8 @@ interface CustomerNavigationRailProps {
   showOrdersTab?: boolean;
   /** Providers: the team button, drawn right above the profile picture. */
   teamSlot?: ReactNode;
+  /** The logo: back to the fresh home screen (nothing open). */
+  onGoHome?: () => void;
 }
 
 /*
@@ -41,6 +43,7 @@ export function CustomerNavigationRail({
   accountTitle,
   showOrdersTab = true,
   teamSlot,
+  onGoHome,
 }: CustomerNavigationRailProps) {
   // The Support chat is a row of the chat list, so Chats stays lit while it is open.
   const isChatsSelected = selection === 'CHATS' || selection === 'SUPPORT';
@@ -51,7 +54,9 @@ export function CustomerNavigationRail({
         {/* The app logo heads the rail in every role. */}
         {/* Centred in a bar as tall as the headers beside it, so the logo sits on the same line as their titles. */}
         <div className={`mb-[5px] flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-center`}>
-          <Image src="/chat-list/brand-logo.svg" alt="Super App" width={36} height={36} priority />
+          <button type="button" onClick={onGoHome} title="Home" aria-label="Home" className="cursor-pointer">
+            <Image src="/chat-list/brand-logo.svg" alt="Super App" width={36} height={36} priority />
+          </button>
         </div>
 
         <RailIconButton icon={BubbleChatIcon} label="Chats & Services" isActive={isChatsSelected} onClick={() => onSelectTab('CHATS')} />

@@ -19,12 +19,14 @@ interface NavigationRailProps {
   user: User | null;
   activeRole: string | null;
   runningCount?: number;
+  /** The logo: back to the fresh home screen. */
+  onGoHome?: () => void;
 }
 
 /* One rail per kind of person: staff get the workspace rail (tabs by permission); everyone else the slim one. */
-export function NavigationRail({ activeRailTab, onSelectTab, onOpenProfile, onOpenAuth, onStartNewOrder, user, activeRole, runningCount = 0 }: NavigationRailProps) {
+export function NavigationRail({ activeRailTab, onSelectTab, onOpenProfile, onOpenAuth, onStartNewOrder, user, activeRole, runningCount = 0, onGoHome }: NavigationRailProps) {
   if (isStaffRole(activeRole)) {
-    return <AdminNavigationRail selection={activeRailTab} onSelectTab={onSelectTab} profilePhoto={user?.profilePhoto} onOpenAccount={onOpenProfile} />;
+    return <AdminNavigationRail selection={activeRailTab} onSelectTab={onSelectTab} profilePhoto={user?.profilePhoto} onOpenAccount={onOpenProfile} onGoHome={onGoHome} />;
   }
 
   // Providers and technicians work from their order list: no orders tab and no new-order button.
@@ -39,6 +41,7 @@ export function NavigationRail({ activeRailTab, onSelectTab, onOpenProfile, onOp
       profilePhoto={user?.profilePhoto}
       onOpenAccount={user ? onOpenProfile : onOpenAuth}
       runningCount={runningCount}
+      onGoHome={onGoHome}
       accountTitle={user ? `${user.name} (${activeRole})` : 'Profile / Login'}
       teamSlot={
         user && activeRole === 'PROVIDER' ? (

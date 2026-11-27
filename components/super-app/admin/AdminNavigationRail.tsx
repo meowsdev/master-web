@@ -14,6 +14,8 @@ interface AdminNavigationRailProps {
   onSelectTab: (tab: RailTab) => void;
   profilePhoto?: string | null;
   onOpenAccount: () => void;
+  /** The logo: back to the fresh home screen (nothing open). */
+  onGoHome?: () => void;
 }
 
 const SUPPORT_CHAT_TABS: Array<{ tab: RailTab; title: string; icon: IconSvgElement }> = [
@@ -23,7 +25,7 @@ const SUPPORT_CHAT_TABS: Array<{ tab: RailTab; title: string; icon: IconSvgEleme
 ];
 
 /* The staff rail: logo, Messages (all orders), then Services and the member chats when the role may use them, profile at the bottom. */
-export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOpenAccount }: AdminNavigationRailProps) {
+export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOpenAccount, onGoHome }: AdminNavigationRailProps) {
   const { canManageServices, canChatWithMembers, canManageStaff, canManagePayouts, canViewEarnings, canManageDues, canViewLevels } = useStaffPermissions();
   const isStaffSelected = selection === 'STAFF';
   const isWithdrawalsSelected = selection === 'WITHDRAWALS';
@@ -40,7 +42,9 @@ export function AdminNavigationRail({ selection, onSelectTab, profilePhoto, onOp
     <aside className="z-20 hidden h-full w-[64px] shrink-0 select-none flex-col items-center justify-between overflow-clip bg-surface px-[8px] pb-[27px] md:flex">
       <div className="flex w-[40px] flex-col items-center gap-[10px]">
         <div className={`mb-[5px] flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-center`}>
-          <Image src="/chat-list/brand-logo.svg" alt="Super App" width={36} height={36} priority />
+          <button type="button" onClick={onGoHome} title="Home" aria-label="Home" className="cursor-pointer">
+            <Image src="/chat-list/brand-logo.svg" alt="Super App" width={36} height={36} priority />
+          </button>
         </div>
 
         <button

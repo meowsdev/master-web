@@ -26,6 +26,9 @@ import { ServicePreviewPanel } from '@/components/modals/ServicePreviewPanel';
 import { SuperAppModals } from '@/components/super-app/SuperAppModals';
 import { CatalogPanels } from '@/components/modals/catalog/CatalogPanels';
 import { useCatalogPanelStore } from '@/store/useCatalogPanelStore';
+import { useOrderHistoryStore } from '@/store/useOrderHistoryStore';
+import { useAdminCatalogStore } from '@/store/useAdminCatalogStore';
+import { useSupportChatStore } from '@/store/useSupportChatStore';
 
 const emptySubscribe = () => () => {};
 
@@ -199,6 +202,23 @@ export default function SuperAppPage() {
   };
   const runningBadgeCount = isProvider ? providerOrders.length : runningServiceIds.length;
 
+  // The logo: back to the screen a fresh login lands on. Only closes what is open; it never logs out, deletes
+  // anything or ends a running call, and every chat and order is still there to reopen.
+  const handleGoHome = () => {
+    setActiveRailTab('CHATS');
+    setActiveServiceId(null);
+    setActiveOrderId(null);
+    // Staff and technicians keep their open order, service and member chat in stores, not in this page.
+    if (user) useOrderHistoryStore.getState().select(user.id, null);
+    useAdminCatalogStore.getState().selectMainService(null);
+    useSupportChatStore.getState().reset();
+    modals.closeSidePanels();
+    closePreview();
+    setMobileView('LIST');
+    setSearchQuery('');
+    setActiveFilterChip('All');
+  };
+
   return (
     <div className={`flex h-screen w-screen overflow-hidden font-sans ${bgMain}`}>
       {/* 1. Far-left navigation rail */}
@@ -214,6 +234,7 @@ export default function SuperAppPage() {
         user={user}
         activeRole={activeRole}
         runningCount={runningBadgeCount}
+        onGoHome={handleGoHome}
       />
 
       {/* 2. Middle column: the list for this role */}

@@ -7,3 +7,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# Read the project rules first
+
+This web app is **live in production**. Before you change anything, read and follow [`../AGENTS.md`](../AGENTS.md):
+look first, ask before changing the existing system, and never break login, orders, payments or chat. Brand, icon and
+layout rules are in `CLAUDE.md` in this folder.

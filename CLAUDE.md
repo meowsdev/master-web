@@ -1,4 +1,5 @@
 @AGENTS.md
+@../AGENTS.md
 
 # Brand colors (mandatory)
 
