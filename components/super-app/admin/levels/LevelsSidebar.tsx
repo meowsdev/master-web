@@ -127,6 +127,19 @@ export function LevelsSidebar({ user, onOpened, onOpenAuth }: { user: User; onOp
                 {run.isPending ? 'হিসাব হচ্ছে...' : 'এখনই হিসাব করুন'}
               </button>
             )}
+            {/* Admin only: who gets new orders first (the backend allows only ADMIN too). */}
+            {canManageLevels && (
+              <button
+                type="button"
+                onClick={() => {
+                  openPanel(null, 'adminDispatchRanking');
+                  onOpened();
+                }}
+                className={secondaryButton}
+              >
+                অর্ডার বণ্টনের নিয়ম
+              </button>
+            )}
           </div>
           <p className="mt-[8px] text-[12px] font-medium text-muted">
             টার্গেট সব প্রোভাইডারের জন্য একটাই। প্রতি মাসের ১ তারিখে নিজে থেকে লেভেল হিসাব হয়; লক করা লেভেল বদলায় না।
