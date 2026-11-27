@@ -6,12 +6,12 @@ import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, CheckmarkCircle02Icon, PencilEdit01Icon, StarIcon } from '@hugeicons/core-free-icons';
 import { SidePanelShell } from '@/components/modals/SidePanelShell';
-import { MoveToGroup } from '@/components/super-app/admin/panels/AdminCatalogPanel';
 import { PublishToggle } from '@/components/super-app/admin/panels/PublishToggle';
 import { MainServiceIdentityEditor } from '@/components/super-app/admin/panels/MainServiceIdentityEditor';
 import { DetailsTab, FaqTab, HowToOrderTab, OverviewTab, useAction } from '@/components/super-app/admin/panels/ServiceContentEditor';
 import { useAdminCatalog } from '@/components/super-app/admin/useAdminCatalog';
 import { useStaffPermissions } from '@/hooks/useStaffPermissions';
+import { useReviewVisibility } from '@/hooks/useReviewVisibility';
 import { catalogService } from '@/services/catalog.service';
 import { catalogAdminService } from '@/services/catalog-admin.service';
 import { CatalogMainServiceDetail, CatalogReviewPage } from '@/types/catalog.types';
@@ -97,9 +97,11 @@ export function useMainServiceView(mainServiceId: string) {
 export function MainServiceInfo({ data, embedded = false }: { data: CatalogMainServiceDetail; embedded?: boolean }) {
   const [activeSection, setActiveSection] = useState<SectionId>('overview');
   const [editing, setEditing] = useState<EditableId | null>(null);
+  // Staff: the name / description / picture editor, opened by the pencil beside the name.
+  const [isEditingIdentity, setIsEditingIdentity] = useState(false);
   const { canManageServices: canEdit } = useStaffPermissions();
   // Staff edit the stored values (the public read fills an empty How to order with the standard steps).
-  const { groups, mains } = useAdminCatalog({ enabled: canEdit });
+  const { mains } = useAdminCatalog({ enabled: canEdit });
   const stored = mains.find((main) => main.id === data.id);
   const publish = useAction((isActive: boolean) => catalogAdminService.updateMainService(data.id, { isActive }), 'Saved');
 
@@ -127,25 +129,50 @@ export function MainServiceInfo({ data, embedded = false }: { data: CatalogMainS
   return (
     <div className="flex flex-col gap-[20px] pb-[16px]">
       <div>
-        {data.group && <p className="text-[12px] font-semibold uppercase tracking-[0.6px] text-primary">{embedded ? 'Service সম্পর্কে' : data.group.name}</p>}
-        <h2 className={`border-l-[4px] border-primary pl-[12px] font-semibold leading-tight text-ink ${embedded ? 'text-[18px] tracking-[-0.36px]' : 'text-[22px] tracking-[-0.44px]'}`}>{data.name}</h2>
-        <div className="mt-[6px] flex flex-wrap items-center gap-x-[8px] text-[14px] text-ink">
-          <span className="flex items-center gap-[4px] font-bold">
-            <HugeiconsIcon icon={StarIcon} size={16} className="fill-[#f5a623] text-[#f5a623]" />
-            {data.rating?.average != null ? data.rating.average.toFixed(2) : 'New'}
-          </span>
-          {(data.servedCount ?? 0) > 0 && <span>• {data.servedCount}+ served</span>}
-          <span className="text-muted">({data.rating?.count ?? 0} reviews{data.services.length ? ` on ${data.services.length} services` : ''})</span>
+        {/* Who the service is: its category, picture, name and how customers rate it, with room to breathe. */}
+        <div className={`rounded-[16px] border border-line bg-white ${embedded ? 'p-[14px]' : 'p-[16px]'}`}>
+          {data.group && (
+            <span className="inline-flex items-center rounded-full bg-secondary/60 px-[10px] py-[3px] text-[11px] font-semibold uppercase tracking-[0.6px] text-ink">
+              {embedded ? 'Service সম্পর্কে' : data.group.name}
+            </span>
+          )}
+          <div className={`flex items-center gap-[12px] ${data.group ? 'mt-[12px]' : ''}`}>
+            {!embedded && <ServicePicture source={data.iconUrl ?? null} />}
+            <h2 className={`min-w-0 flex-1 font-semibold leading-[1.25] text-ink ${embedded ? 'text-[18px] tracking-[-0.36px]' : 'text-[22px] tracking-[-0.44px]'}`}>{data.name}</h2>
+            {/* Staff: publish / unpublish and the pencil that opens the editor, right beside the name. */}
+            {canEdit && stored && !embedded && (
+              <div className="flex shrink-0 items-center gap-[6px]">
+                <PublishToggle isPublished={stored.isActive} onChange={(isActive) => publish.mutate(isActive)} />
+                <button
+                  type="button"
+                  onClick={() => setIsEditingIdentity((isOpen) => !isOpen)}
+                  aria-label="নাম, বিবরণ ও আইকন এডিট"
+                  aria-expanded={isEditingIdentity}
+                  title="নাম, বিবরণ ও আইকন এডিট"
+                  className={`flex size-[32px] cursor-pointer items-center justify-center rounded-full transition-colors ${isEditingIdentity ? 'bg-secondary text-ink' : 'text-primary hover:bg-secondary'}`}
+                >
+                  <HugeiconsIcon icon={PencilEdit01Icon} size={18} strokeWidth={1.8} />
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="mt-[12px] flex flex-wrap items-center gap-[8px] text-[13px]">
+            <span className="inline-flex items-center gap-[4px] rounded-full bg-surface px-[10px] py-[4px] font-bold text-ink">
+              <HugeiconsIcon icon={StarIcon} size={15} className="fill-[#f5a524] text-[#f5a524]" />
+              {data.rating?.average != null ? data.rating.average.toFixed(2) : 'New'}
+            </span>
+            {(data.servedCount ?? 0) > 0 && (
+              <span className="inline-flex items-center rounded-full bg-surface px-[10px] py-[4px] font-semibold text-ink">{data.servedCount}+ served</span>
+            )}
+            <span className="inline-flex items-center rounded-full bg-surface px-[10px] py-[4px] font-medium text-muted">
+              {data.rating?.count ?? 0} reviews{data.services.length ? ` · ${data.services.length} services` : ''}
+            </span>
+          </div>
         </div>
 
-        {canEdit && stored && !embedded && (
-          <div className="mt-[12px] flex flex-col gap-[10px] rounded-[12px] bg-surface p-[10px]">
-            <div className="flex items-center justify-between gap-[8px]">
-              <span className="text-[13px] text-muted">Unpublish করলে এই main service আর এর সব package customer দেখবে না।</span>
-              <PublishToggle isPublished={stored.isActive} onChange={(isActive) => publish.mutate(isActive)} />
-            </div>
-            <MoveToGroup main={stored} groups={groups} />
-            <MainServiceIdentityEditor key={`${stored.name}-${stored.iconUrl ?? ''}-${stored.description ?? ''}`} main={stored} />
+        {canEdit && stored && !embedded && isEditingIdentity && (
+          <div className="mt-[12px]">
+            <MainServiceIdentityEditor main={stored} onClose={() => setIsEditingIdentity(false)} />
           </div>
         )}
       </div>
@@ -231,7 +258,25 @@ export function MainServiceInfo({ data, embedded = false }: { data: CatalogMainS
   );
 }
 
+const isImageSource = (value: string) => /^(https?:)?\//.test(value);
+
+/* The main service's round picture: an uploaded image or Hugeicons icon link, or an old emoji. */
+function ServicePicture({ source }: { source: string | null }) {
+  return (
+    <span className="flex size-[52px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-[24px]">
+      {source && isImageSource(source) ? (
+        // eslint-disable-next-line @next/next/no-img-element -- pictures come from arbitrary upload hosts
+        <img src={source} alt="" className="size-full object-cover" />
+      ) : (
+        <span aria-hidden>{source || '🛠️'}</span>
+      )}
+    </span>
+  );
+}
+
 function Reviews({ mainServiceId }: { mainServiceId: string }) {
+  const { canModerateReviews } = useStaffPermissions();
+  const visibility = useReviewVisibility();
   const { data: first, isLoading } = useQuery({
     queryKey: ['catalog-main-service-reviews', mainServiceId],
     queryFn: () => catalogService.getMainServiceReviews(mainServiceId, 1),
@@ -294,6 +339,20 @@ function Reviews({ mainServiceId }: { mainServiceId: string }) {
             </div>
             <p className="text-[12px] text-muted">Taken on {new Date(review.takenOn ?? review.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
             {review.comment && <p className="mt-[4px] text-[14px] text-ink">{review.comment}</p>}
+            {/* Admin: take it off the page (the provider's details panel can show it again). */}
+            {canModerateReviews && (
+              <button
+                type="button"
+                disabled={visibility.busyReviewId === review.id}
+                onClick={() => {
+                  visibility.toggle(review.id, false);
+                  setMore((pages) => pages.map((page) => ({ ...page, items: page.items.filter((item) => item.id !== review.id) })));
+                }}
+                className="mt-[6px] cursor-pointer text-[12px] font-semibold text-[#d64545] hover:underline disabled:opacity-50"
+              >
+                এই রিভিউ লুকান
+              </button>
+            )}
           </li>
         ))}
       </ul>

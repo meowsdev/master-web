@@ -43,6 +43,8 @@ export interface StaffPermissions {
   canViewKyc: boolean;
   /** Approve or reject a provider's verification (backend: ADMIN). */
   canReviewKyc: boolean;
+  /** Hide a customer review, or show it again (backend: ADMIN). New reviews are public. */
+  canModerateReviews: boolean;
 }
 
 const NONE: StaffPermissions = {
@@ -65,6 +67,7 @@ const NONE: StaffPermissions = {
   canManageLevels: false,
   canViewKyc: false,
   canReviewKyc: false,
+  canModerateReviews: false,
 };
 
 const MANAGER: StaffPermissions = {
@@ -87,10 +90,11 @@ const MANAGER: StaffPermissions = {
   canManageLevels: false,
   canViewKyc: true,
   canReviewKyc: false,
+  canModerateReviews: false,
 };
 
 const PERMISSIONS_BY_ROLE: Record<string, StaffPermissions> = {
-  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true, canReviewExpenses: true, canManageStaff: true, canSetCommission: true, canManagePayouts: true, canViewEarnings: true, canManageLevels: true, canReviewKyc: true },
+  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true, canReviewExpenses: true, canManageStaff: true, canSetCommission: true, canManagePayouts: true, canViewEarnings: true, canManageLevels: true, canReviewKyc: true, canModerateReviews: true },
   MANAGER,
   // Support chat is open to support staff; member management is not (admin-members is ADMIN/MANAGER).
   SUPPORT: { ...NONE, canChatWithMembers: true },

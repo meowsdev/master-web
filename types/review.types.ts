@@ -1,5 +1,9 @@
 /** One review as a profile lists it: who gave it, for which order, and what they said. */
 export interface ReceivedReview {
+  /** The review itself (customer reviews only; a provider's rating of a customer has none). */
+  reviewId?: string;
+  /** Whether customers see it; an admin can hide a customer review. */
+  isPublic?: boolean;
   orderId: string;
   referenceCode: string;
   rating: number;

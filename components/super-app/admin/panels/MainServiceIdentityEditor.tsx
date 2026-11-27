@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Note01Icon, PencilEdit01Icon, Wrench01Icon } from '@hugeicons/core-free-icons';
+import { Note01Icon, Wrench01Icon } from '@hugeicons/core-free-icons';
 import { OrderField, fieldControlClass } from '@/components/modals/place-order/OrderField';
 import { adminService } from '@/services/admin.service';
 import { AdminMainService } from '@/services/catalog-admin.service';
@@ -12,12 +11,11 @@ import { useAction } from './ServiceContentEditor';
 
 /*
  * Staff, in a main service's details drawer: its name, the line under it, and its picture (the round icon customers
- * see beside it: an uploaded image or a Hugeicons icon, the same picker as when it was made). Closed until "Edit"
- * is pressed, so the drawer reads like the customer's.
+ * see beside it: an uploaded image or a Hugeicons icon, the same picker as when it was made). The drawer shows it
+ * under the name when its edit icon is pressed; it starts from what is saved and closes on Save or Cancel.
  */
-export function MainServiceIdentityEditor({ main }: { main: Pick<AdminMainService, 'id' | 'name' | 'description' | 'iconUrl'> }) {
+export function MainServiceIdentityEditor({ main, onClose }: { main: Pick<AdminMainService, 'id' | 'name' | 'description' | 'iconUrl'>; onClose: () => void }) {
   const queryClient = useQueryClient();
-  const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState(main.name);
   const [description, setDescription] = useState(main.description ?? '');
   const [icon, setIcon] = useState(main.iconUrl ?? '');
@@ -26,24 +24,6 @@ export function MainServiceIdentityEditor({ main }: { main: Pick<AdminMainServic
     'Main service updated',
   );
   const isChanged = name.trim() !== main.name || description.trim() !== (main.description ?? '') || icon.trim() !== (main.iconUrl ?? '');
-
-  if (!isOpen) {
-    return (
-      <button
-        type="button"
-        onClick={() => {
-          // Always start from what is saved now.
-          setName(main.name);
-          setDescription(main.description ?? '');
-          setIcon(main.iconUrl ?? '');
-          setIsOpen(true);
-        }}
-        className="flex w-fit cursor-pointer items-center gap-[6px] rounded-full px-[10px] py-[4px] text-[13px] font-semibold text-primary transition-colors hover:bg-secondary"
-      >
-        <HugeiconsIcon icon={PencilEdit01Icon} size={16} strokeWidth={1.8} /> নাম, বিবরণ ও আইকন এডিট
-      </button>
-    );
-  }
 
   return (
     <form
@@ -56,7 +36,7 @@ export function MainServiceIdentityEditor({ main }: { main: Pick<AdminMainServic
             // The customer read, the list rows and the chat headers all show these.
             void queryClient.invalidateQueries({ queryKey: ['catalog-main-service', main.id] });
             void queryClient.invalidateQueries({ queryKey: ['super-app-services'] });
-            setIsOpen(false);
+            onClose();
           },
         });
       }}
@@ -70,7 +50,7 @@ export function MainServiceIdentityEditor({ main }: { main: Pick<AdminMainServic
       <p className="mb-[6px] mt-[16px] text-[13px] font-semibold text-ink">আইকন / ছবি</p>
       <PicturePicker value={icon} onChange={setIcon} />
       <div className="mt-[14px] flex gap-[8px]">
-        <button type="button" onClick={() => setIsOpen(false)} className="h-[40px] flex-1 cursor-pointer rounded-[10px] border border-chip bg-white text-[14px] font-semibold text-ink hover:bg-surface">
+        <button type="button" onClick={onClose} className="h-[40px] flex-1 cursor-pointer rounded-[10px] border border-chip bg-white text-[14px] font-semibold text-ink hover:bg-surface">
           বাতিল
         </button>
         <button

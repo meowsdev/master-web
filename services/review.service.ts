@@ -29,4 +29,8 @@ export const reviewService = {
     );
     return response.data;
   },
+
+  /** Admin: show or hide a customer review everywhere (new reviews are public); the provider's rating follows. */
+  setVisibility: async (reviewId: string, isPublic: boolean) =>
+    (await apiClient.patch<{ id: string; isPublic: boolean }>(`/provider-review/${reviewId}/visibility`, { isPublic })).data,
 };

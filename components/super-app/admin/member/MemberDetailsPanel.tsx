@@ -5,12 +5,13 @@ import { useAdminMember, useModerateMember } from '@/hooks/useAdminMember';
 import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 import { SupportAvatar } from '../../support/SupportAvatar';
 import { CustomerSections } from './CustomerSections';
-import { Fact, ReviewList, Section, StatusBadges, formatDate } from './MemberParts';
+import { Fact, Section, StatusBadges, formatDate } from './MemberParts';
 import { MemberActions } from './MemberActions';
 import { ProviderCommissionControl } from './ProviderCommissionControl';
 import { ProviderLevelSection } from './ProviderLevelSection';
 import { ProviderSections } from './ProviderSections';
 import { ProviderKycSection } from './ProviderKycSection';
+import { ModeratedReviewList } from './ModeratedReviewList';
 import { TechnicianProviderControl } from './TechnicianProviderControl';
 
 const ROLE_LABEL = { PROVIDER: 'Provider', TECHNICIAN: 'Technician', CUSTOMER: 'Customer' } as const;
@@ -68,7 +69,7 @@ export function MemberDetailsPanel({ adminId, memberId, onClose }: { adminId: st
           {member.technician && <TechnicianProviderControl adminId={adminId} technician={member.technician} canChange={canManageTechnicians} />}
           {member.technician && (
             <Section title={`Customer reviews · ${member.technician.reviews.length}`}>
-              <ReviewList reviews={member.technician.reviews} />
+              <ModeratedReviewList reviews={member.technician.reviews} />
             </Section>
           )}
           {member.customer && <CustomerSections customer={member.customer} />}

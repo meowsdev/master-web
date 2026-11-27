@@ -2,7 +2,8 @@ import { formatTaka } from '@/components/modals/place-order/format-taka';
 import { MemberDetails } from '@/types/admin-member.types';
 import type { ProviderLevel } from '@/types/provider-earnings.types';
 import { LEVEL_LABEL } from '../../provider/earnings/earnings-format';
-import { Fact, OrderCounts, ReviewList, Section, StatusBadges, formatDate } from './MemberParts';
+import { Fact, OrderCounts, Section, StatusBadges, formatDate } from './MemberParts';
+import { ModeratedReviewList } from './ModeratedReviewList';
 
 /* A provider: business info, standing, areas, and the technicians who work under them. */
 export function ProviderSections({ provider }: { provider: NonNullable<MemberDetails['provider']> }) {
@@ -26,7 +27,7 @@ export function ProviderSections({ provider }: { provider: NonNullable<MemberDet
       </Section>
 
       <Section title={`Customer reviews · ${provider.reviews.length}`}>
-        <ReviewList reviews={provider.reviews} />
+        <ModeratedReviewList reviews={provider.reviews} />
       </Section>
 
       <Section title="Areas served">
