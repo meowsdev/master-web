@@ -17,7 +17,7 @@ import { AdminSupportCanvas } from '../support/AdminSupportCanvas';
 import { supportRoleForTab } from '../support/support-tabs';
 
 /* Every staff member's main area: the selected order, or the empty landing canvas (always on the Services tab); management panels and the service form slide in on top. */
-export function AdminCanvas({ userId, activeRailTab, onBack, onSwitchAccount }: { userId: string; activeRailTab: RailTab; onBack: () => void; onSwitchAccount: () => void }) {
+export function AdminCanvas({ userId, activeRailTab, onBack, onSwitchAccount }: { userId: string; activeRailTab: RailTab; onBack: () => void; onSwitchAccount?: () => void }) {
   const { data: orders = [] } = useAdminOrders(userId);
   const openOrderId = useOrderHistoryStore(selectOpenOrderId(userId));
   const order = orders.find((item) => item.id === openOrderId);
@@ -47,7 +47,7 @@ export function AdminCanvas({ userId, activeRailTab, onBack, onSwitchAccount }: 
 }
 
 /* Services tab: the customer's Services screen for the main service picked on the left, with the staff edit controls on. */
-function CatalogCanvas({ onSwitchAccount }: { onSwitchAccount: () => void }) {
+function CatalogCanvas({ onSwitchAccount }: { onSwitchAccount?: () => void }) {
   const mainServiceId = useAdminCatalogStore((state) => state.mainServiceId);
   const openMainService = useCatalogPanelStore((state) => state.openMainService);
   return (
@@ -65,13 +65,15 @@ function CatalogCanvas({ onSwitchAccount }: { onSwitchAccount: () => void }) {
         ) : (
           <span />
         )}
-        <button
-          type="button"
-          onClick={onSwitchAccount}
-          className="h-[36px] cursor-pointer rounded-[10px] border border-ink bg-white px-[14px] text-[14px] font-semibold text-ink transition-colors hover:bg-surface"
-        >
-          Switch Account
-        </button>
+        {onSwitchAccount && (
+          <button
+            type="button"
+            onClick={onSwitchAccount}
+            className="h-[36px] cursor-pointer rounded-[10px] border border-ink bg-white px-[14px] text-[14px] font-semibold text-ink transition-colors hover:bg-surface"
+          >
+            Switch Account
+          </button>
+        )}
       </header>
       {mainServiceId ? (
         <ServicesTab key={mainServiceId} mainServiceId={mainServiceId} isAuthenticated onRequireAuth={() => {}} canEdit />

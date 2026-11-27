@@ -19,6 +19,9 @@ interface ProfileEditorModalProps {
   isDarkMode: boolean;
   /** Shown as a "Log out" link under the form. */
   onLogout?: () => void;
+  /** Message and order sounds on or off: one row above Log out. */
+  soundEnabled?: boolean;
+  onToggleSound?: () => void;
 }
 
 /*
@@ -27,10 +30,10 @@ interface ProfileEditorModalProps {
  * (see AuthModal), pre-filled with the signed-in user's details.
  * The content is its own component so every open starts from fresh values.
  */
-export function ProfileEditorModal({ isOpen, onClose, user, onUserUpdated, onLogout }: ProfileEditorModalProps) {
+export function ProfileEditorModal({ isOpen, onClose, user, onUserUpdated, onLogout, soundEnabled, onToggleSound }: ProfileEditorModalProps) {
   if (!isOpen || !user) return null;
   return (
-    <ProfileEditorContent key={user.id} user={user} onClose={onClose} onUserUpdated={onUserUpdated} onLogout={onLogout} />
+    <ProfileEditorContent key={user.id} user={user} onClose={onClose} onUserUpdated={onUserUpdated} onLogout={onLogout} soundEnabled={soundEnabled} onToggleSound={onToggleSound} />
   );
 }
 
@@ -39,9 +42,11 @@ interface ProfileEditorContentProps {
   onClose: () => void;
   onUserUpdated: (updatedUser: UserType) => void;
   onLogout?: () => void;
+  soundEnabled?: boolean;
+  onToggleSound?: () => void;
 }
 
-function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout }: ProfileEditorContentProps) {
+function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout, soundEnabled, onToggleSound }: ProfileEditorContentProps) {
   // The panel opens on the read-only profile; Edit Profile switches to the form, and saving comes back here.
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [photoUrl, setPhotoUrl] = useState<string | null>(user.profilePhoto ?? null);
@@ -71,6 +76,22 @@ function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout }: Profil
             setMode('edit');
           }}
         />
+        {onToggleSound && (
+          <div className="mb-[16px] flex items-center justify-between rounded-[12px] border border-line bg-white px-[14px] py-[12px]">
+            <span className="text-[14px] font-semibold text-ink">Sound Notifications</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={Boolean(soundEnabled)}
+              aria-label="Sound Notifications"
+              onClick={onToggleSound}
+              className="relative h-[22px] w-[40px] shrink-0 cursor-pointer rounded-full"
+            >
+              <span className={`absolute inset-0 rounded-full transition-colors ${soundEnabled ? 'bg-primary' : 'bg-muted/40'}`} />
+              <span className={`absolute top-[3px] size-[16px] rounded-full bg-white shadow transition-all ${soundEnabled ? 'left-[21px]' : 'left-[3px]'}`} />
+            </button>
+          </div>
+        )}
         {logoutLink}
       </AuthDrawerShell>
     );

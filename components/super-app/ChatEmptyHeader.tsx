@@ -4,7 +4,8 @@ import { HEADER_BAR_HEIGHT_CLASS } from '@/components/modals/side-panel';
 import { HeaderMenuItem } from './HeaderOptionsMenu';
 
 interface ChatEmptyHeaderProps {
-  onSwitchAccount: () => void;
+  /** Customers and providers only; without it the button is not shown (technicians, staff). */
+  onSwitchAccount?: () => void;
   menuItems: HeaderMenuItem[];
 }
 
@@ -12,13 +13,15 @@ interface ChatEmptyHeaderProps {
 export function ChatEmptyHeader({ onSwitchAccount }: ChatEmptyHeaderProps) {
   return (
     <header className={`flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-end gap-[12px] border-b border-line bg-white px-[16px]`}>
-      <button
-        type="button"
-        onClick={onSwitchAccount}
-        className="h-[36px] cursor-pointer rounded-[10px] border border-ink bg-white px-[14px] text-[14px] font-semibold text-ink transition-colors hover:bg-surface"
-      >
-        Switch Account
-      </button>
+      {onSwitchAccount && (
+        <button
+          type="button"
+          onClick={onSwitchAccount}
+          className="h-[36px] cursor-pointer rounded-[10px] border border-ink bg-white px-[14px] text-[14px] font-semibold text-ink transition-colors hover:bg-surface"
+        >
+          Switch Account
+        </button>
+      )}
       {/* <HeaderOptionsMenu items={menuItems} /> */}
     </header>
   );

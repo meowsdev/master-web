@@ -4,18 +4,16 @@ import React from 'react';
 import { PlaceOrderPanel } from '@/components/modals/place-order/PlaceOrderPanel';
 import { AuthModal } from '@/components/modals/AuthModal';
 import { CallingModal } from '@/components/modals/CallingModal';
-import { SettingsDrawer } from '@/components/modals/SettingsDrawer';
 import { ProfileEditorModal } from '@/components/modals/ProfileEditorModal';
 import { ServicePreviewPanel } from '@/components/modals/ServicePreviewPanel';
 import { OrdersDrawer } from '@/components/modals/OrdersDrawer';
 import { Service } from '@/types/service.types';
 import { Order } from '@/types/order.types';
-import { User, UserRole } from '@/types/auth.types';
+import { User } from '@/types/auth.types';
 
 interface SuperAppModalsProps {
   isDarkMode: boolean;
   user: User | null;
-  activeRole: string | null;
   isAuthenticated: boolean;
   activeService: Service | null;
   // Place Order panel
@@ -32,14 +30,9 @@ interface SuperAppModalsProps {
   isCallingModalOpen: boolean;
   onCloseCalling: () => void;
   callType: 'voice' | 'video';
-  // Settings Drawer
-  isSettingsDrawerOpen: boolean;
-  onCloseSettings: () => void;
+  // Sound on/off (a row of the profile panel) and log out
   soundEnabled: boolean;
   onToggleSound: () => void;
-  onSwitchRole: (role: UserRole) => void;
-  onOpenEditProfile: () => void;
-  onOpenOrders: () => void;
   onLogout: () => void;
   // Profile Editor
   isProfileEditorOpen: boolean;
@@ -60,7 +53,6 @@ interface SuperAppModalsProps {
 export function SuperAppModals({
   isDarkMode,
   user,
-  activeRole,
   isAuthenticated,
   activeService,
   isPlaceOrderOpen,
@@ -74,13 +66,8 @@ export function SuperAppModals({
   isCallingModalOpen,
   onCloseCalling,
   callType,
-  isSettingsDrawerOpen,
-  onCloseSettings,
   soundEnabled,
   onToggleSound,
-  onSwitchRole,
-  onOpenEditProfile,
-  onOpenOrders,
   onLogout,
   isProfileEditorOpen,
   onCloseProfileEditor,
@@ -120,21 +107,6 @@ export function SuperAppModals({
         />
       )}
 
-      <SettingsDrawer
-        isOpen={isSettingsDrawerOpen}
-        onClose={onCloseSettings}
-        isDarkMode={isDarkMode}
-        soundEnabled={soundEnabled}
-        onToggleSound={onToggleSound}
-        user={user}
-        activeRole={activeRole}
-        onSwitchRole={onSwitchRole}
-        onOpenEditProfile={onOpenEditProfile}
-        onOpenOrders={onOpenOrders}
-        onOpenAuth={() => onOpenAuth('LOGIN')}
-        onLogout={onLogout}
-      />
-
       <ProfileEditorModal
         isOpen={isProfileEditorOpen}
         onClose={onCloseProfileEditor}
@@ -142,6 +114,8 @@ export function SuperAppModals({
         onUserUpdated={onUserUpdated}
         isDarkMode={isDarkMode}
         onLogout={onLogout}
+        soundEnabled={soundEnabled}
+        onToggleSound={onToggleSound}
       />
 
       {/* The same "Service info" panel guests get; here its button starts a booking. */}

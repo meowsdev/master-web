@@ -8,7 +8,7 @@ import { ProviderOrderWorkspace } from '../provider/ProviderOrderWorkspace';
 interface TechnicianCanvasProps {
   userId: string;
   onBack: () => void;
-  onSwitchAccount: () => void;
+  onSwitchAccount?: () => void;
   onStartCall: (type: 'voice' | 'video') => void;
 }
 

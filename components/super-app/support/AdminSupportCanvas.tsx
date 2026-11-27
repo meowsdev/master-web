@@ -14,7 +14,7 @@ interface AdminSupportCanvasProps {
   userId: string;
   role: SupportMemberRole;
   onBack: () => void;
-  onSwitchAccount: () => void;
+  onSwitchAccount?: () => void;
 }
 
 /* Staff's main area on the Providers / Customers chat tabs: the chosen person's thread, or an empty canvas. */

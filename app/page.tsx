@@ -30,6 +30,10 @@ import { useCatalogPanelStore } from '@/store/useCatalogPanelStore';
 import { useOrderHistoryStore } from '@/store/useOrderHistoryStore';
 import { useAdminCatalogStore } from '@/store/useAdminCatalogStore';
 import { useSupportChatStore } from '@/store/useSupportChatStore';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
+import { ProviderKycPanel } from '@/components/super-app/kyc/ProviderKycPanel';
+import { SwitchAccountDialog } from '@/components/super-app/switch-account/SwitchAccountDialog';
+import { useSwitchAccount } from '@/components/super-app/switch-account/useSwitchAccount';
 
 const emptySubscribe = () => () => {};
 
@@ -39,7 +43,7 @@ const emptySubscribe = () => () => {};
  */
 export default function SuperAppPage() {
   const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
-  const { user, isAuthenticated, activeRole, setRole, setUser } = useAuthStore();
+  const { user, isAuthenticated, activeRole, setUser } = useAuthStore();
 
   const isProvider = Boolean(isAuthenticated && (activeRole === 'PROVIDER' || user?.role === 'PROVIDER'));
 
@@ -186,6 +190,34 @@ export default function SuperAppPage() {
     deselectChats: () => { setActiveServiceId(null); setActiveOrderId(null); },
   });
 
+  // The logo: back to the screen a fresh login lands on. Only closes what is open; it never logs out, deletes
+  // anything or ends a running call, and every chat and order is still there to reopen.
+  const handleGoHome = () => {
+    setActiveRailTab('CHATS');
+    setActiveServiceId(null);
+    setActiveOrderId(null);
+    // Staff and technicians keep their open order, service and member chat in stores, not in this page.
+    if (user) useOrderHistoryStore.getState().select(user.id, null);
+    useAdminCatalogStore.getState().selectMainService(null);
+    useSupportChatStore.getState().reset();
+    modals.closeSidePanels();
+    closePreview();
+    setMobileView('LIST');
+    setSearchQuery('');
+    setActiveFilterChip('All');
+  };
+
+  // Switch Account: customer ⇄ provider on the same number, or "become a provider?" → KYC. After a switch the
+  // whole app is on the other side, so it starts again from home.
+  const switchAccount = useSwitchAccount({
+    user,
+    onSwitched: (me) => {
+      setUser(me);
+      handleGoHome();
+    },
+  });
+  const kycPanelOpen = useOrderPanelStore((state) => state.kind === 'providerKyc');
+
   if (!isMounted) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-surface dark:bg-[#0b141a]">
@@ -203,23 +235,6 @@ export default function SuperAppPage() {
   };
   const runningBadgeCount = isProvider ? providerOrders.length : runningServiceIds.length;
   const openProfile = () => modals.setIsProfileEditorOpen(true);
-
-  // The logo: back to the screen a fresh login lands on. Only closes what is open; it never logs out, deletes
-  // anything or ends a running call, and every chat and order is still there to reopen.
-  const handleGoHome = () => {
-    setActiveRailTab('CHATS');
-    setActiveServiceId(null);
-    setActiveOrderId(null);
-    // Staff and technicians keep their open order, service and member chat in stores, not in this page.
-    if (user) useOrderHistoryStore.getState().select(user.id, null);
-    useAdminCatalogStore.getState().selectMainService(null);
-    useSupportChatStore.getState().reset();
-    modals.closeSidePanels();
-    closePreview();
-    setMobileView('LIST');
-    setSearchQuery('');
-    setActiveFilterChip('All');
-  };
 
   return (
     <div className={`flex h-screen w-screen overflow-hidden font-sans ${bgMain}`}>
@@ -315,7 +330,7 @@ export default function SuperAppPage() {
         onStartNewOrder={handleStartNewOrder}
         selectedOrderId={selectedOrderId}
         onSelectOrderTab={selectOrderTab}
-        openSettings={modals.openSettings}
+        onSwitchAccount={switchAccount.start}
         handleLogout={handleLogout}
         isDarkMode={isDarkMode}
         user={user}
@@ -326,7 +341,6 @@ export default function SuperAppPage() {
       <SuperAppModals
         isDarkMode={isDarkMode}
         user={user}
-        activeRole={activeRole}
         isAuthenticated={isAuthenticated}
         isPlaceOrderOpen={modals.isPlaceOrderOpen}
         onClosePlaceOrder={() => modals.setIsPlaceOrderOpen(false)}
@@ -340,13 +354,8 @@ export default function SuperAppPage() {
         isCallingModalOpen={modals.isCallingModalOpen}
         onCloseCalling={() => modals.setIsCallingModalOpen(false)}
         callType={modals.callType}
-        isSettingsDrawerOpen={modals.isSettingsDrawerOpen}
-        onCloseSettings={() => modals.setIsSettingsDrawerOpen(false)}
         soundEnabled={soundEnabled}
         onToggleSound={toggleSound}
-        onSwitchRole={setRole}
-        onOpenEditProfile={() => modals.setIsProfileEditorOpen(true)}
-        onOpenOrders={modals.openOrders}
         onLogout={handleLogout}
         isProfileEditorOpen={modals.isProfileEditorOpen}
         onCloseProfileEditor={() => modals.setIsProfileEditorOpen(false)}
@@ -362,6 +371,12 @@ export default function SuperAppPage() {
 
       {/* 5. The Services tab's right-hand panels (sub-service details, cart checkout, custom request) */}
       <CatalogPanels onOrderPlaced={handleOrderPlaced} />
+
+      {/* The verification (KYC): a provider's, or a customer's who chose to become one through Switch Account. */}
+      {kycPanelOpen && user && <ProviderKycPanel userId={user.id} onClose={() => useOrderPanelStore.getState().close()} />}
+      {switchAccount.prompt && (
+        <SwitchAccountDialog prompt={switchAccount.prompt} isBusy={switchAccount.isBusy} onConfirm={switchAccount.confirm} onCancel={switchAccount.cancel} />
+      )}
 
       {!isAuthenticated && (
         <ServicePreviewPanel service={modals.isAnySidePanelOpen ? null : previewService} onClose={closePreview} primaryActionLabel="Contact Now" onPrimaryAction={handleContactNow} />

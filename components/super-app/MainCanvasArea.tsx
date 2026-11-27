@@ -47,7 +47,8 @@ interface MainCanvasAreaProps {
   /** The open order tab (null = General Chat) and how to change it. */
   selectedOrderId: string | null;
   onSelectOrderTab: (orderId: string | null) => void;
-  openSettings: () => void;
+  /** Switch Account: customer ⇄ provider, or "become a provider?" (customers and providers only). */
+  onSwitchAccount: () => void;
   handleLogout: () => void;
   isDarkMode: boolean;
   user: User | null;
@@ -80,7 +81,7 @@ export function MainCanvasArea({
   onStartNewOrder,
   selectedOrderId,
   onSelectOrderTab,
-  openSettings,
+  onSwitchAccount,
   handleLogout,
   isDarkMode,
   user,
@@ -97,10 +98,10 @@ export function MainCanvasArea({
         <MemberSupportCanvas userId={user.id} onBack={() => setMobileView('LIST')} />
       ) : activeRole === 'TECHNICIAN' && user ? (
         /* 1c. Technician: the job they opened and nothing else */
-        <TechnicianCanvas userId={user.id} onBack={() => setMobileView('LIST')} onSwitchAccount={openSettings} onStartCall={handleStartCall} />
+        <TechnicianCanvas userId={user.id} onBack={() => setMobileView('LIST')} onStartCall={handleStartCall} />
       ) : isStaffRole(activeRole) && user ? (
         /* 1b. Staff: one order's full picture and chat, or the empty landing canvas; tabs by permission */
-        <AdminCanvas userId={user.id} activeRailTab={activeRailTab} onBack={() => setMobileView('LIST')} onSwitchAccount={openSettings} />
+        <AdminCanvas userId={user.id} activeRailTab={activeRailTab} onBack={() => setMobileView('LIST')} />
       ) : isProvider && activeProviderOrder && user ? (
         /* 2. Provider Order Workspace: full order info + live chat with the customer */
         <ProviderOrderWorkspace
@@ -114,7 +115,7 @@ export function MainCanvasArea({
       ) : isProvider ? (
         /* 2a. Provider landing: nothing open yet, just the header with Switch Account */
         <>
-          <ChatEmptyHeader onSwitchAccount={openSettings} menuItems={[]} />
+          <ChatEmptyHeader onSwitchAccount={onSwitchAccount} menuItems={[]} />
           <div className="flex-1 bg-surface" />
         </>
       ) : activeRailTab === 'ORDERS' && !isProvider && user ? (
@@ -154,7 +155,7 @@ export function MainCanvasArea({
           user={user}
           activeRole={activeRole}
           onOpenAuth={handleOpenAuth}
-          onOpenSettings={openSettings}
+          onOpenSettings={onSwitchAccount}
           onOpenOrders={openOrders}
           onStartNewOrder={onStartNewOrder}
           onLogout={handleLogout}

@@ -39,6 +39,10 @@ export interface StaffPermissions {
   canViewLevels: boolean;
   /** Provider levels: edit each level's targets, give providers a level by hand, run the evaluation now (backend: ADMIN). */
   canManageLevels: boolean;
+  /** A provider's verification: NID pictures and family numbers (backend: ADMIN, MANAGER). */
+  canViewKyc: boolean;
+  /** Approve or reject a provider's verification (backend: ADMIN). */
+  canReviewKyc: boolean;
 }
 
 const NONE: StaffPermissions = {
@@ -59,6 +63,8 @@ const NONE: StaffPermissions = {
   canManageDues: false,
   canViewLevels: false,
   canManageLevels: false,
+  canViewKyc: false,
+  canReviewKyc: false,
 };
 
 const MANAGER: StaffPermissions = {
@@ -79,10 +85,12 @@ const MANAGER: StaffPermissions = {
   canManageDues: true,
   canViewLevels: true,
   canManageLevels: false,
+  canViewKyc: true,
+  canReviewKyc: false,
 };
 
 const PERMISSIONS_BY_ROLE: Record<string, StaffPermissions> = {
-  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true, canReviewExpenses: true, canManageStaff: true, canSetCommission: true, canManagePayouts: true, canViewEarnings: true, canManageLevels: true },
+  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true, canReviewExpenses: true, canManageStaff: true, canSetCommission: true, canManagePayouts: true, canViewEarnings: true, canManageLevels: true, canReviewKyc: true },
   MANAGER,
   // Support chat is open to support staff; member management is not (admin-members is ADMIN/MANAGER).
   SUPPORT: { ...NONE, canChatWithMembers: true },

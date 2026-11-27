@@ -13,10 +13,9 @@ export function useSuperAppModals() {
   const [isPlaceOrderOpen, setIsPlaceOrderOpen] = useState(false);
   const [placeOrderServiceId, setPlaceOrderServiceId] = useState<string | null>(null);
 
-  // Calling & Settings
+  // Calling
   const [callType, setCallType] = useState<'voice' | 'video'>('voice');
   const [isCallingModalOpen, setIsCallingModalOpen] = useState(false);
-  const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
   const [isOrdersDrawerOpen, setIsOrdersDrawerOpen] = useState(() => {
     return typeof window !== 'undefined' ? window.location.search.includes('view=orders') : false;
   });
@@ -37,7 +36,6 @@ export function useSuperAppModals() {
 
   const closePanelsExceptProvider = useCallback(() => {
     setIsAuthModalOpen(false);
-    setIsSettingsDrawerOpen(false);
     setIsOrdersDrawerOpen(false);
     setIsProfileEditorOpen(false);
     setIsServiceDetailsOpen(false);
@@ -83,7 +81,6 @@ export function useSuperAppModals() {
   const panelSetters = useMemo(
     () => ({
       setIsAuthModalOpen: exclusive(setIsAuthModalOpen),
-      setIsSettingsDrawerOpen: exclusive(setIsSettingsDrawerOpen),
       setIsOrdersDrawerOpen: exclusive(setIsOrdersDrawerOpen),
       setIsProfileEditorOpen: exclusive(setIsProfileEditorOpen),
       setIsServiceDetailsOpen: exclusive(setIsServiceDetailsOpen),
@@ -92,7 +89,6 @@ export function useSuperAppModals() {
     [exclusive],
   );
 
-  const openSettings = useCallback(() => panelSetters.setIsSettingsDrawerOpen(true), [panelSetters]);
   const openOrders = useCallback(() => panelSetters.setIsOrdersDrawerOpen(true), [panelSetters]);
   const openPlaceOrder = useCallback(
     (serviceId: string | null = null) => {
@@ -109,7 +105,6 @@ export function useSuperAppModals() {
 
   const isAnySidePanelOpen =
     isAuthModalOpen ||
-    isSettingsDrawerOpen ||
     isOrdersDrawerOpen ||
     isProfileEditorOpen ||
     isServiceDetailsOpen ||
@@ -132,9 +127,6 @@ export function useSuperAppModals() {
     setCallType,
     isCallingModalOpen,
     setIsCallingModalOpen,
-    isSettingsDrawerOpen,
-    setIsSettingsDrawerOpen: panelSetters.setIsSettingsDrawerOpen,
-    openSettings,
     isOrdersDrawerOpen,
     setIsOrdersDrawerOpen: panelSetters.setIsOrdersDrawerOpen,
     openOrders,

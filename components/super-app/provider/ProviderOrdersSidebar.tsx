@@ -5,6 +5,7 @@ import { Order } from '@/types/order.types';
 import { User } from '@/types/auth.types';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { AdminCreateOrderPanel } from '../admin/panels/AdminCreateOrderPanel';
+import { ProviderKycBanner } from '../kyc/ProviderKycBanner';
 import { CustomerSidebarTop } from '../CustomerSidebarTop';
 import { OrderHistoryListItem } from '../order-history/OrderHistoryListItem';
 import { SupportChatRow } from '../support/SupportChatRow';
@@ -66,6 +67,8 @@ export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, 
       />
 
       <div className="min-h-0 flex-1 overflow-y-auto px-[16px] pb-[8px]">
+        {/* Until verified: where the KYC stands, with a button to it. */}
+        <ProviderKycBanner userId={user.id} />
         <div className="pt-[8px]">
           <SupportChatRow userId={user.id} isActive={isSupportOpen} onOpen={onOpenSupport} />
         </div>
@@ -87,7 +90,6 @@ export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, 
       </div>
 
       {/* The provider's New order form (opened by the + on the rail or in the header): a side panel on the right. */}
-      {panelKind === 'providerOrder' && <AdminCreateOrderPanel adminId={user.id} booker="provider" onClose={closePanel} />}
-    </>
+      {panelKind === 'providerOrder' && <AdminCreateOrderPanel adminId={user.id} booker="provider" onClose={closePanel} />}    </>
   );
 }
