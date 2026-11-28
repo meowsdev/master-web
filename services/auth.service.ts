@@ -64,6 +64,13 @@ export const authService = {
     return response.data;
   },
 
+  /** Upload a picture for the signed-in user's own profile photo; returns the link to save as profilePhoto. */
+  uploadProfilePhoto: async (file: File) => {
+    const form = new FormData();
+    form.append('image', file);
+    return (await apiClient.post<{ url: string }>('/uploads/profile-photo', form, { headers: { 'Content-Type': 'multipart/form-data' } })).data.url;
+  },
+
   completeProfile: async (dto: CompleteProfileDto) => {
     const response = await apiClient.patch<User>('/auth/complete-profile', dto);
     return response.data;

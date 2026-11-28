@@ -27,6 +27,8 @@ interface SidePanelShellProps {
   titleNote?: string;
   /** Pinned under the scrolling body, e.g. the Tap to Schedule button. */
   footer?: ReactNode;
+  /** Pinned to the header's right edge, e.g. the profile's Log out. */
+  headerAction?: ReactNode;
 }
 
 /*
@@ -34,7 +36,7 @@ interface SidePanelShellProps {
  * (Figma: 570px wide, 65px header with ✕ + title, store badges at the bottom of the public panels).
  * There is no click-outside-to-close: only the ✕ closes it.
  */
-export function SidePanelShell({ title, onClose, children, blockOutside = false, showStoreBadges = false, titleNote, footer }: SidePanelShellProps) {
+export function SidePanelShell({ title, onClose, children, blockOutside = false, showStoreBadges = false, titleNote, footer, headerAction }: SidePanelShellProps) {
   return (
     <div className={blockOutside ? SIDE_PANEL_BLOCKING_OVERLAY_CLASS : SIDE_PANEL_OVERLAY_CLASS}>
       <aside
@@ -53,6 +55,7 @@ export function SidePanelShell({ title, onClose, children, blockOutside = false,
             {title}
             {titleNote && <span className="font-normal text-muted"> {titleNote}</span>}
           </h3>
+          {headerAction && <div className="ml-auto shrink-0">{headerAction}</div>}
         </header>
 
         <div className="flex flex-1 flex-col justify-between gap-[32px] overflow-y-auto p-[20px]">

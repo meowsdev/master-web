@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import { toast } from 'sonner';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, Logout01Icon, Notification01Icon, NotificationOff01Icon, PencilEdit02Icon } from '@hugeicons/core-free-icons';
 import { authService } from '@/services/auth.service';
 import { User as UserType, UserRole } from '@/types/auth.types';
-import { AuthDrawerShell, authLinkClass } from '@/components/modals/auth/AuthDrawerShell';
+import { AuthDrawerShell } from '@/components/modals/auth/AuthDrawerShell';
 import { ProfilePhoto, ProfileView } from '@/components/modals/profile/ProfileView';
-import { AvatarPicker } from '@/components/modals/auth/AvatarPicker';
 import { CreateAccountForm, ProfileDraft } from '@/components/modals/auth/CreateAccountForm';
 import { ProviderAreasSection } from '@/components/modals/profile/ProviderAreasSection';
 import { ProviderSkillsSection } from '@/components/modals/profile/ProviderSkillsSection';
@@ -49,8 +50,29 @@ interface ProfileEditorContentProps {
 function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout, soundEnabled, onToggleSound }: ProfileEditorContentProps) {
   // The panel opens on the read-only profile; Edit Profile switches to the form, and saving comes back here.
   const [mode, setMode] = useState<'view' | 'edit'>('view');
-  const [photoUrl, setPhotoUrl] = useState<string | null>(user.profilePhoto ?? null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
+  // A picture chosen on the profile circle is uploaded and saved at once: no Save button.
+  const changePhoto = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('ছবি 5MB-এর বেশি হতে পারবে না');
+      return;
+    }
+    setIsUploadingPhoto(true);
+    try {
+      const url = await authService.uploadProfilePhoto(file);
+      const updatedUser = await authService.completeProfile({ profilePhoto: url });
+      onUserUpdated(updatedUser);
+      toast.success('Profile photo updated');
+    } catch (err: unknown) {
+      const apiMessage = (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
+      const message = Array.isArray(apiMessage) ? apiMessage[0] : apiMessage;
+      toast.error(message || 'Profile photo could not be updated');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
 
   const logoutLink = onLogout && (
     <button
@@ -59,40 +81,56 @@ function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout, soundEna
         onClose();
         onLogout();
       }}
-      className="cursor-pointer text-[14px] font-semibold text-[#d64545] hover:underline"
+      className="flex h-[36px] cursor-pointer items-center gap-[6px] rounded-[10px] px-[12px] text-[14px] font-semibold text-[#d64545] transition-colors hover:bg-[#fdecec]"
     >
+      <HugeiconsIcon icon={Logout01Icon} size={18} strokeWidth={1.8} />
       Log out
     </button>
   );
 
+  /*
+   * The photo in the middle (one click changes it, in both modes) and, on its right under Log out, a small column:
+   * the round icon that switches mode (a pencil to edit, a cross to leave the edit without saving) and under it the
+   * sound switch: one round bell, crossed out when sound is off; pressing it turns sound on or off. The column fits beside the photo on phones too.
+   */
+  const avatarRow = (
+    <div className="relative flex w-full justify-center">
+      <ProfilePhoto photoUrl={user.profilePhoto ?? null} onPick={(file) => void changePhoto(file)} isUploading={isUploadingPhoto} />
+      <div className="absolute right-0 top-0 flex flex-col items-end gap-[10px]">
+        <button
+          type="button"
+          onClick={() => setMode(mode === 'view' ? 'edit' : 'view')}
+          aria-label={mode === 'view' ? 'Edit profile' : 'Cancel editing'}
+          title={mode === 'view' ? 'Edit profile' : 'Cancel'}
+          className={`flex size-[40px] cursor-pointer items-center justify-center rounded-full transition-colors ${
+            mode === 'view' ? 'bg-secondary/40 text-primary hover:bg-secondary' : 'bg-surface text-ink hover:bg-line'
+          }`}
+        >
+          <HugeiconsIcon icon={mode === 'view' ? PencilEdit02Icon : Cancel01Icon} size={20} strokeWidth={1.8} />
+        </button>
+        {onToggleSound && (
+          <button
+            type="button"
+            role="switch"
+            aria-checked={Boolean(soundEnabled)}
+            aria-label="Sound notifications"
+            title={soundEnabled ? 'Sound on' : 'Sound off'}
+            onClick={onToggleSound}
+            className={`flex size-[40px] cursor-pointer items-center justify-center rounded-full transition-colors ${
+              soundEnabled ? 'bg-secondary/40 text-primary hover:bg-secondary' : 'bg-surface text-muted hover:bg-line'
+            }`}
+          >
+            <HugeiconsIcon icon={soundEnabled ? Notification01Icon : NotificationOff01Icon} size={20} strokeWidth={1.8} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
   if (mode === 'view') {
     return (
-      <AuthDrawerShell title="My Profile" onClose={onClose} avatar={<ProfilePhoto photoUrl={user.profilePhoto ?? null} />}>
-        <ProfileView
-          user={user}
-          onEdit={() => {
-            // Every edit starts from what is saved now.
-            setPhotoUrl(user.profilePhoto ?? null);
-            setMode('edit');
-          }}
-        />
-        {onToggleSound && (
-          <div className="mb-[16px] flex items-center justify-between rounded-[12px] border border-line bg-white px-[14px] py-[12px]">
-            <span className="text-[14px] font-semibold text-ink">Sound Notifications</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={Boolean(soundEnabled)}
-              aria-label="Sound Notifications"
-              onClick={onToggleSound}
-              className="relative h-[22px] w-[40px] shrink-0 cursor-pointer rounded-full"
-            >
-              <span className={`absolute inset-0 rounded-full transition-colors ${soundEnabled ? 'bg-primary' : 'bg-muted/40'}`} />
-              <span className={`absolute top-[3px] size-[16px] rounded-full bg-white shadow transition-all ${soundEnabled ? 'left-[21px]' : 'left-[3px]'}`} />
-            </button>
-          </div>
-        )}
-        {logoutLink}
+      <AuthDrawerShell title="My Profile" onClose={onClose} avatar={avatarRow} headerAction={logoutLink}>
+        <ProfileView user={user} />
       </AuthDrawerShell>
     );
   }
@@ -100,10 +138,8 @@ function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout, soundEna
   const handleSave = async (profile: ProfileDraft) => {
     setIsSaving(true);
     try {
-      const updatedUser = await authService.completeProfile({
-        ...profile,
-        profilePhoto: photoUrl ?? undefined,
-      });
+      // The photo saves on its own the moment it is chosen, so Save sends only the fields.
+      const updatedUser = await authService.completeProfile(profile);
       onUserUpdated(updatedUser);
       toast.success('Profile updated successfully! ✨');
       setMode('view');
@@ -117,11 +153,7 @@ function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout, soundEna
   };
 
   return (
-    <AuthDrawerShell
-      title="Edit Profile"
-      onClose={onClose}
-      avatar={<AvatarPicker photoUrl={photoUrl} onChange={setPhotoUrl} />}
-    >
+    <AuthDrawerShell title="Edit Profile" onClose={onClose} avatar={avatarRow} headerAction={logoutLink}>
       <CreateAccountForm
         phone={user.mobileNumber}
         initialValues={{
@@ -132,7 +164,6 @@ function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout, soundEna
         }}
         isSaving={isSaving}
         onSave={(profile) => void handleSave(profile)}
-        hasExtraChanges={photoUrl !== (user.profilePhoto ?? null)}
       />
 
       {/* A provider also says here what they offer and where. Both save on their own buttons. */}
@@ -142,10 +173,6 @@ function ProfileEditorContent({ user, onClose, onUserUpdated, onLogout, soundEna
           <ProviderAreasSection userId={user.id} />
         </>
       )}
-
-      <button type="button" onClick={() => setMode('view')} className={authLinkClass}>
-        ← Back to profile
-      </button>
     </AuthDrawerShell>
   );
 }
