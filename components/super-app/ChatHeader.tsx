@@ -12,17 +12,19 @@ interface ChatHeaderProps {
   onClearChat: () => void;
   onOpenDetails?: () => void;
   isDarkMode: boolean;
-  /** Before the ⋮ menu, e.g. the open order tab's status box. */
+  /** On the right, e.g. the open order tab's status box. */
   trailing?: ReactNode;
 }
 
 const isImageSource = (value: string) => /^(https?:)?\//.test(value);
 
 /*
- * Header of an open service (Figma): profile picture, service name, star rating and the ⋮ menu.
- * Booking is no longer a header button; it lives in the Place Order card and the ⋮ menu.
+ * Header of an open service (Figma): profile picture, service name, star rating and, with an order tab open, its
+ * status box. No ⋮ menu, like the provider's and the admin's order headers: the name opens the service info, booking
+ * lives in the Place Order card, and the sidebar list switches chats. onBackToWelcome / onOpenBooking stay in the props
+ * for the callers but are no longer used here.
  */
-export function ChatHeader({ activeService, onBackMobile, onBackToWelcome, onOpenBooking, onOpenDetails, isDarkMode, trailing }: ChatHeaderProps) {
+export function ChatHeader({ activeService, onBackMobile, onOpenDetails, isDarkMode, trailing }: ChatHeaderProps) {
   const profileSource = activeService.imageUrl || activeService.category?.iconUrl || null;
   const averageRating = activeService.providerSummary?.averageRating ?? null;
 
@@ -45,11 +47,7 @@ export function ChatHeader({ activeService, onBackMobile, onBackToWelcome, onOpe
       onBack={onBackMobile}
       onOpenTitle={onOpenDetails}
       trailing={trailing}
-      menuItems={[
-        { label: 'Service info', onSelect: () => onOpenDetails?.() },
-        { label: 'Place Order', onSelect: onOpenBooking },
-        { label: 'Close chat', onSelect: onBackToWelcome },
-      ]}
+      menuItems={[]}
     />
   );
 }
