@@ -47,6 +47,8 @@ export interface StaffPermissions {
   canModerateReviews: boolean;
   /** Put any running order on hold with a reason, or resume it (backend: ORDER_HOLD_STAFF_ROLES = ADMIN, MANAGER). */
   canHoldOrders: boolean;
+  /** The order status box: set any status at any time, with a reason (backend: ORDER_STATUS_STAFF_ROLES = ADMIN). */
+  canChangeOrderStatus: boolean;
 }
 
 const NONE: StaffPermissions = {
@@ -71,6 +73,7 @@ const NONE: StaffPermissions = {
   canReviewKyc: false,
   canModerateReviews: false,
   canHoldOrders: false,
+  canChangeOrderStatus: false,
 };
 
 const MANAGER: StaffPermissions = {
@@ -95,10 +98,11 @@ const MANAGER: StaffPermissions = {
   canReviewKyc: false,
   canModerateReviews: false,
   canHoldOrders: true,
+  canChangeOrderStatus: false,
 };
 
 const PERMISSIONS_BY_ROLE: Record<string, StaffPermissions> = {
-  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true, canReviewExpenses: true, canManageStaff: true, canSetCommission: true, canManagePayouts: true, canViewEarnings: true, canManageLevels: true, canReviewKyc: true, canModerateReviews: true },
+  ADMIN: { ...MANAGER, canBanMembers: true, canManageTechnicians: true, canSendToRevision: true, canReviewExpenses: true, canManageStaff: true, canSetCommission: true, canManagePayouts: true, canViewEarnings: true, canManageLevels: true, canReviewKyc: true, canModerateReviews: true, canChangeOrderStatus: true },
   MANAGER,
   // Support chat is open to support staff; member management is not (admin-members is ADMIN/MANAGER).
   SUPPORT: { ...NONE, canChatWithMembers: true },

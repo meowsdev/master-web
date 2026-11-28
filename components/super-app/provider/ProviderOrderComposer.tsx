@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
-import { CheckmarkCircle02Icon, Invoice01Icon, PauseCircleIcon, PlayCircleIcon, PlusSignIcon, UserAdd01Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
+import { Invoice01Icon, PlusSignIcon, UserAdd01Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import { Order, OrderStatus } from '@/types/order.types';
 import { openRevision } from '@/lib/revision';
 import { OrderChatComposer } from '../order-chat/OrderChatComposer';
@@ -19,8 +19,19 @@ interface ProviderOrderComposerProps {
   canAssignWorker?: boolean;
   /** Costs can be sent: the job is complete and no claim is waiting or approved. */
   canSendCosts?: boolean;
-  /** "Hold order" / "Resume order" (useOrderHold); missing when the order cannot be held now. */
-  holdAction?: { label: string; onSelect: () => void } | null;
+}
+
+/*
+ * Work Complete (Revision Done in a revision): only while the job is in progress, priced, and not waiting for an
+ * online payment. It now lives in the order's status box; its panel takes the payment as before.
+ */
+export function workCompleteState(order: Order): { label: string; isEnabled: boolean } {
+  const isWaitingForOnlinePayment = order.paymentAndTip?.paymentMode === 'ONLINE' && order.orderStatus !== OrderStatus.COMPLETED;
+  const isInRevision = Boolean(openRevision(order));
+  return {
+    label: isWaitingForOnlinePayment ? 'Waiting for payment...' : isInRevision ? 'Revision Done' : 'Work Complete',
+    isEnabled: order.orderStatus === OrderStatus.IN_PROGRESS && !isWaitingForOnlinePayment && !order.isPricePending,
+  };
 }
 
 interface PlusAction {
@@ -35,7 +46,7 @@ interface PlusAction {
  * the job actions. The menu only asks; the backend decides what
  * is allowed (status flow, who may act, price limits). Entries that do not fit the order's status are greyed.
  */
-export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, canSend, onChooseAction, canAssignWorker = true, canSendCosts = false, holdAction = null }: ProviderOrderComposerProps) {
+export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, canSend, onChooseAction, canAssignWorker = true, canSendCosts = false }: ProviderOrderComposerProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +72,6 @@ export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, c
     ...(isPricePending ? [{ id: 'quote' as const, label: 'দাম পাঠান', icon: Invoice01Icon, isEnabled: isRunning }] : []),
     ...(canAssignWorker ? [{ id: 'assign' as const, label: 'Assign Worker', icon: UserAdd01Icon, isEnabled: isRunning }] : []),
     { id: 'extraCharge', label: 'Extra Charge', icon: Wallet01Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment },
-    { id: 'complete', label: isWaitingForOnlinePayment ? 'Waiting for payment...' : isInRevision ? 'Revision Done' : 'Work Complete', icon: CheckmarkCircle02Icon, isEnabled: isInProgress && !isWaitingForOnlinePayment && !isPricePending },
     // After the job: parts bought and other costs, for the admin to review (the backend refuses a second claim).
     // Off while a revision is open: parts found then are billed to the customer as an Extra Charge.
     { id: 'expenseClaim', label: 'পার্টস / খরচ', icon: Invoice01Icon, isEnabled: Boolean(order.completedAt) && canSendCosts && !isInRevision },
@@ -105,21 +115,6 @@ export function ProviderOrderComposer({ order, draft, onDraftChange, onSubmit, c
                   {action.label}
                 </button>
               ))}
-              {/* Pause a running job (parts late, customer away) with a reason, or carry on with it. */}
-              {holdAction && (
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    holdAction.onSelect();
-                  }}
-                  className="flex w-full cursor-pointer items-center gap-[10px] rounded-[8px] px-[10px] py-[10px] text-left text-[14px] font-semibold text-ink hover:bg-surface"
-                >
-                  <HugeiconsIcon icon={order.isOnHold ? PlayCircleIcon : PauseCircleIcon} size={18} />
-                  {holdAction.label}
-                </button>
-              )}
             </div>
           )}
         </div>

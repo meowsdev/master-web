@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/axios';
-import { Order, OrderStatus, PaymentStatus } from '@/types/order.types';
+import { Order, OrderStatus, OrderStatusLogEntry, OrderStatusRequestEntry, PaymentStatus } from '@/types/order.types';
 
 export interface CreateCustomOrderDto {
   providerId?: string;
@@ -55,11 +55,23 @@ export const ordersService = {
     return response.data;
   },
 
-  /** Hold a running order (a reason is required) or resume it: its technician, its provider or an admin. */
-  setHold: async (id: string, onHold: boolean, reason?: string) => {
-    const response = await apiClient.patch<Order>(`/orders/${id}/hold`, { onHold, ...(onHold ? { reason } : {}) });
+  /** The order's status box: a new status, or hold / resume (onHold). The reason is required and logged. */
+  changeStatus: async (id: string, body: { status?: OrderStatus; onHold?: boolean; reason: string }) => {
+    const response = await apiClient.patch<Order>(`/orders/${id}/status-change`, body);
     return response.data;
   },
+
+  /** Who changed the order's status and why, newest first. */
+  getStatusLog: async (id: string) => (await apiClient.get<OrderStatusLogEntry[]>(`/orders/${id}/status-log`)).data,
+
+  /** Hold / cancel requests of an order with the admin's answers (provider, technician and staff only). */
+  getStatusRequests: async (id: string) => (await apiClient.get<OrderStatusRequestEntry[]>(`/orders/${id}/status-requests`)).data,
+
+  /** Admin: carry out a provider's / technician's hold or cancel request. */
+  approveStatusRequest: async (requestId: string) => (await apiClient.patch<Order>(`/orders/status-requests/${requestId}/approve`)).data,
+
+  /** Admin: turn the request down, saying why. */
+  rejectStatusRequest: async (requestId: string, note: string) => (await apiClient.patch<Order>(`/orders/status-requests/${requestId}/reject`, { note })).data,
 
   /** Provider: turn down the offer of a new order. The order stays open for the other providers. */
   declineOffer: async (id: string) => {

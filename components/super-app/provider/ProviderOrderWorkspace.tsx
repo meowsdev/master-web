@@ -12,13 +12,16 @@ import { MessageBubble } from '../order-chat/MessageBubble';
 import { ReviewCard } from '../order-chat/ReviewCard';
 import { CustomerAvatar } from './CustomerAvatar';
 import { CustomerRatingCard } from './CustomerRatingCard';
-import { ProviderOrderComposer } from './ProviderOrderComposer';
+import { ProviderOrderComposer, workCompleteState } from './ProviderOrderComposer';
 import { QuoteCard } from '../order-chat/QuoteCard';
 import { ProviderOrderPanels } from './ProviderOrderPanels';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { ProviderPendingActions } from './ProviderPendingActions';
 import { ProviderOrderInfoCard } from './ProviderOrderInfoCard';
-import { useOrderHold } from '../order-chat/OrderHoldBar';
+import { OrderHoldBanner } from '../order-chat/OrderHoldBar';
+import { OrderStatusBox } from '../order-chat/OrderStatusBox';
+import { OrderStatusHistory } from '../order-chat/OrderStatusHistory';
+import { OrderStatusRequestBar } from '../order-chat/OrderStatusRequestBar';
 import { ProviderPaymentNote } from './ProviderPaymentNote';
 import { providerOrderTitle } from './provider-order-filters';
 import { RevisionCard } from '../order-chat/RevisionCard';
@@ -31,7 +34,8 @@ interface ProviderOrderWorkspaceProps {
   onBack: () => void;
   onUpdateStatus: (status: OrderStatus) => Promise<void>;
   isUpdatingStatus: boolean;
-  onStartCall: (type: 'voice' | 'video') => void;
+  /** Kept for callers; the voice / video items left with the ⋮ menu (the owner chose the status box instead). */
+  onStartCall?: (type: 'voice' | 'video') => void;
   /** A technician works the order too, but cannot assign workers or rate the customer. */
   viewer?: 'PROVIDER' | 'TECHNICIAN';
 }
@@ -40,7 +44,7 @@ interface ProviderOrderWorkspaceProps {
  * One order for the provider: its full info, the extra charges and payment so far, and the live chat
  * with the customer, all on one timeline (oldest first). Accept / Decline sit on the order card; assign, extra charge and finish are in the + menu of the message box.
  */
-export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, isUpdatingStatus, onStartCall, viewer = 'PROVIDER' }: ProviderOrderWorkspaceProps) {
+export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, isUpdatingStatus, viewer = 'PROVIDER' }: ProviderOrderWorkspaceProps) {
   const isProviderViewer = viewer === 'PROVIDER';
   const { messages, draft, setDraft, submit, canSend } = useOrderChat(order, userId, 'PROVIDER');
   const { requests: extraCharges } = useExtraCharges(order.id, userId);
@@ -49,8 +53,8 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
   const bottomRef = useRef<HTMLDivElement>(null);
   // Shares the cache with the costs card below, so the + menu knows whether costs can still be sent.
   const { canSubmit: canSendCosts } = useExpenseClaims(order.id, userId);
-  // The order's provider and technician may hold or resume it; the backend checks they are really on it.
-  const hold = useOrderHold(order, true);
+  // The status box: the order's provider and technician hold / resume, cancel, and complete (through Work Complete).
+  const workComplete = workCompleteState(order);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [timeline.length]);
@@ -64,15 +68,20 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
         backLabel="Back to orders"
         onBack={onBack}
         onOpenTitle={() => openPanel(order.id, 'orderDetails')}
-        menuItems={[
-          { label: 'Order details', onSelect: () => openPanel(order.id, 'orderDetails') },
-          ...(hold.menuItem ? [hold.menuItem] : []),
-          { label: 'Voice call', onSelect: () => onStartCall('voice') },
-          { label: 'Video call', onSelect: () => onStartCall('video') },
-          { label: 'Open full order page', onSelect: () => window.open(`/orders/${order.id}`, '_blank') },
-        ]}
+        menuItems={[]}
+        trailing={
+          <OrderStatusBox
+            order={order}
+            isWorker
+            onComplete={() => openPanel(order.id, 'complete')}
+            canComplete={workComplete.isEnabled}
+            completeLabel={workComplete.label}
+          />
+        }
       />
-      {hold.bar}
+      <OrderHoldBanner order={order} />
+      {/* Their own Hold / Cancel request, waiting for an admin. */}
+      <OrderStatusRequestBar order={order} />
 
       <div className="flex min-h-0 flex-1 flex-col gap-[12px] overflow-y-auto bg-surface p-[16px]">
         {timeline.map((entry) => {
@@ -101,10 +110,11 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
         <RevisionCard order={order} canRequest={false} />
         {/* After the job: parts / costs for the admin to review (commission is then taken on total - costs). */}
         <ExpenseClaimsCard order={order} userId={userId} viewer={viewer} />
+        <OrderStatusHistory orderId={order.id} showRequests />
         <div ref={bottomRef} />
       </div>
 
-      <ProviderOrderComposer order={order} draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} onChooseAction={(kind) => openPanel(order.id, kind)} canAssignWorker={isProviderViewer} canSendCosts={canSendCosts} holdAction={hold.menuItem} />
+      <ProviderOrderComposer order={order} draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} onChooseAction={(kind) => openPanel(order.id, kind)} canAssignWorker={isProviderViewer} canSendCosts={canSendCosts} />
       <ProviderOrderPanels order={order} userId={userId} viewer={viewer} />
     </>
   );

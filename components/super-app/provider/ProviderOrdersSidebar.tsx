@@ -87,7 +87,7 @@ export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, 
             onSelect={onSelectOrder}
             title={providerOrderTitle(order)}
             avatar={<CustomerAvatar order={order} />}
-            statusOverride={hasOpenRevision(order) ? { text: 'Revision', className: 'text-[#b7791f]' } : undefined}
+            statusOverride={order.statusRequests?.length ? { text: 'অনুমোদনের অপেক্ষায়', className: 'text-[#b7791f]' } : hasOpenRevision(order) ? { text: 'Revision', className: 'text-[#b7791f]' } : undefined}
           />
         ))}
       </div>

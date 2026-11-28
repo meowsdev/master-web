@@ -176,7 +176,11 @@ export interface Order {
   isOnHold?: boolean;
   /** Why it is on hold. */
   holdReason?: string | null;
+  /** A provider's / technician's hold or cancel waiting for an admin (at most one). Missing on old API responses. */
+  statusRequests?: PendingOrderStatusRequest[];
   heldAt?: string | null;
+  /** Set when the order went to legal escalation (shown as Hold; replaces the old DISPUTED status). */
+  legalEscalatedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   /** Who created the order (a tag on every screen). Orders from before this was recorded are CUSTOMER. */
@@ -217,3 +221,37 @@ export interface Order {
   revisionDeadline?: string | null;
 }
 
+
+/** One change made from an order's status box: who, from what to what, and why. */
+export interface OrderStatusLogEntry {
+  id: string;
+  changedByRole: string;
+  changedByName: string | null;
+  fromStatus: OrderStatus;
+  toStatus: OrderStatus;
+  wasOnHold: boolean;
+  isOnHold: boolean;
+  reason: string;
+  /** Set when it was a provider's / technician's request that an admin approved. */
+  approvedByName?: string | null;
+  createdAt: string;
+}
+
+/** A provider's / technician's ask to hold (onHold) or cancel (toStatus CANCELLED), waiting for an admin. */
+export interface PendingOrderStatusRequest {
+  id: string;
+  requestedByRole: string;
+  requestedByName: string | null;
+  toStatus: OrderStatus | null;
+  onHold: boolean;
+  reason: string;
+  createdAt: string;
+}
+
+/** A hold / cancel request with the admin's answer. */
+export interface OrderStatusRequestEntry extends PendingOrderStatusRequest {
+  state: 'PENDING' | 'APPROVED' | 'REJECTED';
+  decidedByName: string | null;
+  decisionNote: string | null;
+  decidedAt: string | null;
+}

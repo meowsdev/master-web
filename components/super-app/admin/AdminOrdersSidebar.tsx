@@ -87,7 +87,7 @@ export function AdminOrdersSidebar({ user, onOrderOpened, onOpenAuth }: { user: 
             }}
             title={providerOrderTitle(order)}
             avatar={<CustomerAvatar order={order} />}
-            statusOverride={order.needsAttention ? { text: 'Needs provider', className: 'text-[#d64545]' } : hasOpenRevision(order) ? { text: 'Revision', className: 'text-[#b7791f]' } : order.hasPendingExpenseClaim ? { text: 'খরচ রিভিউ', className: 'text-[#b7791f]' } : undefined}
+            statusOverride={order.statusRequests?.length ? { text: 'অনুমোদন বাকি', className: 'text-[#b7791f]' } : order.needsAttention ? { text: 'Needs provider', className: 'text-[#d64545]' } : hasOpenRevision(order) ? { text: 'Revision', className: 'text-[#b7791f]' } : order.hasPendingExpenseClaim ? { text: 'খরচ রিভিউ', className: 'text-[#b7791f]' } : undefined}
           />
         ))}
       </div>

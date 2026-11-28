@@ -7,9 +7,9 @@ import { Order, OrderStatus } from '@/types/order.types';
 import { buildOrderTabLabel, formatScheduleDate, formatMessageTime } from './order-labels';
 
 const STATUS_TEXT: Partial<Record<OrderStatus, string>> = {
-  [OrderStatus.ACCEPTED]: 'Accepted',
-  [OrderStatus.IN_PROGRESS]: 'In progress',
-  [OrderStatus.COMPLETED]: 'Completed',
+  [OrderStatus.ACCEPTED]: 'Active',
+  [OrderStatus.IN_PROGRESS]: 'Active',
+  [OrderStatus.COMPLETED]: 'Complete',
 };
 
 function Line({ icon, children }: { icon: IconSvgElement; children: ReactNode }) {

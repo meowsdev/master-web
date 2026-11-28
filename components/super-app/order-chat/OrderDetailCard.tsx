@@ -40,7 +40,7 @@ export function OrderDetailCard({ order, onPayNow, onCancel, isCancelling }: Ord
   const isPaid = order.paymentStatus === PaymentStatus.PAID || Number(order.dueAmount) <= 0;
   // An advance needs a provider on the job and an order that is not settled yet (the backend enforces the same).
   const canPayAdvance = order.orderStatus === OrderStatus.ACCEPTED || order.orderStatus === OrderStatus.IN_PROGRESS;
-  const statusLabel = order.orderStatus === OrderStatus.COMPLETED ? 'Completed' : 'Accepted';
+  const statusLabel = order.orderStatus === OrderStatus.COMPLETED ? 'Complete' : 'Active';
   const waitingTime = useWaitingTime(order.createdAt, isWaiting ? null : order.acceptedAt ?? order.updatedAt);
   const [problemLine, ...surchargeLines] = detail?.priceBreakdown ?? [];
 

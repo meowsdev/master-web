@@ -6,22 +6,28 @@ import { hasOpenRevision } from './provider/provider-order-filters';
  * each with its count. "All" is added by the shared sidebar top. Every order falls in exactly one of these, so the
  * counts add up to All.
  */
-export const ORDER_LIST_CHIPS = ['Active', 'Revision', 'Complete', 'Cancel', 'Hold'] as const;
+export const ORDER_LIST_CHIPS = ['Pending', 'Active', 'Revision', 'Complete', 'Cancel', 'Hold'] as const;
 
-const RUNNING: OrderStatus[] = [OrderStatus.PENDING, OrderStatus.ACCEPTED, OrderStatus.IN_PROGRESS];
+/** Active: a provider has the order (ACCEPTED is how old orders said it). */
+const ACTIVE: OrderStatus[] = [OrderStatus.ACCEPTED, OrderStatus.IN_PROGRESS];
 
 /** Paused by its technician, provider or an admin. A hold only means something while the order is running. */
 export const isOrderOnHold = (order: Order) =>
   Boolean(order.isOnHold) && (order.orderStatus === OrderStatus.ACCEPTED || order.orderStatus === OrderStatus.IN_PROGRESS);
 
-/** Hold also keeps the disputed orders the platform paused before holds existed. */
-const isHeld = (order: Order) => isOrderOnHold(order) || order.orderStatus === OrderStatus.DISPUTED;
+/*
+ * Hold: a running order held by its people or an admin (legal escalation holds it too, and Resume lifts it), a pending
+ * order sent to legal escalation, or an old DISPUTED order.
+ */
+export const isHeld = (order: Order) =>
+  isOrderOnHold(order) || order.orderStatus === OrderStatus.DISPUTED || (Boolean(order.legalEscalatedAt) && order.orderStatus === OrderStatus.PENDING);
 const isInRevision = (order: Order) => !isHeld(order) && hasOpenRevision(order);
 
 export function matchesOrderListFilter(order: Order, chip: string): boolean {
   switch (chip) {
     case 'All': return true;
-    case 'Active': return RUNNING.includes(order.orderStatus) && !isHeld(order) && !isInRevision(order);
+    case 'Pending': return order.orderStatus === OrderStatus.PENDING && !isHeld(order);
+    case 'Active': return ACTIVE.includes(order.orderStatus) && !isHeld(order) && !isInRevision(order);
     case 'Revision': return isInRevision(order);
     case 'Complete': return order.orderStatus === OrderStatus.COMPLETED && !isInRevision(order);
     case 'Cancel': return order.orderStatus === OrderStatus.CANCELLED;

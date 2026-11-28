@@ -5,6 +5,7 @@ import { selectOpenOrderId, useOrderHistoryStore } from '@/store/useOrderHistory
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { ConversationHeader } from '../ConversationHeader';
 import { OrderChatPanel } from '../order-chat/OrderChatPanel';
+import { OrderStatusBox } from '../order-chat/OrderStatusBox';
 import { buildOrderTabLabel } from '../order-chat/order-labels';
 import { OrderAvatar } from './OrderAvatar';
 
@@ -21,7 +22,6 @@ interface CustomerOrdersCanvasProps {
 export function CustomerOrdersCanvas({ userId, onBackMobile, onOpenOrdersDrawer }: CustomerOrdersCanvasProps) {
   const { data: orders = [] } = useMyOrders(userId);
   const openOrderId = useOrderHistoryStore(selectOpenOrderId(userId));
-  const selectOrder = useOrderHistoryStore((state) => state.select);
   const openPanel = useOrderPanelStore((state) => state.open);
   const order = orders.find((item) => item.id === openOrderId);
 
@@ -44,11 +44,9 @@ export function CustomerOrdersCanvas({ userId, onBackMobile, onOpenOrdersDrawer 
         backLabel="Back to orders"
         onBack={onBackMobile}
         onOpenTitle={() => openPanel(order.id, 'orderDetails')}
-        menuItems={[
-          { label: 'Order details', onSelect: () => openPanel(order.id, 'orderDetails') },
-          { label: 'All orders', onSelect: onOpenOrdersDrawer },
-          { label: 'Close chat', onSelect: () => selectOrder(userId, null) },
-        ]}
+        menuItems={[]}
+        // The customer sees the running status (and Hold) but cannot change it.
+        trailing={<OrderStatusBox order={order} />}
       />
       {/* key: a different order starts a fresh timeline and scroll position. */}
       <OrderChatPanel key={order.id} order={order} userId={userId} onOpenOrders={onOpenOrdersDrawer} />

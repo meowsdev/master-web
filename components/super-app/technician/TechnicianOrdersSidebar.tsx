@@ -104,6 +104,7 @@ export function TechnicianOrdersSidebar({ user, onOrderOpened, onOpenAuth, onOpe
             }}
             title={providerOrderTitle(order)}
             avatar={<CustomerAvatar order={order} />}
+            statusOverride={order.statusRequests?.length ? { text: 'অনুমোদনের অপেক্ষায়', className: 'text-[#b7791f]' } : undefined}
           />
         ))}
       </div>

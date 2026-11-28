@@ -17,10 +17,12 @@ interface ConversationHeaderProps {
   onOpenTitle?: () => void;
   menuItems: HeaderMenuItem[];
   isDarkMode?: boolean;
+  /** In place of the ⋮ menu (shown only when there are menu items), e.g. an order's status box. */
+  trailing?: ReactNode;
 }
 
 /* The Figma chat header: back arrow (phones), picture, title, star rating and the ⋮ menu. Shared by service and order chats. */
-export function ConversationHeader({ picture, title, ratingLabel, backLabel, onBack, onOpenTitle, menuItems, isDarkMode = false }: ConversationHeaderProps) {
+export function ConversationHeader({ picture, title, ratingLabel, backLabel, onBack, onOpenTitle, menuItems, isDarkMode = false, trailing }: ConversationHeaderProps) {
   return (
     <header
       className={`flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-between gap-[12px] border-b px-[16px] ${
@@ -42,7 +44,8 @@ export function ConversationHeader({ picture, title, ratingLabel, backLabel, onB
         </button>
       </div>
 
-      <HeaderOptionsMenu items={menuItems} />
+      {trailing}
+      {menuItems.length > 0 && <HeaderOptionsMenu items={menuItems} />}
     </header>
   );
 }

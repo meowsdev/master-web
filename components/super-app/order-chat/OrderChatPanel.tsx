@@ -21,7 +21,8 @@ import { MessageBubble } from './MessageBubble';
 import { OrderChatComposer } from './OrderChatComposer';
 import { ReviewCard } from './ReviewCard';
 import { OrderDetailCard } from './OrderDetailCard';
-import { useOrderHold } from './OrderHoldBar';
+import { OrderHoldBanner } from './OrderHoldBar';
+import { OrderStatusHistory } from './OrderStatusHistory';
 
 interface OrderChatPanelProps {
   order: Order;
@@ -46,8 +47,6 @@ export function OrderChatPanel({ order, userId }: OrderChatPanelProps) {
   const { requests: extraCharges, approve, reject, isAnswering } = useExtraCharges(order.id, userId);
 
   const timeline = useOrderTimeline(order, messages, extraCharges);
-  // The customer cannot hold an order, only sees that it is held and why.
-  const hold = useOrderHold(order, false);
   const bottomRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -61,7 +60,7 @@ export function OrderChatPanel({ order, userId }: OrderChatPanelProps) {
 
   return (
     <>
-      {hold.bar}
+      <OrderHoldBanner order={order} />
       <div className="flex min-h-0 flex-1 flex-col gap-[12px] overflow-y-auto bg-surface p-[16px]">
         {timeline.map((entry) => {
           switch (entry.kind) {
@@ -95,6 +94,8 @@ export function OrderChatPanel({ order, userId }: OrderChatPanelProps) {
         <CustomerRatingNote order={order} viewer="CUSTOMER" />
         {/* 7-day warranty: send it back for revision, or see the one that is running. */}
         <RevisionCard order={order} canRequest />
+        {/* Why the status changed, written by staff or the provider. */}
+        <OrderStatusHistory orderId={order.id} />
         {/* Newest at the bottom: the view follows new items like WhatsApp. */}
         <div ref={bottomRef} />
       </div>
