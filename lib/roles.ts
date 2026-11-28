@@ -45,6 +45,8 @@ export interface StaffPermissions {
   canReviewKyc: boolean;
   /** Hide a customer review, or show it again (backend: ADMIN). New reviews are public. */
   canModerateReviews: boolean;
+  /** Put any running order on hold with a reason, or resume it (backend: ORDER_HOLD_STAFF_ROLES = ADMIN, MANAGER). */
+  canHoldOrders: boolean;
 }
 
 const NONE: StaffPermissions = {
@@ -68,6 +70,7 @@ const NONE: StaffPermissions = {
   canViewKyc: false,
   canReviewKyc: false,
   canModerateReviews: false,
+  canHoldOrders: false,
 };
 
 const MANAGER: StaffPermissions = {
@@ -91,6 +94,7 @@ const MANAGER: StaffPermissions = {
   canViewKyc: true,
   canReviewKyc: false,
   canModerateReviews: false,
+  canHoldOrders: true,
 };
 
 const PERMISSIONS_BY_ROLE: Record<string, StaffPermissions> = {

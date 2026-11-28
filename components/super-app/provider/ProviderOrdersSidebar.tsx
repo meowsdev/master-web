@@ -11,7 +11,8 @@ import { OrderHistoryListItem } from '../order-history/OrderHistoryListItem';
 import { SupportChatRow } from '../support/SupportChatRow';
 import { CustomerAvatar } from './CustomerAvatar';
 import { ProviderProfileHeader } from './ProviderProfileHeader';
-import { PROVIDER_FILTER_CHIPS, hasOpenRevision, matchesProviderFilter, providerOrderTitle } from './provider-order-filters';
+import { hasOpenRevision, providerOrderTitle } from './provider-order-filters';
+import { ORDER_LIST_CHIPS, countOrdersByChip, matchesOrderListFilter } from '../order-list-filters';
 
 interface ProviderOrdersSidebarProps {
   user: User;
@@ -32,13 +33,14 @@ interface ProviderOrdersSidebarProps {
 export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, onSelectOrder, onOpenAuth, onOpenSupport, isSupportOpen }: ProviderOrdersSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilterChip, setActiveFilterChip] = useState('All');
+  const chipCounts = useMemo(() => countOrdersByChip(orders), [orders]);
   const panelKind = useOrderPanelStore((state) => state.kind);
   const closePanel = useOrderPanelStore((state) => state.close);
 
   const visibleOrders = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return orders
-      .filter((order) => matchesProviderFilter(order, activeFilterChip))
+      .filter((order) => matchesOrderListFilter(order, activeFilterChip))
       .filter((order) => {
         if (!query) return true;
         const customer = order.customer?.user;
@@ -60,7 +62,8 @@ export function ProviderOrdersSidebar({ user, orders, isLoading, activeOrderId, 
         onSearchBlur={() => {}}
         activeFilterChip={activeFilterChip}
         onSelectFilterChip={setActiveFilterChip}
-        categoryNames={[...PROVIDER_FILTER_CHIPS]}
+        categoryNames={[...ORDER_LIST_CHIPS]}
+        chipCounts={chipCounts}
         isSearchCollapsed={false}
         searchPlaceholder="Search orders..."
         profileSlot={<ProviderProfileHeader user={user} />}

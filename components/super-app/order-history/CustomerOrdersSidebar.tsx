@@ -8,7 +8,7 @@ import { User } from '@/types/auth.types';
 import { CustomerSidebarTop } from '../CustomerSidebarTop';
 import { buildOrderTabLabel } from '../order-chat/order-labels';
 import { OrderHistoryListItem } from './OrderHistoryListItem';
-import { ORDER_FILTER_CHIPS, matchesOrderFilter } from './order-status';
+import { ORDER_LIST_CHIPS, countOrdersByChip, matchesOrderListFilter } from '../order-list-filters';
 
 interface CustomerOrdersSidebarProps {
   user: User;
@@ -25,6 +25,7 @@ interface CustomerOrdersSidebarProps {
  */
 export function CustomerOrdersSidebar({ user, onStartNewOrder, onOpenAuth, onOpenProfile, onOrderOpened }: CustomerOrdersSidebarProps) {
   const { data: orders = [], isLoading } = useMyOrders(user.id);
+  const chipCounts = useMemo(() => countOrdersByChip(orders), [orders]);
   const openOrderId = useOrderHistoryStore(selectOpenOrderId(user.id));
   const selectOrder = useOrderHistoryStore((state) => state.select);
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,7 +34,7 @@ export function CustomerOrdersSidebar({ user, onStartNewOrder, onOpenAuth, onOpe
   const visibleOrders = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return orders
-      .filter((order) => matchesOrderFilter(order.orderStatus, activeFilterChip))
+      .filter((order) => matchesOrderListFilter(order, activeFilterChip))
       .filter((order) => !query || `${buildOrderTabLabel(order)} ${order.service?.name ?? ''} ${order.service?.category?.name ?? ''}`.toLowerCase().includes(query))
       .sort((newer, older) => older.createdAt.localeCompare(newer.createdAt));
   }, [orders, searchQuery, activeFilterChip]);
@@ -57,7 +58,8 @@ export function CustomerOrdersSidebar({ user, onStartNewOrder, onOpenAuth, onOpe
         onSearchBlur={() => {}}
         activeFilterChip={activeFilterChip}
         onSelectFilterChip={setActiveFilterChip}
-        categoryNames={[...ORDER_FILTER_CHIPS]}
+        categoryNames={[...ORDER_LIST_CHIPS]}
+        chipCounts={chipCounts}
         isSearchCollapsed={false}
         searchPlaceholder="Search orders..."
       />

@@ -9,6 +9,8 @@ import { useOrderTimeline } from '@/hooks/useOrderTimeline';
 import { useStaffPermissions } from '@/hooks/useStaffPermissions';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { Order, OrderStatus } from '@/types/order.types';
+import { useOrderHold } from '../order-chat/OrderHoldBar';
+import { OrderPlusMenu } from '../order-chat/OrderPlusMenu';
 import { ConversationHeader } from '../ConversationHeader';
 import { AdvancePaymentCard } from '../order-chat/AdvancePaymentCard';
 import { ExtraChargeCard } from '../order-chat/ExtraChargeCard';
@@ -40,10 +42,12 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
   const details = useOrderDetailsPanel(order.id);
   // Nobody has taken it yet: staff who may assign can send it to a provider.
   const isWaitingForProvider = order.orderStatus === OrderStatus.PENDING;
-  const { canAssignOrders, canSendToRevision } = useStaffPermissions();
+  const { canAssignOrders, canSendToRevision, canHoldOrders } = useStaffPermissions();
   const panelKind = useOrderPanelStore((state) => state.kind);
   const panelOrderId = useOrderPanelStore((state) => state.orderId);
   const closePanel = useOrderPanelStore((state) => state.close);
+  // Staff with the hold permission (admin, manager) may hold or resume any running order; others only see it is held.
+  const hold = useOrderHold(order, canHoldOrders);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [timeline.length]);
@@ -59,9 +63,11 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
         onOpenTitle={details.open}
         menuItems={[
           { label: 'Order details', onSelect: details.open },
+          ...(hold.menuItem ? [hold.menuItem] : []),
           { label: 'Open full order page', onSelect: () => window.open(`/orders/${order.id}`, '_blank') },
         ]}
       />
+      {hold.bar}
 
       {isWaitingForProvider && (
         <div className="flex shrink-0 items-center justify-between gap-[12px] border-b border-line bg-[#fff4e5] px-[16px] py-[8px]">
@@ -109,7 +115,14 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
         <div ref={bottomRef} />
       </div>
 
-      <OrderChatComposer draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} isDisabled={order.isChatOpen === false} />
+      <OrderChatComposer
+        draft={draft}
+        onDraftChange={setDraft}
+        onSubmit={submit}
+        canSend={canSend}
+        isDisabled={order.isChatOpen === false}
+        actions={hold.menuItem ? <OrderPlusMenu items={[{ ...hold.menuItem, isResume: Boolean(order.isOnHold) }]} /> : undefined}
+      />
       {details.isOpen && <OrderDetailsPanel order={order} viewer="ADMIN" onClose={details.close} />}
       {panelKind === 'revision' && panelOrderId === order.id && <RevisionRequestPanel order={order} onClose={closePanel} />}
       {panelKind === 'expenseReview' && panelOrderId === order.id && <ExpenseReviewPanel order={order} userId={userId} onClose={closePanel} />}

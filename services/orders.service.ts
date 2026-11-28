@@ -55,6 +55,12 @@ export const ordersService = {
     return response.data;
   },
 
+  /** Hold a running order (a reason is required) or resume it: its technician, its provider or an admin. */
+  setHold: async (id: string, onHold: boolean, reason?: string) => {
+    const response = await apiClient.patch<Order>(`/orders/${id}/hold`, { onHold, ...(onHold ? { reason } : {}) });
+    return response.data;
+  },
+
   /** Provider: turn down the offer of a new order. The order stays open for the other providers. */
   declineOffer: async (id: string) => {
     const response = await apiClient.post<{ declined: true }>(`/orders/${id}/decline-offer`);

@@ -8,6 +8,7 @@ import { buildOrderTabLabel } from '@/components/super-app/order-chat/order-labe
 import { OrderAvatar } from './OrderAvatar';
 import { OrderCreatorTag } from './OrderCreatorTag';
 import { ORDER_STATUS_LABEL } from './order-status';
+import { isOrderOnHold } from '../order-list-filters';
 
 interface OrderHistoryListItemProps {
   order: Order;
@@ -23,7 +24,8 @@ interface OrderHistoryListItemProps {
 
 /* One row of the Orders list, in the same shape as a service row: picture, title, subtitle, status. */
 export function OrderHistoryListItem({ order, isSelected, onSelect, title, avatar, statusOverride }: OrderHistoryListItemProps) {
-  const status = statusOverride ?? ORDER_STATUS_LABEL[order.orderStatus];
+  // A held order says so on every role's list, before any other note.
+  const status = isOrderOnHold(order) ? { text: 'Hold', className: 'text-[#b7791f]' } : statusOverride ?? ORDER_STATUS_LABEL[order.orderStatus];
 
   return (
     <button

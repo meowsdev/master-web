@@ -18,6 +18,7 @@ import { ProviderOrderPanels } from './ProviderOrderPanels';
 import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { ProviderPendingActions } from './ProviderPendingActions';
 import { ProviderOrderInfoCard } from './ProviderOrderInfoCard';
+import { useOrderHold } from '../order-chat/OrderHoldBar';
 import { ProviderPaymentNote } from './ProviderPaymentNote';
 import { providerOrderTitle } from './provider-order-filters';
 import { RevisionCard } from '../order-chat/RevisionCard';
@@ -48,6 +49,8 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
   const bottomRef = useRef<HTMLDivElement>(null);
   // Shares the cache with the costs card below, so the + menu knows whether costs can still be sent.
   const { canSubmit: canSendCosts } = useExpenseClaims(order.id, userId);
+  // The order's provider and technician may hold or resume it; the backend checks they are really on it.
+  const hold = useOrderHold(order, true);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [timeline.length]);
@@ -63,11 +66,13 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
         onOpenTitle={() => openPanel(order.id, 'orderDetails')}
         menuItems={[
           { label: 'Order details', onSelect: () => openPanel(order.id, 'orderDetails') },
+          ...(hold.menuItem ? [hold.menuItem] : []),
           { label: 'Voice call', onSelect: () => onStartCall('voice') },
           { label: 'Video call', onSelect: () => onStartCall('video') },
           { label: 'Open full order page', onSelect: () => window.open(`/orders/${order.id}`, '_blank') },
         ]}
       />
+      {hold.bar}
 
       <div className="flex min-h-0 flex-1 flex-col gap-[12px] overflow-y-auto bg-surface p-[16px]">
         {timeline.map((entry) => {
@@ -99,7 +104,7 @@ export function ProviderOrderWorkspace({ order, userId, onBack, onUpdateStatus, 
         <div ref={bottomRef} />
       </div>
 
-      <ProviderOrderComposer order={order} draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} onChooseAction={(kind) => openPanel(order.id, kind)} canAssignWorker={isProviderViewer} canSendCosts={canSendCosts} />
+      <ProviderOrderComposer order={order} draft={draft} onDraftChange={setDraft} onSubmit={submit} canSend={canSend} onChooseAction={(kind) => openPanel(order.id, kind)} canAssignWorker={isProviderViewer} canSendCosts={canSendCosts} holdAction={hold.menuItem} />
       <ProviderOrderPanels order={order} userId={userId} viewer={viewer} />
     </>
   );

@@ -11,7 +11,8 @@ import { Order } from '@/types/order.types';
 import { CustomerSidebarTop } from '../CustomerSidebarTop';
 import { OrderHistoryListItem } from '../order-history/OrderHistoryListItem';
 import { CustomerAvatar } from '../provider/CustomerAvatar';
-import { PROVIDER_FILTER_CHIPS, hasOpenRevision, matchesProviderFilter, providerOrderTitle } from '../provider/provider-order-filters';
+import { hasOpenRevision, providerOrderTitle } from '../provider/provider-order-filters';
+import { ORDER_LIST_CHIPS, countOrdersByChip, matchesOrderListFilter } from '../order-list-filters';
 import { StaffSidebarHeader } from './AdminProfileHeader';
 
 /** Every order on the platform, newest first. The backend returns all of them for an admin. */
@@ -30,6 +31,7 @@ export function useAdminOrders(userId: string | undefined) {
  */
 export function AdminOrdersSidebar({ user, onOrderOpened, onOpenAuth }: { user: User; onOrderOpened: () => void; onOpenAuth: () => void }) {
   const { data: orders = [], isLoading } = useAdminOrders(user.id);
+  const chipCounts = useMemo(() => countOrdersByChip(orders), [orders]);
   const openOrderId = useOrderHistoryStore(selectOpenOrderId(user.id));
   const selectOrder = useOrderHistoryStore((state) => state.select);
   const openPanel = useOrderPanelStore((state) => state.open);
@@ -40,7 +42,7 @@ export function AdminOrdersSidebar({ user, onOrderOpened, onOpenAuth }: { user: 
   const visibleOrders = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return orders
-      .filter((order) => matchesProviderFilter(order, activeFilterChip))
+      .filter((order) => matchesOrderListFilter(order, activeFilterChip))
       .filter((order) => {
         if (!query) return true;
         const customer = order.customer?.user;
@@ -64,7 +66,8 @@ export function AdminOrdersSidebar({ user, onOrderOpened, onOpenAuth }: { user: 
         onSearchBlur={() => {}}
         activeFilterChip={activeFilterChip}
         onSelectFilterChip={setActiveFilterChip}
-        categoryNames={[...PROVIDER_FILTER_CHIPS]}
+        categoryNames={[...ORDER_LIST_CHIPS]}
+        chipCounts={chipCounts}
         isSearchCollapsed={false}
         searchPlaceholder="Search all orders..."
         profileSlot={<StaffSidebarHeader user={user} action={canCreateOrders ? { label: 'New order', onClick: () => openPanel(null, 'adminOrder') } : undefined} />}

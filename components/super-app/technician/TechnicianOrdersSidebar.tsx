@@ -7,7 +7,8 @@ import { User } from '@/types/auth.types';
 import { CustomerSidebarTop } from '../CustomerSidebarTop';
 import { OrderHistoryListItem } from '../order-history/OrderHistoryListItem';
 import { CustomerAvatar } from '../provider/CustomerAvatar';
-import { PROVIDER_FILTER_CHIPS, matchesProviderFilter, providerOrderTitle } from '../provider/provider-order-filters';
+import { providerOrderTitle } from '../provider/provider-order-filters';
+import { ORDER_LIST_CHIPS, countOrdersByChip, matchesOrderListFilter } from '../order-list-filters';
 import { MyRatingButton } from '../reviews/MyRatingButton';
 import { ProfileTrigger } from '../ProfileTrigger';
 import { SupportChatRow } from '../support/SupportChatRow';
@@ -27,6 +28,7 @@ interface TechnicianOrdersSidebarProps {
  */
 export function TechnicianOrdersSidebar({ user, onOrderOpened, onOpenAuth, onOpenSupport, isSupportOpen }: TechnicianOrdersSidebarProps) {
   const { data: orders = [], isLoading } = useTechnicianOrders(user.id);
+  const chipCounts = useMemo(() => countOrdersByChip(orders), [orders]);
   const openOrderId = useOrderHistoryStore(selectOpenOrderId(user.id));
   const selectOrder = useOrderHistoryStore((state) => state.select);
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,7 +37,7 @@ export function TechnicianOrdersSidebar({ user, onOrderOpened, onOpenAuth, onOpe
   const visibleOrders = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return orders
-      .filter((order) => matchesProviderFilter(order, activeFilterChip))
+      .filter((order) => matchesOrderListFilter(order, activeFilterChip))
       .filter((order) => {
         if (!query) return true;
         const customer = order.customer?.user;
@@ -56,7 +58,8 @@ export function TechnicianOrdersSidebar({ user, onOrderOpened, onOpenAuth, onOpe
         onSearchBlur={() => {}}
         activeFilterChip={activeFilterChip}
         onSelectFilterChip={setActiveFilterChip}
-        categoryNames={[...PROVIDER_FILTER_CHIPS]}
+        categoryNames={[...ORDER_LIST_CHIPS]}
+        chipCounts={chipCounts}
         isSearchCollapsed={false}
         searchPlaceholder="Search my jobs..."
         profileSlot={

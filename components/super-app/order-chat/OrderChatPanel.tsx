@@ -21,6 +21,7 @@ import { MessageBubble } from './MessageBubble';
 import { OrderChatComposer } from './OrderChatComposer';
 import { ReviewCard } from './ReviewCard';
 import { OrderDetailCard } from './OrderDetailCard';
+import { useOrderHold } from './OrderHoldBar';
 
 interface OrderChatPanelProps {
   order: Order;
@@ -45,6 +46,8 @@ export function OrderChatPanel({ order, userId }: OrderChatPanelProps) {
   const { requests: extraCharges, approve, reject, isAnswering } = useExtraCharges(order.id, userId);
 
   const timeline = useOrderTimeline(order, messages, extraCharges);
+  // The customer cannot hold an order, only sees that it is held and why.
+  const hold = useOrderHold(order, false);
   const bottomRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -58,6 +61,7 @@ export function OrderChatPanel({ order, userId }: OrderChatPanelProps) {
 
   return (
     <>
+      {hold.bar}
       <div className="flex min-h-0 flex-1 flex-col gap-[12px] overflow-y-auto bg-surface p-[16px]">
         {timeline.map((entry) => {
           switch (entry.kind) {

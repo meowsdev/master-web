@@ -29,6 +29,8 @@ interface CustomerSidebarTopProps {
   onSelectFilterChip: (chip: FilterChip) => void;
   /** Service categories from the backend, shown as chips after "All" like the Figma design. */
   categoryNames: string[];
+  /** Order lists: how many each chip holds, shown as "Active (3)". Chips left out show no number. */
+  chipCounts?: Record<string, number>;
   /** False when the options-menu header (staff roles) already renders the brand row. */
   showBrandRow?: boolean;
   isSearchCollapsed: boolean;
@@ -57,6 +59,7 @@ export function CustomerSidebarTop({
   activeFilterChip,
   onSelectFilterChip,
   categoryNames,
+  chipCounts,
   showBrandRow = true,
   isSearchCollapsed,
   searchPlaceholder = 'Search services...',
@@ -132,7 +135,7 @@ export function CustomerSidebarTop({
       {/* Many categories overflow the row: wheel, drag and the arrows all scroll it sideways. */}
       <ChipRow
         label="categories"
-        chips={filterChips.map((chip) => ({ id: chip, label: chip }))}
+        chips={filterChips.map((chip) => ({ id: chip, label: chipCounts?.[chip] !== undefined ? `${chip} (${chipCounts[chip]})` : chip }))}
         activeId={activeFilterChip}
         onSelect={onSelectFilterChip}
         trailing={chipsTrailing}

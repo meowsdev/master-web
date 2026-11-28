@@ -172,6 +172,11 @@ export interface Order {
   dueAmount: string | number;
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
+  /** Paused by its technician, provider or an admin; orderStatus stays as it was. Missing on old API responses. */
+  isOnHold?: boolean;
+  /** Why it is on hold. */
+  holdReason?: string | null;
+  heldAt?: string | null;
   createdAt: string;
   updatedAt: string;
   /** Who created the order (a tag on every screen). Orders from before this was recorded are CUSTOMER. */
