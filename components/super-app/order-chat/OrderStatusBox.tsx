@@ -9,6 +9,7 @@ import { ordersService } from '@/services/orders.service';
 import { Order, OrderStatus, PaymentStatus } from '@/types/order.types';
 import { isHeld } from '../order-list-filters';
 import { hasOpenRevision } from '../provider/provider-order-filters';
+import { revisionDaysLeft } from '@/lib/revision';
 
 /*
  * The six order states, as the status box and its history call them, with their dot colours. ACCEPTED (old orders)
@@ -26,13 +27,17 @@ export const ORDER_STATUS_BOX_LABEL: Record<OrderStatus | 'HOLD' | 'REVISION', {
 };
 
 /*
- * What an admin can set from the box: Pending, Active, Complete, Cancel (Hold / Resume are their own entries).
- * Revision is not set here: it opens from the 7-day warranty (Send for revision), as before.
+ * Where an admin can move the order from the box. Orders only go forward (the backend's order-transitions.ts says the
+ * same): nothing goes back to Pending, Cancel and Complete are final, a held order is resumed before it is completed,
+ * and a revision is neither cancelled nor completed here (the provider finishes it with Revision Done). A pending
+ * order becomes Active only when a provider takes it (Accept, or staff sending it to one), never from the box.
  */
-const SETTABLE_STATUSES: OrderStatus[] = [OrderStatus.PENDING, OrderStatus.IN_PROGRESS, OrderStatus.COMPLETED, OrderStatus.CANCELLED];
-/** Old ACCEPTED orders are Active: the same entry. */
-const sameState = (first: OrderStatus, second: OrderStatus) =>
-  first === second || ([first, second].every((status) => status === OrderStatus.ACCEPTED || status === OrderStatus.IN_PROGRESS));
+function adminMoves(order: Order, isOrderHeld: boolean, isInRevision: boolean): OrderStatus[] {
+  if (order.orderStatus === OrderStatus.PENDING) return [OrderStatus.CANCELLED];
+  const isRunning = order.orderStatus === OrderStatus.ACCEPTED || order.orderStatus === OrderStatus.IN_PROGRESS;
+  if (!isRunning || isInRevision) return [];
+  return isOrderHeld ? [OrderStatus.CANCELLED] : [OrderStatus.COMPLETED, OrderStatus.CANCELLED];
+}
 
 /** Every role's order list and this order's history; each refreshes after a change. */
 const KEYS_TO_REFRESH = ['provider-assigned-orders', 'admin-orders', 'my-orders-drawer'];
@@ -43,7 +48,7 @@ interface StatusOption {
   /** Dot colour of what it leads to. */
   dot: string;
   /** A new status, or hold / resume, or the Work Complete panel (it takes the payment). */
-  change: { status: OrderStatus } | { onHold: boolean } | 'complete';
+  change: { status: OrderStatus } | { onHold: boolean } | 'complete' | 'revision';
   isEnabled?: boolean;
   /** Shown before confirming: what this change cannot undo. */
   warning?: string;
@@ -63,6 +68,11 @@ interface OrderStatusBoxProps {
   onComplete?: () => void;
   canComplete?: boolean;
   completeLabel?: string;
+  /**
+   * The customer, or an admin who may: send a completed order back for revision while the 7-day warranty runs
+   * (opens the revision form). For the customer this is the box's only entry, so it is clickable only then.
+   */
+  onRequestRevision?: () => void;
 }
 
 const apiErrorMessage = (error: unknown) => {
@@ -77,7 +87,7 @@ const apiErrorMessage = (error: unknown) => {
  * Resume. Every change asks why, and the reason is saved in the order's status history. Everyone else only sees it.
  * A provider's or technician's Hold and Cancel are requests: they wait for an admin (one at a time), Resume is at once.
  */
-export function OrderStatusBox({ order, canSetAnyStatus = false, isWorker = false, canHold = false, onComplete, canComplete = false, completeLabel = 'Complete' }: OrderStatusBoxProps) {
+export function OrderStatusBox({ order, canSetAnyStatus = false, isWorker = false, canHold = false, onComplete, canComplete = false, completeLabel = 'Complete', onRequestRevision }: OrderStatusBoxProps) {
   const queryClient = useQueryClient();
   const boxRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -86,7 +96,8 @@ export function OrderStatusBox({ order, canSetAnyStatus = false, isWorker = fals
 
   const isOrderHeld = isHeld(order);
   const isRunning = order.orderStatus === OrderStatus.ACCEPTED || order.orderStatus === OrderStatus.IN_PROGRESS;
-  const current = ORDER_STATUS_BOX_LABEL[isOrderHeld ? 'HOLD' : hasOpenRevision(order) ? 'REVISION' : order.orderStatus];
+  const isInRevision = hasOpenRevision(order);
+  const current = ORDER_STATUS_BOX_LABEL[isOrderHeld ? 'HOLD' : isInRevision ? 'REVISION' : order.orderStatus];
   const isPaid = order.paymentStatus !== PaymentStatus.UNPAID;
   // The order's provider / technician ask an admin to hold or cancel; staff with the right do it themselves.
   const asksAdmin = isWorker && !canHold && !canSetAnyStatus;
@@ -108,16 +119,16 @@ export function OrderStatusBox({ order, canSetAnyStatus = false, isWorker = fals
     );
   }
   if (canSetAnyStatus) {
-    for (const status of SETTABLE_STATUSES) {
-      if (sameState(status, order.orderStatus)) continue;
+    for (const status of adminMoves(order, isOrderHeld, isInRevision)) {
       let warning: string | undefined;
-      if (order.completedAt && status !== OrderStatus.COMPLETED) warning = 'এই order-এর commission আগেই কাটা হয়েছে; status বদলালেও তা ফেরত যাবে না।';
-      else if (status === OrderStatus.COMPLETED) warning = 'Provider-এর commission কাটা হবে, কিন্তু customer-এর payment এখানে নেওয়া হবে না।';
+      if (status === OrderStatus.COMPLETED) warning = 'Provider-এর commission কাটা হবে, কিন্তু customer-এর payment এখানে নেওয়া হবে না। Complete-এর পর আর বদলানো যাবে না।';
+      if (status === OrderStatus.CANCELLED) warning = 'Cancel-এর পর order আর কোনো status-এ যাবে না।';
       if (status === OrderStatus.CANCELLED && isPaid) warning = 'Customer টাকা দিয়েছেন; cancel করলে refund নিজে থেকে হবে না।';
       options.push({ key: status, label: ORDER_STATUS_BOX_LABEL[status].text, dot: ORDER_STATUS_BOX_LABEL[status].dot, change: { status }, warning });
     }
   } else if (isWorker && isRunning) {
-    options.push({
+    // A revision is not cancelled: it is finished with Revision Done.
+    if (!isInRevision) options.push({
       key: 'CANCELLED',
       label: 'Cancel (Admin অনুমোদন লাগবে)',
       dot: ORDER_STATUS_BOX_LABEL.CANCELLED.dot,
@@ -126,6 +137,17 @@ export function OrderStatusBox({ order, canSetAnyStatus = false, isWorker = fals
       isEnabled: !hasWaitingRequest,
     });
     if (onComplete) options.push({ key: 'complete', label: completeLabel, dot: ORDER_STATUS_BOX_LABEL.COMPLETED.dot, change: 'complete', isEnabled: canComplete });
+  }
+
+  // Completed and still under warranty: Revision, for whoever may ask for it.
+  const warrantyDaysLeft = revisionDaysLeft(order);
+  if (onRequestRevision && warrantyDaysLeft !== null) {
+    options.push({
+      key: 'revision',
+      label: `রিভিশনে পাঠান (আর ${warrantyDaysLeft.toLocaleString('bn-BD')} দিন বাকি)`,
+      dot: ORDER_STATUS_BOX_LABEL.REVISION.dot,
+      change: 'revision',
+    });
   }
 
   useEffect(() => {
@@ -189,9 +211,10 @@ export function OrderStatusBox({ order, canSetAnyStatus = false, isWorker = fals
                   role="menuitem"
                   disabled={option.isEnabled === false}
                   onClick={() => {
-                    if (option.change === 'complete') {
+                    if (option.change === 'complete' || option.change === 'revision') {
                       close();
-                      onComplete?.();
+                      if (option.change === 'complete') onComplete?.();
+                      else onRequestRevision?.();
                       return;
                     }
                     setChosen(option);
@@ -208,7 +231,7 @@ export function OrderStatusBox({ order, canSetAnyStatus = false, isWorker = fals
               className="flex flex-col gap-[8px] p-[6px]"
               onSubmit={(event) => {
                 event.preventDefault();
-                if (reason.trim().length >= 3 && chosen.change !== 'complete') save.mutate(chosen.change);
+                if (reason.trim().length >= 3 && typeof chosen.change !== 'string') save.mutate(chosen.change);
               }}
             >
               <p className="text-[13px] font-semibold text-ink">

@@ -30,7 +30,7 @@ export function workCompleteState(order: Order): { label: string; isEnabled: boo
   const isInRevision = Boolean(openRevision(order));
   return {
     label: isWaitingForOnlinePayment ? 'Waiting for payment...' : isInRevision ? 'Revision Done' : 'Work Complete',
-    isEnabled: order.orderStatus === OrderStatus.IN_PROGRESS && !isWaitingForOnlinePayment && !order.isPricePending,
+    isEnabled: order.orderStatus === OrderStatus.IN_PROGRESS && !isWaitingForOnlinePayment && !order.isPricePending && !order.isOnHold,
   };
 }
 

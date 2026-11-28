@@ -1,5 +1,6 @@
 'use client';
 
+import { ReactNode } from 'react';
 import { Service } from '@/types/service.types';
 import { ConversationHeader } from './ConversationHeader';
 
@@ -11,6 +12,8 @@ interface ChatHeaderProps {
   onClearChat: () => void;
   onOpenDetails?: () => void;
   isDarkMode: boolean;
+  /** Before the ⋮ menu, e.g. the open order tab's status box. */
+  trailing?: ReactNode;
 }
 
 const isImageSource = (value: string) => /^(https?:)?\//.test(value);
@@ -19,7 +22,7 @@ const isImageSource = (value: string) => /^(https?:)?\//.test(value);
  * Header of an open service (Figma): profile picture, service name, star rating and the ⋮ menu.
  * Booking is no longer a header button; it lives in the Place Order card and the ⋮ menu.
  */
-export function ChatHeader({ activeService, onBackMobile, onBackToWelcome, onOpenBooking, onOpenDetails, isDarkMode }: ChatHeaderProps) {
+export function ChatHeader({ activeService, onBackMobile, onBackToWelcome, onOpenBooking, onOpenDetails, isDarkMode, trailing }: ChatHeaderProps) {
   const profileSource = activeService.imageUrl || activeService.category?.iconUrl || null;
   const averageRating = activeService.providerSummary?.averageRating ?? null;
 
@@ -41,6 +44,7 @@ export function ChatHeader({ activeService, onBackMobile, onBackToWelcome, onOpe
       backLabel="Back to services"
       onBack={onBackMobile}
       onOpenTitle={onOpenDetails}
+      trailing={trailing}
       menuItems={[
         { label: 'Service info', onSelect: () => onOpenDetails?.() },
         { label: 'Place Order', onSelect: onOpenBooking },

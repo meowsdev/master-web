@@ -45,8 +45,9 @@ export function CustomerOrdersCanvas({ userId, onBackMobile, onOpenOrdersDrawer 
         onBack={onBackMobile}
         onOpenTitle={() => openPanel(order.id, 'orderDetails')}
         menuItems={[]}
-        // The customer sees the running status (and Hold) but cannot change it.
-        trailing={<OrderStatusBox order={order} />}
+        // The customer sees the status change (Pending, Active, Complete...) but cannot change it; once the work is
+        // complete and the warranty runs, the box opens to send it back for revision.
+        trailing={<OrderStatusBox order={order} onRequestRevision={() => openPanel(order.id, 'revision')} />}
       />
       {/* key: a different order starts a fresh timeline and scroll position. */}
       <OrderChatPanel key={order.id} order={order} userId={userId} onOpenOrders={onOpenOrdersDrawer} />

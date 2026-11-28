@@ -93,7 +93,7 @@ export function OrderChatPanel({ order, userId }: OrderChatPanelProps) {
         {/* Completed: what the provider said about the customer. */}
         <CustomerRatingNote order={order} viewer="CUSTOMER" />
         {/* 7-day warranty: send it back for revision, or see the one that is running. */}
-        <RevisionCard order={order} canRequest />
+        <RevisionCard order={order} />
         {/* Why the status changed, written by staff or the provider. */}
         <OrderStatusHistory orderId={order.id} />
         {/* Newest at the bottom: the view follows new items like WhatsApp. */}

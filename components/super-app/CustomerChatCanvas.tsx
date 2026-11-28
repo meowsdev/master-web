@@ -8,6 +8,8 @@ import { ChatHeader } from './ChatHeader';
 import { OrderTabsBar, SERVICES_TAB } from './order-chat/OrderTabsBar';
 import { ServicesTab } from './catalog/ServicesTab';
 import { OrderChatPanel } from './order-chat/OrderChatPanel';
+import { OrderStatusBox } from './order-chat/OrderStatusBox';
+import { useOrderPanelStore } from '@/store/useOrderPanelStore';
 import { useCustomerOrderTabs } from '@/hooks/useCustomerOrderTabs';
 
 interface CustomerChatCanvasProps {
@@ -52,6 +54,7 @@ export function CustomerChatCanvas({
   onRequireAuth,
 }: CustomerChatCanvasProps) {
   const [isCompletingBanner, setIsCompletingBanner] = useState(false);
+  const openPanel = useOrderPanelStore((state) => state.open);
   const orderTabs = useCustomerOrderTabs(userId, activeService.categoryId);
   // With no tab picked yet, the newest running order opens; with none running, the Services tab (the sub-service
   // cards). A picked order that has since closed falls back the same way.
@@ -68,6 +71,8 @@ export function CustomerChatCanvas({
         onClearChat={() => onClearChat(activeServiceId)}
         onOpenDetails={onOpenDetails}
         isDarkMode={isDarkMode}
+        // An order tab is open: its status, which opens for a revision once the work is complete (7-day warranty).
+        trailing={selectedOrder ? <OrderStatusBox order={selectedOrder} onRequestRevision={() => openPanel(selectedOrder.id, 'revision')} /> : undefined}
       />
 
       {isAuthenticated && orderTabs.length > 0 && <OrderTabsBar orders={orderTabs} selectedTab={selectedTab} onSelect={onSelectOrderTab} />}

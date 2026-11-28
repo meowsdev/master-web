@@ -63,7 +63,15 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
         onOpenTitle={details.open}
         menuItems={[]}
         // Admin: any status; managers: hold / resume; other staff only see the status.
-        trailing={<OrderStatusBox order={order} canSetAnyStatus={canChangeOrderStatus} canHold={canHoldOrders} />}
+        trailing={
+          <OrderStatusBox
+            order={order}
+            canSetAnyStatus={canChangeOrderStatus}
+            canHold={canHoldOrders}
+            // Within the 7-day warranty, staff who may send it back for revision (admin) find it here too.
+            onRequestRevision={canSendToRevision ? () => openPanel(order.id, 'revision') : undefined}
+          />
+        }
       />
       <OrderHoldBanner order={order} />
       {/* A provider's / technician's Hold or Cancel: an admin approves or rejects it here. */}
@@ -109,7 +117,7 @@ export function AdminOrderWorkspace({ order, userId, onBack }: { order: Order; u
         {/* Completed: the provider's rating of the customer. */}
         <CustomerRatingNote order={order} viewer="ADMIN" />
         {/* 7-day warranty: staff who may (admin) can send it back for revision. */}
-        <RevisionCard order={order} canRequest={canSendToRevision} />
+        <RevisionCard order={order} />
         {/* The provider's job costs; an admin reviews and approves them. */}
         <ExpenseClaimsCard order={order} userId={userId} viewer="ADMIN" />
         <OrderStatusHistory orderId={order.id} showRequests />
