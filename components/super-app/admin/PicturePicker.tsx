@@ -2,8 +2,9 @@
 
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Camera01Icon } from '@hugeicons/core-free-icons';
 import { adminService } from '@/services/admin.service';
-import { IconGrid } from './IconGrid';
 
 const isImageSource = (value: string) => /^(https?:)?\//.test(value);
 
@@ -19,19 +20,17 @@ interface PicturePickerProps {
 }
 
 /*
- * The picture of a service or main service: either an image the admin uploads, or an icon from Hugeicons.
- * Both end up as one link, so the rest of the app shows them the same way.
+ * The picture of a service or main service, like the profile photo: a 120px grey camera circle. Pressing it uploads
+ * an image; the circle then shows it. Pictures saved before (old icons included) keep showing as they are.
  */
 export function PicturePicker({ value, onChange }: PicturePickerProps) {
   const fileInput = useRef<HTMLInputElement>(null);
-  const [isIconGridOpen, setIsIconGridOpen] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
 
-  const run = async (save: () => Promise<string>) => {
+  const upload = async (file: File) => {
     setIsBusy(true);
     try {
-      onChange(await save());
-      setIsIconGridOpen(false);
+      onChange(await adminService.uploadServicePicture(file));
     } catch (error) {
       toast.error(apiErrorMessage(error));
     } finally {
@@ -39,40 +38,43 @@ export function PicturePicker({ value, onChange }: PicturePickerProps) {
     }
   };
 
-  const buttonClass = 'cursor-pointer rounded-[8px] border border-line bg-white px-[12px] py-[7px] text-[13px] font-semibold text-ink hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50';
-
   return (
-    <div className="pt-[22px]">
-      <div className="flex items-center gap-[14px]">
-        <span className="flex size-[64px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-[28px]">
-          {value && isImageSource(value) ? (
-            // eslint-disable-next-line @next/next/no-img-element -- picture links come from the backend's uploads or any host
-            <img src={value} alt="" className="size-full object-cover" />
-          ) : (
-            <span aria-hidden>{value || '＋'}</span>
-          )}
-        </span>
+    <div className="flex flex-col items-center gap-[8px] pt-[22px]">
+      <button
+        type="button"
+        disabled={isBusy}
+        onClick={() => fileInput.current?.click()}
+        aria-label={value ? 'Change picture' : 'Upload picture'}
+        className="relative flex size-[120px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-surface text-[44px] disabled:cursor-wait"
+      >
+        {value && isImageSource(value) ? (
+          // eslint-disable-next-line @next/next/no-img-element -- picture links come from the backend's uploads or any host
+          <img src={value} alt="" className="size-full object-cover" />
+        ) : value ? (
+          <span aria-hidden>{value}</span>
+        ) : (
+          <HugeiconsIcon icon={Camera01Icon} size={40} strokeWidth={1.5} className="text-ink" />
+        )}
+        {isBusy && <span className="absolute inset-0 flex items-center justify-center bg-ink/40 text-[13px] font-semibold text-white">Uploading...</span>}
+      </button>
 
-        <div className="flex flex-wrap gap-[8px]">
-          <button type="button" disabled={isBusy} onClick={() => fileInput.current?.click()} className={buttonClass}>Upload image</button>
-          <button type="button" disabled={isBusy} onClick={() => setIsIconGridOpen((wasOpen) => !wasOpen)} className={buttonClass} aria-expanded={isIconGridOpen}>Choose icon</button>
-          {value && <button type="button" disabled={isBusy} onClick={() => onChange('')} className={`${buttonClass} text-[#d64545]`}>Remove</button>}
-        </div>
+      {value && (
+        <button type="button" disabled={isBusy} onClick={() => onChange('')} className="cursor-pointer text-[13px] font-semibold text-[#d64545] disabled:cursor-not-allowed disabled:opacity-50">
+          Remove picture
+        </button>
+      )}
 
-        <input
-          ref={fileInput}
-          type="file"
-          accept=".jpg,.jpeg,.png,.webp"
-          hidden
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            event.target.value = '';
-            if (file) run(() => adminService.uploadServicePicture(file));
-          }}
-        />
-      </div>
-
-      {isIconGridOpen && <IconGrid isBusy={isBusy} onChoose={(name, elements) => run(() => adminService.saveHugeicon(name, elements))} />}
+      <input
+        ref={fileInput}
+        type="file"
+        accept=".jpg,.jpeg,.png,.webp"
+        hidden
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = '';
+          if (file) void upload(file);
+        }}
+      />
     </div>
   );
 }

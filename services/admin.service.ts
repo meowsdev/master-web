@@ -51,11 +51,8 @@ export const adminService = {
     return (await apiClient.post<{ url: string }>('/uploads/service-pictures', form, { headers: { 'Content-Type': 'multipart/form-data' } })).data.url;
   },
 
-  /** Store a chosen Hugeicons icon as a picture; the backend rebuilds the SVG from the icon data. */
-  saveHugeicon: async (name: string, elements: unknown) => (await apiClient.post<{ url: string }>('/uploads/hugeicon', { name, elements })).data.url,
-
   createCategory: async (dto: { name: string; description?: string; iconUrl?: string; groupId?: string }) => (await apiClient.post<{ id: string; name: string }>('/category/create', dto)).data,
-  /** A main service's name, the line under it, and its picture (an uploaded image or a Hugeicons icon link). */
+  /** A main service's name, the line under it, and its picture (an uploaded image link). */
   updateCategory: async (id: string, dto: { name?: string; description?: string; iconUrl?: string }) => (await apiClient.patch(`/category/${id}`, dto)).data,
 
   createService: async (dto: AdminServiceInput) => (await apiClient.post<{ id: string }>('/service/create', dto)).data,

@@ -12,7 +12,7 @@ import { ChipRow } from '@/components/super-app/ChipRow';
 export const inputClass = 'w-full rounded-[8px] border border-line bg-white px-[10px] py-[8px] text-[14px] text-ink outline-none placeholder:text-muted focus:border-primary';
 export const smallButton = 'cursor-pointer rounded-[8px] px-[12px] py-[7px] text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50';
 const primaryButton = `${smallButton} self-start bg-primary text-white hover:bg-primary/90`;
-const lines = (text: string) => text.split('\n').map((line) => line.trim()).filter(Boolean);
+export const lines = (text: string) => text.split('\n').map((line) => line.trim()).filter(Boolean);
 
 /** Every catalog read the customer app caches; refreshed after each admin change so edits show at once. */
 function useRefreshCatalog() {
@@ -77,7 +77,7 @@ export function ServiceContentEditor({ kind, id, initial, faqs }: ServiceContent
   );
 }
 
-function TabHeading({ title, hint }: { title: string; hint: string }) {
+export function TabHeading({ title, hint }: { title: string; hint: string }) {
   return (
     <div className="mb-[10px]">
       <p className="border-l-[3px] border-primary pl-[8px] text-[14px] font-semibold text-ink">{title}</p>

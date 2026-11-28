@@ -52,7 +52,7 @@ function CatalogCanvas({ onBack, onSwitchAccount }: { onBack: () => void; onSwit
   return (
     <>
       {mainServiceId ? (
-        <MainServiceHeader key={mainServiceId} mainServiceId={mainServiceId} onBack={onBack} />
+        <MainServiceHeader key={`header-${mainServiceId}`} mainServiceId={mainServiceId} onBack={onBack} />
       ) : (
         <header className={`flex ${HEADER_BAR_HEIGHT_CLASS} shrink-0 items-center justify-end gap-[12px] border-b border-line bg-white px-[16px]`}>
           {onSwitchAccount && (
@@ -67,7 +67,7 @@ function CatalogCanvas({ onBack, onSwitchAccount }: { onBack: () => void; onSwit
         </header>
       )}
       {mainServiceId ? (
-        <ServicesTab key={mainServiceId} mainServiceId={mainServiceId} isAuthenticated onRequireAuth={() => {}} canEdit />
+        <ServicesTab key={`services-${mainServiceId}`} mainServiceId={mainServiceId} isAuthenticated onRequireAuth={() => {}} canEdit />
       ) : (
         <div className="flex flex-1 items-center justify-center bg-white text-[15px] font-medium text-muted">বাম পাশ থেকে একটা সার্ভিস বাছুন</div>
       )}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Note01Icon, Wrench01Icon } from '@hugeicons/core-free-icons';
+import { Wrench01Icon } from '@hugeicons/core-free-icons';
 import { OrderField, fieldControlClass } from '@/components/modals/place-order/OrderField';
 import { adminService } from '@/services/admin.service';
 import { AdminMainService } from '@/services/catalog-admin.service';
@@ -10,20 +10,19 @@ import { PicturePicker } from '../PicturePicker';
 import { useAction } from './ServiceContentEditor';
 
 /*
- * Staff, in a main service's details drawer: its name, the line under it, and its picture (the round icon customers
- * see beside it: an uploaded image or a Hugeicons icon, the same picker as when it was made). The drawer shows it
+ * Staff, in a main service's details drawer: its picture (the round image customers see beside it, uploaded the same
+ * way as when it was made) and its name. A description saved before stays as it is. The drawer shows it
  * under the name when its edit icon is pressed; it starts from what is saved and closes on Save or Cancel.
  */
 export function MainServiceIdentityEditor({ main, onClose }: { main: Pick<AdminMainService, 'id' | 'name' | 'description' | 'iconUrl'>; onClose: () => void }) {
   const queryClient = useQueryClient();
   const [name, setName] = useState(main.name);
-  const [description, setDescription] = useState(main.description ?? '');
   const [icon, setIcon] = useState(main.iconUrl ?? '');
   const save = useAction(
-    () => adminService.updateCategory(main.id, { name: name.trim(), description: description.trim(), iconUrl: icon.trim() }),
+    () => adminService.updateCategory(main.id, { name: name.trim(), iconUrl: icon.trim() }),
     'Main service updated',
   );
-  const isChanged = name.trim() !== main.name || description.trim() !== (main.description ?? '') || icon.trim() !== (main.iconUrl ?? '');
+  const isChanged = name.trim() !== main.name || icon.trim() !== (main.iconUrl ?? '');
 
   return (
     <form
@@ -41,14 +40,10 @@ export function MainServiceIdentityEditor({ main, onClose }: { main: Pick<AdminM
         });
       }}
     >
+      <PicturePicker value={icon} onChange={setIcon} />
       <OrderField icon={Wrench01Icon}>
         <input value={name} onChange={(event) => setName(event.target.value)} maxLength={100} placeholder="Main service name" className={fieldControlClass} />
       </OrderField>
-      <OrderField icon={Note01Icon}>
-        <textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={300} rows={2} placeholder="বিবরণ (নামের নিচের লাইন)" className={`${fieldControlClass} resize-none`} />
-      </OrderField>
-      <p className="mb-[6px] mt-[16px] text-[13px] font-semibold text-ink">আইকন / ছবি</p>
-      <PicturePicker value={icon} onChange={setIcon} />
       <div className="mt-[14px] flex gap-[8px]">
         <button type="button" onClick={onClose} className="h-[40px] flex-1 cursor-pointer rounded-[10px] border border-chip bg-white text-[14px] font-semibold text-ink hover:bg-surface">
           বাতিল
